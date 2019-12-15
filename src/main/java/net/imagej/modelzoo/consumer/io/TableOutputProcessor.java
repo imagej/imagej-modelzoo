@@ -29,7 +29,7 @@
 
 package net.imagej.modelzoo.consumer.io;
 
-import net.imagej.modelzoo.consumer.network.model.ImageTensor;
+import net.imagej.modelzoo.consumer.network.model.InputNode;
 import net.imagej.modelzoo.consumer.task.DefaultTask;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -42,7 +42,7 @@ import java.util.List;
 public class TableOutputProcessor<T extends RealType<T>> extends DefaultTask implements OutputProcessor<T, GenericTable> {
 
 		@Override
-		public GenericTable run(List<RandomAccessibleInterval<T>> result, ImageTensor node) {
+		public GenericTable run(List<RandomAccessibleInterval<T>> result, InputNode node) {
 
 			RandomAccessibleInterval data = result.get(0);
 			GenericTable table = new DefaultGenericTable();

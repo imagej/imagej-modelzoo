@@ -29,44 +29,37 @@
 
 package net.imagej.modelzoo.consumer.network.model.tensorflow;
 
-import java.util.concurrent.ExecutionException;
-
-import javax.swing.*;
-
 import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 import org.tensorflow.framework.TensorInfo;
+
+import javax.swing.*;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class TensorFlowRunner {
 
 	/*
-	 * runs graph on input tensor
+	 * runs graph on multiple input / output tensors
 	 *
 	 */
-	public static Tensor executeGraph(final SavedModelBundle model,
-		final Tensor image, final TensorInfo inputTensorInfo,
-		final TensorInfo outputTensorInfo) throws IllegalArgumentException, ExecutionException
+	public static List<Tensor<?>> executeGraph(final SavedModelBundle model,
+	                                           final List<Tensor> inputs, final List<String> inputNames,
+	                                           final List<String> outputNames) throws IllegalArgumentException
 	{
 
-		System.out.println("input operation: " + opName(inputTensorInfo));
-		System.out.println("output operation: " + opName(outputTensorInfo));
+//		System.out.println("input operation: " + opName(inputTensorInfo));
+//		System.out.println("output operation: " + opName(outputTensorInfo));
 
-		final Tensor output_t = model.session().runner() //
-			.feed(opName(inputTensorInfo), image) //
-			.fetch(opName(outputTensorInfo)) //
-			.run().get(0);
-
-		if (output_t != null) {
-
-			if (output_t.numDimensions() == 0) {
-				showError("Output tensor has no dimensions");
-				throw new ExecutionException("Output tensor has no dimensions", null);
-			}
+		Session.Runner runner = model.session().runner();
+		for (int i = 0; i < inputs.size(); i++) {
+			runner.feed(inputNames.get(i), inputs.get(i));
 		}
-		else {
-			throw new NullPointerException("Output tensor is null");
+		for (String outputName : outputNames) {
+			runner.fetch(outputName);
 		}
-		return output_t;
+		return runner.run();
 	}
 
 	/**
@@ -81,11 +74,6 @@ public class TensorFlowRunner {
 			return n.substring(0, n.lastIndexOf(":0"));
 		}
 		return n;
-	}
-
-	public static void showError(final String errorMsg) {
-		JOptionPane.showMessageDialog(null, errorMsg, "Error",
-			JOptionPane.ERROR_MESSAGE);
 	}
 
 }

@@ -32,17 +32,13 @@ package net.imagej.modelzoo.consumer.network;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.task.DefaultTask;
 import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;
-import net.imagej.modelzoo.consumer.util.DatasetHelper;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
 public class DefaultModelExecutor<T extends RealType<T>> extends DefaultTask
@@ -50,40 +46,56 @@ public class DefaultModelExecutor<T extends RealType<T>> extends DefaultTask
 {
 
 	private ExecutorService pool = null;
-	private Model network = null;
+	private Model model = null;
 	private boolean canceled = false;
+//
+//	@Override
+//	public List<AdvancedTiledView<T>> run(final List<AdvancedTiledView<T>> input,
+//		final Model network) throws OutOfMemoryError, ExecutionException {
+//		if(!isCanceled()) {
+//			setStarted();
+//			this.network = network;
+//			if (input.size() > 0) {
+//				DatasetHelper.logDim(this, "Network input size", input.get(0)
+//						.randomAccess().get());
+//			}
+//
+//			setCurrentStep(0);
+//			network.resetTileCount();
+//			setNumSteps(getSteps(input));
+//
+//			pool = Executors.newWorkStealingPool();
+//			final List<AdvancedTiledView<T>> output = new ArrayList<>();
+//			for (AdvancedTiledView<T> tile : input) {
+//				output.add(run(tile, network));
+//				if(isCanceled()) return null;
+//			}
+//			pool.shutdown();
+//			if(isCanceled()) return null;
+//			if (output.size() > 0) {
+//				DatasetHelper.logDim(this, "Network output size", output.get(0)
+//						.getProcessedTiles().get(0));
+//			}
+//			setFinished();
+//			return output;
+//		}
+//		return null;
+//	}
 
 	@Override
-	public List<AdvancedTiledView<T>> run(final List<AdvancedTiledView<T>> input,
-		final Model network) throws OutOfMemoryError, ExecutionException {
+	public void run(Model model) throws ExecutionException {
 		if(!isCanceled()) {
 			setStarted();
-			this.network = network;
-			if (input.size() > 0) {
-				DatasetHelper.logDim(this, "Network input size", input.get(0)
-						.randomAccess().get());
-			}
-
+			this.model = model;
 			setCurrentStep(0);
-			network.resetTileCount();
-			setNumSteps(getSteps(input));
-
+			model.resetTileCount();
+			//FIXME
+			setNumSteps(1);
 			pool = Executors.newWorkStealingPool();
-			final List<AdvancedTiledView<T>> output = new ArrayList<>();
-			for (AdvancedTiledView<T> tile : input) {
-				output.add(run(tile, network));
-				if(isCanceled()) return null;
-			}
+			runTile(model);
 			pool.shutdown();
-			if(isCanceled()) return null;
-			if (output.size() > 0) {
-				DatasetHelper.logDim(this, "Network output size", output.get(0)
-						.getProcessedTiles().get(0));
-			}
 			setFinished();
-			return output;
 		}
-		return null;
 	}
 
 	private int getSteps(List<AdvancedTiledView<T>> input) {
@@ -98,33 +110,26 @@ public class DefaultModelExecutor<T extends RealType<T>> extends DefaultTask
 		return numSteps;
 	}
 
-	private AdvancedTiledView<T> run(final AdvancedTiledView<T> input,
-		final Model network) throws OutOfMemoryError, IllegalArgumentException, ExecutionException {
-
-		input.getProcessedTiles().clear();
+	private void runTile(final Model model) throws OutOfMemoryError, IllegalArgumentException, ExecutionException {
 
 		try {
-			network.setTiledView(input);
-			Future<List<RandomAccessibleInterval<T>>> resultFuture = pool.submit(network);
-			List<RandomAccessibleInterval<T>> result = resultFuture.get();
-			if(result != null) {
-				input.getProcessedTiles().addAll(result);
-			}
-
+//			CountDownLatch latch = new CountDownLatch(1);
+//			pool.execute(model);
+			model.run();
+//			latch.await();
 		}
-		catch(final CancellationException | RejectedExecutionException | InterruptedException e) {
+		catch(final CancellationException | RejectedExecutionException e) {
 			//canceled
 			setFailed();
 			String PROGRESS_CANCELED = "Canceled";
 			log(PROGRESS_CANCELED);
 			cancel(PROGRESS_CANCELED);
-			return null;
 		}
 		catch(final IllegalArgumentException e) {
 			setFailed();
 			throw e;
 		}
-		catch (final ExecutionException | IllegalStateException exc) {
+		catch (final IllegalStateException exc) {
 			if(exc.getMessage() != null && exc.getMessage().contains("OOM")) {
 				setIdle();
 				throw new OutOfMemoryError();
@@ -133,9 +138,46 @@ public class DefaultModelExecutor<T extends RealType<T>> extends DefaultTask
 			setFailed();
 			throw exc;
 		}
-
-		return input;
 	}
+
+//	private AdvancedTiledView<T> run(final AdvancedTiledView<T> input,
+//		final Model network) throws OutOfMemoryError, IllegalArgumentException, ExecutionException {
+//
+//		input.getProcessedTiles().clear();
+//
+//		try {
+//			network.setTiledView(input);
+//			Future<List<RandomAccessibleInterval<T>>> resultFuture = pool.submit(network);
+//			List<RandomAccessibleInterval<T>> result = resultFuture.get();
+//			if(result != null) {
+//				input.getProcessedTiles().addAll(result);
+//			}
+//
+//		}
+//		catch(final CancellationException | RejectedExecutionException | InterruptedException e) {
+//			//canceled
+//			setFailed();
+//			String PROGRESS_CANCELED = "Canceled";
+//			log(PROGRESS_CANCELED);
+//			cancel(PROGRESS_CANCELED);
+//			return null;
+//		}
+//		catch(final IllegalArgumentException e) {
+//			setFailed();
+//			throw e;
+//		}
+//		catch (final ExecutionException | IllegalStateException exc) {
+//			if(exc.getMessage() != null && exc.getMessage().contains("OOM")) {
+//				setIdle();
+//				throw new OutOfMemoryError();
+//			}
+//			exc.printStackTrace();
+//			setFailed();
+//			throw exc;
+//		}
+//
+//		return input;
+//	}
 
 	@Override
 	public boolean isCanceled() {
@@ -148,8 +190,8 @@ public class DefaultModelExecutor<T extends RealType<T>> extends DefaultTask
 		if (pool != null && !pool.isShutdown()) {
 			pool.shutdownNow();
 		}
-		if(network != null) {
-			network.cancel(reason);
+		if(model != null) {
+			model.cancel(reason);
 		}
 	}
 

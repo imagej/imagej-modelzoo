@@ -29,7 +29,7 @@
 
 package net.imagej.modelzoo.consumer.util;
 
-import net.imagej.modelzoo.consumer.commands.ModelZooPrediction;
+import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
 import org.scijava.io.http.HTTPLocation;
 import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
@@ -89,7 +89,7 @@ public class IOHelper {
 		return existingUrl;
 	}
 
-	public static String getFileCacheName(Class<? extends ModelZooPrediction> parentClass, File file) throws IOException {
+	public static String getFileCacheName(Class<? extends ModelZooPredictionCommand> parentClass, File file) throws IOException {
 		try (FileInputStream fis = new FileInputStream(file)) {
 			String md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
 			return parentClass.getSimpleName() + "_" + md5;
@@ -98,7 +98,7 @@ public class IOHelper {
 		}
 	}
 
-	public static String getUrlCacheName(Class<? extends ModelZooPrediction> parentClass, String modelUrl) throws IOException {
+	public static String getUrlCacheName(Class<? extends ModelZooPredictionCommand> parentClass, String modelUrl) throws IOException {
 		URL url = new URL(modelUrl);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setReadTimeout(1000*10*1);

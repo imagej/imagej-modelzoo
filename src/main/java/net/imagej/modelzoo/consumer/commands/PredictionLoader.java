@@ -44,19 +44,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-@Plugin(type = Command.class)
-public class PredictionLoader implements Command {
+public class PredictionLoader implements Runnable {
 
-	@Parameter(label = "Import model (.zip)", callback = "modelFileChanged",
-			initializer = "modelFileInitialized", persist = false, required = false)
 	private File modelFile;
 
-	@Parameter(label = "Import model (.zip) from URL", callback = "modelUrlChanged",
-			initializer = "modelUrlChanged", persist = false, required = false)
-	protected String modelUrl;
+	private String modelUrl;
 
-	@Parameter(type = ItemIO.OUTPUT)
-	protected Model model;
+	private Model model;
 
 	@Parameter
 	private Context context;
@@ -97,6 +91,14 @@ public class PredictionLoader implements Command {
 		}
 	}
 
+	public void setModelFromFile(File modelFile) {
+		this.modelFile = modelFile;
+	}
+
+	public void setModelFromURL(String url) {
+		this.modelUrl = url;
+	}
+
 	private void solveModelSource() {
 		if(modelFileUrl.isEmpty()) modelFileChanged();
 		if(modelFileUrl.isEmpty()) modelUrlChanged();
@@ -118,7 +120,7 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-	public static String getUrlCacheName(Class commandClass, String modelUrl) {
+	private static String getUrlCacheName(Class commandClass, String modelUrl) {
 		try {
 			return IOHelper.getUrlCacheName(commandClass, modelUrl);
 		} catch (IOException e) {
@@ -127,7 +129,7 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-	public static String getFileCacheName(Class commandClass, File modelFile) {
+	private static String getFileCacheName(Class commandClass, File modelFile) {
 		try {
 			return IOHelper.getFileCacheName(commandClass, modelFile);
 		} catch (IOException e) {
@@ -136,7 +138,7 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-	protected void modelFileChanged() {
+	private void modelFileChanged() {
 		if (modelFile != null) {
 			if(modelFile.exists()) {
 				modelUrl = null;
@@ -149,7 +151,7 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-	protected void modelUrlChanged() {
+	private void modelUrlChanged() {
 		if(modelUrl != null && modelUrl.length() > "https://".length()) {
 			if (IOHelper.urlExists(modelUrl)) {
 				modelFile = null;
@@ -160,7 +162,7 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-	protected void modelChanged() {
+	private void modelChanged() {
 		updateCacheName();
 		savePreferences();
 	}
@@ -171,10 +173,12 @@ public class PredictionLoader implements Command {
 		}
 	}
 
-
-	public String getModelFileKey() {
+	String getModelFileKey() {
 		return this.getClass().getSimpleName() + "_modelfile";
 	}
 
+	public Model getModel() {
+		return model;
+	}
 
 }

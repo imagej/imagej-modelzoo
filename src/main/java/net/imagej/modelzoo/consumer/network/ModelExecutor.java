@@ -41,7 +41,8 @@ import net.imglib2.type.numeric.RealType;
 
 public interface ModelExecutor<T extends RealType<T>> extends Task, Cancelable {
 
-	List<AdvancedTiledView<T>> run(List<AdvancedTiledView<T>> input,
-		Model network) throws ExecutionException;
+//	List<AdvancedTiledView<T>> run(List<AdvancedTiledView<T>> input,
+//		Model network) throws ExecutionException;
 
+	void run(Model model) throws ExecutionException;
 }

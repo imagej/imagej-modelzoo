@@ -29,14 +29,9 @@
 
 package net.imagej.modelzoo.consumer.network.model;
 
-import net.imagej.Dataset;
 import net.imagej.modelzoo.consumer.util.IOHelper;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.TiledView;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.view.Views;
-import org.scijava.app.StatusService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -44,28 +39,18 @@ import org.scijava.plugin.Parameter;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-public abstract class DefaultModel<T extends RealType<T>> implements
-		Model<T>
-{
+public abstract class DefaultModel<T extends RealType<T>> implements Model {
 
 	@Parameter
-	protected
-	LogService log;
+	protected LogService log;
 
-	@Parameter
-	StatusService statusService;
-
-	protected ImageTensor inputNode = null;
-	protected ImageTensor outputNode = null;
+	protected final List<InputNode> inputNodes = new ArrayList<>();
+	protected final List<OutputNode> outputNodes = new ArrayList<>();
 	protected TiledView<T> tiledView;
 	protected Integer doneTileCount;
-	protected boolean dropSingletonDims = false;
-	protected NetworkSettings networkSettings;
 	ExecutorService pool;
 
 	public DefaultModel() {
@@ -84,102 +69,61 @@ public abstract class DefaultModel<T extends RealType<T>> implements
 	}
 
 	@Override
-	public abstract void preprocess();
-
-	@Override
-	public List<RandomAccessibleInterval<T>> call()
-		throws IllegalArgumentException, ExecutionException, OutOfMemoryError
+	public void run()
+		throws IllegalArgumentException, OutOfMemoryError
 	{
 
 		pool = Executors.newSingleThreadExecutor();
 
-		final boolean multithreading = false;
+//		final Cursor<RandomAccessibleInterval<T>> cursor = Views.iterable(tiledView)
+//			.cursor();
 
-		final Cursor<RandomAccessibleInterval<T>> cursor = Views.iterable(tiledView)
-			.cursor();
 
-		// Loop over the tiles and execute the prediction
-		final List<RandomAccessibleInterval<T>> results = new ArrayList<>();
-		final List<Future<RandomAccessibleInterval<T>>> futures = new ArrayList<>();
+//		while (cursor.hasNext()) {
+//			final RandomAccessibleInterval<T> tile = cursor.next();
 
-		while (cursor.hasNext()) {
-			final RandomAccessibleInterval<T> tile = cursor.next();
+//		CountDownLatch latch = new CountDownLatch(1);
+//		pool.execute(this::execute);
+		execute();
 
-			final Future<RandomAccessibleInterval<T>> future = pool.submit(() -> execute(tile));
+		log.info("Processing tile " + (doneTileCount + 1) + "..");
 
-			log.info("Processing tile " + (doneTileCount + 1) + "..");
-
-			futures.add(future);
-
-			if (!multithreading) {
-				try {
-					final RandomAccessibleInterval<T> res = future.get();
-					if (res == null) return null;
-					results.add(res);
-					upTileCount();
-				}
-				catch (final IllegalArgumentException exc) {
-					pool.shutdownNow();
-					//FIXME fail
-//					fail();
-					throw  exc;
-				}
-				catch (final InterruptedException exc) {
-					pool.shutdownNow();
-					return null;
-				}
-			}
+		try {
+//			latch.await();
+			upTileCount();
 		}
-		if (multithreading) {
-			for (final Future<RandomAccessibleInterval<T>> future : futures) {
-				try {
-					final RandomAccessibleInterval<T> res = future.get();
-					if (res == null) return null;
-					results.add(res);
-					upTileCount();
-				}
-				catch (final InterruptedException exc) {
-					pool.shutdownNow();
-					//FIXME fail
+		catch (final IllegalArgumentException exc) {
+			pool.shutdownNow();
+			//FIXME fail
 //					fail();
-					return null;
-				}
-			}
+			throw  exc;
 		}
-
-		return results;
-	}
-
-	protected abstract RandomAccessibleInterval<T> execute(
-			RandomAccessibleInterval<T> tile) throws Exception;
-
-	@Override
-	public ImageTensor getInputNode() {
-		return inputNode;
 	}
 
 	@Override
-	public ImageTensor getOutputNode() {
-		return outputNode;
+	public List<InputNode> getInputNodes() {
+		return inputNodes;
 	}
 
 	@Override
-	public void loadInputNode(final Dataset dataset) {
-		inputNode = new ImageTensor();
-		inputNode.initialize(dataset);
+	public List<OutputNode> getOutputNodes() {
+		return outputNodes;
 	}
+//
+//	@Override
+//	public void loadInputNode(final Dataset dataset) {
+//		inputNode = new ImageTensor();
+//		inputNode.initialize(dataset);
+//	}
+//
+//	@Override
+//	public void loadOutputNode(Dataset dataset) {
+//		outputNode = new ImageTensor();
+//		outputNode.initialize(dataset);
+//	}
 
-	@Override
-	public void loadOutputNode(Dataset dataset) {
-		outputNode = new ImageTensor();
-		outputNode.initialize(dataset);
-	}
-
-	@Override
-	public abstract void initMapping();
-
-	@Override
-	public abstract List<Integer> dropSingletonDims();
+	// TODO this is the tensorflow runner
+	public abstract void execute() throws IllegalArgumentException, OutOfMemoryError;
 
 	@Override
 	public abstract boolean isInitialized();
@@ -198,11 +142,6 @@ public abstract class DefaultModel<T extends RealType<T>> implements
 	}
 
 	@Override
-	public void setTiledView(final TiledView<T> tiledView) {
-		this.tiledView = tiledView;
-	}
-
-	@Override
 	public void cancel(String reason) {
 		pool.shutdownNow();
 	}
@@ -217,19 +156,6 @@ public abstract class DefaultModel<T extends RealType<T>> implements
 		return null;
 	}
 
-	//	@Override
-//	public void setDoDimensionReduction(final boolean doDimensionReduction) {
-//		setDoDimensionReduction(doDimensionReduction, Axes.Z);
-//	}
-//
-//	@Override
-//	public void setDoDimensionReduction(final boolean doDimensionReduction,
-//		final AxisType axisToRemove)
-//	{
-//		this.doDimensionReduction = doDimensionReduction;
-//		this.axisToRemove = axisToRemove;
-//	}
-
 	@Override
 	public void dispose() {
 		if (pool != null) {
@@ -239,7 +165,7 @@ public abstract class DefaultModel<T extends RealType<T>> implements
 	}
 
 	public void clear() {
-		inputNode = null;
-		outputNode = null;
+		inputNodes.clear();
+		outputNodes.clear();
 	}
 }

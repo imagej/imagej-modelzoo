@@ -35,7 +35,7 @@ import java.util.Map;
 
 import net.imglib2.GridView;
 import net.imagej.modelzoo.consumer.task.Task;
-import net.imagej.modelzoo.consumer.util.DatasetHelper;
+import net.imagej.modelzoo.consumer.util.LogHelper;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imglib2.FinalInterval;
@@ -97,7 +97,7 @@ public class DefaultTiling<T extends RealType<T>> implements Tiling<T> {
 					i));
 			}
 
-			DatasetHelper.logDim(parent, "Final image tiling", tiledView);
+			LogHelper.logDim(parent, "Final image tiling", tiledView);
 			parent.debug("Final tile padding: " + Arrays.toString(padding));
 
 			int steps = 1;
@@ -146,8 +146,8 @@ public class DefaultTiling<T extends RealType<T>> implements Tiling<T> {
 		return rtn;
 	}
 
-	private long[] computeTiling(RandomAccessibleInterval<T> input,
-	                             long[] tiling, TilingAction[] tilingActions)
+	private long[] computeTiling(final RandomAccessibleInterval<T> input,
+	                             final long[] tiling, final TilingAction[] tilingActions)
 	{
 		int currentTiles = 1;
 		for (long tiles : tiling) {
@@ -245,7 +245,7 @@ public class DefaultTiling<T extends RealType<T>> implements Tiling<T> {
 
 			parent.log("Output axes: " + Arrays.toString(axisTypes));
 
-			DatasetHelper.debugDim(parent, "result 0 before padding removement",
+			LogHelper.debugDim(parent, "result 0 before padding removement",
 				firstResult);
 
 			long[] grid = new long[axisTypes.length];
@@ -264,7 +264,7 @@ public class DefaultTiling<T extends RealType<T>> implements Tiling<T> {
 			}
 
 			// TODO log padding / test padding
-			DatasetHelper.debugDim(parent, "result 0 after padding removement",
+			LogHelper.debugDim(parent, "result 0 after padding removement",
 				firstResult);
 
 			parent.log("Merging tiles..");
@@ -272,14 +272,14 @@ public class DefaultTiling<T extends RealType<T>> implements Tiling<T> {
 			final RandomAccessibleInterval<T> mergedResult = arrangeAndCombineTiles(
 				resultData, grid);
 
-			DatasetHelper.debugDim(parent, "merge", mergedResult);
+			LogHelper.debugDim(parent, "merge", mergedResult);
 			parent.log("Crop to original size..");
 
 			RandomAccessibleInterval<T> fittedResult = undoExpansion(mergedResult,
 				results.getOriginalDims(), axisTypes);
 
 			parent.log("Output axes: " + Arrays.toString(axisTypes));
-			DatasetHelper.debugDim(parent, "fittedResult dimensions", fittedResult);
+			LogHelper.debugDim(parent, "fittedResult dimensions", fittedResult);
 
 			return fittedResult;
 		}

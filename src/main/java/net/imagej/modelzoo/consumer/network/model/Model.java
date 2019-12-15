@@ -29,48 +29,30 @@
 
 package net.imagej.modelzoo.consumer.network.model;
 
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.concurrent.Callable;
-
 import net.imglib2.TiledView;
 import org.scijava.Cancelable;
 import org.scijava.Disposable;
 
-import net.imagej.Dataset;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+import java.io.FileNotFoundException;
+import java.util.List;
 
-public interface Model<T extends RealType<T>> extends
-	Callable<List<RandomAccessibleInterval<T>>>, Disposable, Cancelable
+public interface Model extends
+	Runnable, Disposable, Cancelable
 {
 
 	boolean loadModel(String pathOrURL, String modelName)
 		throws FileNotFoundException;
 
-	void preprocess();
+	List<InputNode> getInputNodes();
 
-	ImageTensor getInputNode();
-
-	ImageTensor getOutputNode();
-
-	void loadInputNode(Dataset dataset);
-
-	void loadOutputNode(Dataset dataset);
-
-	void initMapping();
+	List<OutputNode> getOutputNodes();
 
 	boolean isInitialized();
 
 	void resetTileCount();
 
-	void setTiledView(TiledView<T> tiledView);
-
 	default void loadLibrary(){}
-
-	void calculateMapping();
 
 	boolean libraryLoaded();
 
-	List<Integer> dropSingletonDims();
 }

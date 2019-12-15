@@ -124,4 +124,9 @@ public class DefaultTask implements Task {
 	public void logWarning(String msg) {
 			System.out.println("WARNING: " + msg);
 	}
+
+	@Override
+	public boolean isFailed() {
+		return failed;
+	}
 }

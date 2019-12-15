@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+//FIXME
 public class TestGenericNetworkCommand implements Command {
 
 	@Parameter
@@ -35,18 +36,14 @@ public class TestGenericNetworkCommand implements Command {
 
 	@Override
 	public void run() {
+		Module module = null;
 		try {
-			Module module = command.run(ModelZooPrediction.class, false, "input", input,
-					"normalizeInput", normalizeInput,
-					"percentileBottom", percentileBottom,
-					"percentileTop", percentileTop,
+			module = command.run(ModelZooPredictionCommand.class, false, "input", input,
 					"modelUrl", "http://csbdeep.bioimagecomputing.com/model-project.zip").get();
-			ui.show(module.getOutput("output"));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
+		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
+		ui.show(module.getOutput("output"));
 
 	}
 

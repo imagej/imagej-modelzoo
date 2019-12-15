@@ -29,22 +29,16 @@
 
 package net.imagej.modelzoo.consumer.network.model.tensorflow;
 
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.protobuf.InvalidProtocolBufferException;
-import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.network.DefaultInputMapper;
 import net.imagej.modelzoo.consumer.network.model.DefaultModel;
-import net.imagej.modelzoo.consumer.network.model.NetworkSettings;
+import net.imagej.modelzoo.consumer.network.model.InputNode;
+import net.imagej.modelzoo.consumer.network.model.OutputNode;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.command.CommandService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
@@ -54,17 +48,16 @@ import org.tensorflow.TensorFlowException;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 import org.tensorflow.framework.TensorInfo;
-import org.tensorflow.framework.TensorShapeProto;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class TensorFlowModel<T extends RealType<T>> extends
 		DefaultModel<T>
@@ -85,8 +78,6 @@ public class TensorFlowModel<T extends RealType<T>> extends
 	private SignatureDef sig;
 	private Map meta;
 	private boolean tensorFlowLoaded = false;
-	private TensorInfo inputTensorInfo, outputTensorInfo;
-	private AxisType axisToRemove;
 	// Same as
 	// tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
 	// in Python. Perhaps this should be an exported constant in TensorFlow's Java
@@ -117,207 +108,115 @@ public class TensorFlowModel<T extends RealType<T>> extends
 	}
 
 	@Override
-	public void loadInputNode(final Dataset dataset) {
-		super.loadInputNode( dataset);
-		if (sig != null && sig.getInputsCount() > 0) {
-			inputNode.setName(sig.getInputsMap().keySet().iterator().next());
-			setInputTensor(sig.getInputsOrThrow(inputNode.getName()));
-			inputNode.setNodeShape(getShape(getInputTensorInfo().getTensorShape()));
-			inputNode.initializeNodeMapping();
-		}
-	}
-
-	@Override
-	public void loadOutputNode(Dataset dataset) {
-		super.loadOutputNode(dataset);
-		if (sig != null && sig.getOutputsCount() > 0) {
-			outputNode.setName(sig.getOutputsMap().keySet().iterator().next());
-			setOutputTensor(sig.getOutputsOrThrow(outputNode.getName()));
-			outputNode.setNodeShape(getShape(getOutputTensorInfo().getTensorShape()));
-			outputNode.initializeNodeMapping();
-		}
-	}
-
-	private long[] getShape(final TensorShapeProto tensorShape) {
-		final long[] shape = new long[tensorShape.getDimCount()];
-		for (int i = 0; i < shape.length; i++) {
-			shape[i] = tensorShape.getDim(i).getSize();
-		}
-		return shape;
-	}
-
-	@Override
 	protected boolean loadModel(final Location source, final String modelName) {
 		if(!tensorFlowLoaded) return false;
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
+		if (!loadModelFile(source, modelName)) return false;
+		// Extract names from the model signature.
+		// The strings "input", "probabilities" and "patches" are meant to be
+		// in sync with the model exporter (export_saved_model()) in Python.
+		if(!loadSignature()) return false;
+		if (!loadModelSettings(source, modelName)) return false;
+		return true;
+	}
+
+	private boolean loadModelSettings(Location source, String modelName) {
+		try {
+			loadModelSettingsFromYaml(tensorFlowService.loadFile(source, modelName, "model.yaml"));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	private boolean loadSignature() {
+		try {
+			sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
+				DEFAULT_SERVING_SIGNATURE_DEF_KEY);
+			System.out.println("Model inputs: " + sig.getInputsMap());
+			System.out.println("Model outputs: " + sig.getOutputsMap());
+		}
+		catch (final InvalidProtocolBufferException e) {
+			e.printStackTrace();
+			return false;
+		}
+		if(sig == null) return false;
+		return true;
+	}
+
+	private boolean loadModelFile(Location source, String modelName) {
 		try {
 			if (model != null) {
 				model.close();
 			}
 			model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
-//			loadNetworkSettingsFromJson(tensorFlowService.loadFile(source, modelName, "meta.json"));
 		}
 		catch (TensorFlowException | IOException e) {
 			e.printStackTrace();
 			return false;
 		}
-		// Extract names from the model signature.
-		// The strings "input", "probabilities" and "patches" are meant to be
-		// in sync with the model exporter (export_saved_model()) in Python.
-		try {
-			sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
-				DEFAULT_SERVING_SIGNATURE_DEF_KEY);
-		}
-		catch (final InvalidProtocolBufferException e) {
-			 e.printStackTrace();
-		}
 		return true;
 	}
 
-	private void loadNetworkSettingsFromJson(File jsonFile) {
-		networkSettings = new NetworkSettings();
-		try {
-			try (JsonReader reader = new JsonReader(new FileReader(jsonFile))) {
-				readNetworkSettingsArray(reader);
-			}
-		} catch (IOException e) {
-			log.info("No meta.json file found for network.");
+	private void loadModelSettingsFromYaml(File yamlFile) throws FileNotFoundException {
+		if(!yamlFile.exists()) return;
+		YamlReader reader = new YamlReader(log, sig, yamlFile);
+		if(reader.isJavaModel()) {
+			inputNodes.clear();
+			inputNodes.addAll(reader.processInputs());
+			outputNodes.clear();
+			outputNodes.addAll(reader.processOutputs(inputNodes));
+			reader.processPrediction();
+		} else {
+			log.error("Model seems to be incompatible.");
 		}
-	}
-
-	private void readNetworkSettingsArray(JsonReader reader) throws IOException {
-		reader.beginObject();
-		while (reader.hasNext()) {
-			String name = reader.nextName();
-			if (name.equals("axes_div_by") && reader.peek() != JsonToken.NULL) {
-				networkSettings.axesDivBy = readIntArray(reader);
-			} else if (name.equals("tile_overlap") && reader.peek() != JsonToken.NULL) {
-				networkSettings.tileOverlap = readIntArray(reader);
-			} else if (name.equals("axes") && reader.peek() != JsonToken.NULL) {
-				networkSettings.axesIn = readAxesString(reader);
-			} else if (name.equals("axes_out") && reader.peek() != JsonToken.NULL) {
-				networkSettings.axesOut = readAxesString(reader);
-			} else if (name.equals("tiling") && reader.peek() != JsonToken.NULL) {
-				networkSettings.tilingAllowed = readBooleanArray(reader);
-			} else {
-				reader.skipValue();
-			}
-		}
-		reader.endObject();
-	}
-
-	private List readAxesString(JsonReader reader) throws IOException {
-		String singleEntry = reader.nextString();
-		return toAxesList(singleEntry);
-	}
-
-	private List<AxisType> toAxesList(String axesStr) {
-		return DefaultInputMapper.parseMappingStr(axesStr);
-	}
-
-	private List<Integer> readIntArray(JsonReader reader) throws IOException {
-		List<Integer> res = new ArrayList<>();
-		try {
-			Integer singleEntry = reader.nextInt();
-			res.add(singleEntry);
-		}
-		catch(IllegalStateException | NumberFormatException e) {
-			reader.beginArray();
-			while (reader.hasNext()) {
-				res.add(reader.nextInt());
-			}
-			reader.endArray();
-		}
-		return res;
-	}
-
-	private List<Boolean> readBooleanArray(JsonReader reader) throws IOException {
-		List<Boolean> res = new ArrayList<>();
-		try {
-			Boolean singleEntry = reader.nextBoolean();
-			res.add(singleEntry);
-		}
-		catch(IllegalStateException | NumberFormatException e) {
-			reader.beginArray();
-			while (reader.hasNext()) {
-				res.add(reader.nextBoolean());
-			}
-			reader.endArray();
-		}
-		return res;
-	}
-
-	@Override
-	public void preprocess() {
-		initMapping();
-		calculateMapping();
 	}
 
 	// TODO this is the tensorflow runner
 	@Override
-	public RandomAccessibleInterval<T> execute(
-		final RandomAccessibleInterval<T> tile) throws IllegalArgumentException, OutOfMemoryError, ExecutionException {
+	public void execute() throws IllegalArgumentException, OutOfMemoryError {
+		List<Tensor> inputTensors = getInputTensors();
+		List<String> outputNames = getOutputNames();
+		List<Tensor<?>> outputTensors = TensorFlowRunner.executeGraph(
+				model.model(),
+				inputTensors,
+				getInputNames(),
+				outputNames);
 
-			long[] tileDims = new long[tile.numDimensions()];
-			tile.dimensions(tileDims);
-			final Tensor inputTensor = DatasetTensorFlowConverter.datasetToTensor(tile,
-						convertNodeMappingToImgMapping(getInputNode().getMappingIndices()));
-			if (inputTensor != null) {
-					Tensor outputTensor = TensorFlowRunner.executeGraph(model.model(), inputTensor,
-								getInputTensorInfo(), getOutputTensorInfo());
-
-				RandomAccessibleInterval<T> output = DatasetTensorFlowConverter.tensorToDataset(outputTensor, tile
-								.randomAccess().get(), convertNodeMappingToImgMapping(getOutputNode().getMappingIndices()),
-								dropSingletonDims);
-					outputTensor.close();
-					inputTensor.close();
-					return output;
-				}
-		return null;
-}
-	@Override
-	public void initMapping() {
-		inputNode.setMappingDefaults();
-		outputNode.setMappingDefaults();
+			setOutputTensors(outputTensors);
+			inputTensors.forEach(Tensor::close);
+			outputTensors.forEach(Tensor::close);
 	}
 
-	@Override
-	public void calculateMapping() {
-		doDimensionReduction();
-		generateMapping();
-	}
-
-	@Override
-	public List<Integer> dropSingletonDims() {
-		outputNode.dropSingletonDims();
-		return inputNode.dropSingletonDims();
-	}
-
-	private void doDimensionReduction() {
-		int diff = getOutputNode().getNodeShape().length - getInputNode().getNodeShape().length;
-		if(diff == 0) return;
-		if(diff > 0) log.error("Cannot handle case INPUT TENSOR SIZE < OUTPUT TENSOR SIZE");
-		if(diff == -1) {
-			doSingleDimensionReduction();
-		} else {
-			log.warn("Cannot apply axes from input tensor to output tensor because more than one dimension got reduced.");
-			getInputNode().setTilingAllowed(false);
-			getOutputNode().setTilingAllowed(false);
+	private List<Tensor> getInputTensors() {
+		List<Tensor> res = new ArrayList<>();
+		for (InputNode node : getInputNodes()) {
+			final Tensor tensor = TensorFlowConverter.toTensor(node.getData(), node.getMappingIndices());
+			if(tensor == null) {
+				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
+			}
+			res.add(tensor);
 		}
+		return res;
 	}
 
-	private void doSingleDimensionReduction() {
-		if(getInputNode().getImageAxes().contains(Axes.TIME)) {
-			axisToRemove = Axes.TIME;
-		} else {
-			axisToRemove = Axes.Z;
+	private List<String> getInputNames() {
+		return getInputNodes().stream().map(InputNode::getName).collect(Collectors.toList());
+	}
+
+	private List<String> getOutputNames() {
+		return getOutputNodes().stream().map(OutputNode::getName).collect(Collectors.toList());
+	}
+
+	private void setOutputTensors(List<Tensor<?>> tensors) {
+		for (int i = 0; i < tensors.size(); i++) {
+			Tensor tensor = tensors.get(i);
+			OutputNode node = getOutputNodes().get(i);
+			System.out.println(Arrays.toString(node.getMappingIndices()));
+			RandomAccessibleInterval<T> output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
+			node.setData(output);
 		}
-		final Dataset outputDummy = createEmptyDuplicateWithoutAxis(inputNode
-			.getImageAxes(), inputNode.getImageDimensions(), axisToRemove);
-		getOutputNode().initialize(outputDummy);
-		List<AxisType> mapping = new ArrayList<>(getInputNode().getNodeAxes());
-		mapping.remove(axisToRemove);
-		getOutputNode().setMapping(mapping.toArray(new AxisType[0]));
 	}
 
 	@Override
@@ -325,53 +224,9 @@ public class TensorFlowModel<T extends RealType<T>> extends
 		return tensorFlowLoaded;
 	}
 
-	private void generateMapping() {
-		inputNode.generateMapping();
-		outputNode.generateMapping();
-	}
-
-	private Dataset createEmptyDuplicateWithoutAxis(List<AxisType> imageAxes, List<Long> imageDimensions, AxisType axisToRemove)
-	{
-		int numDims = imageAxes.size();
-		if (imageAxes.contains(axisToRemove)) {
-			numDims--;
-		}
-		final long[] dims = new long[numDims];
-		final AxisType[] axes = new AxisType[numDims];
-		int j = 0;
-		for (int i = 0; i < numDims; i++) {
-			final AxisType axisType = imageAxes.get(i);
-			if (axisType != axisToRemove) {
-				axes[j] = axisType;
-				dims[j] = imageDimensions.get(i);
-				j++;
-			}
-		}
-		return datasetService.create(new FloatType(), dims, "",
-			axes);
-	}
-
-	private static int[] convertNodeMappingToImgMapping(int[] nodeMapping) {
-		int[] res = new int[nodeMapping.length];
-		for (int i = 0; i < nodeMapping.length; i++) {
-			for (int j = 0; j < nodeMapping.length; j++) {
-				if(i == nodeMapping[j]) {
-					res[i] = j;
-					break;
-				}
-			}
-		}
-		return res;
-	}
-
 	@Override
 	public boolean isInitialized() {
 		return model != null;
-	}
-
-	private void setInputTensor(final TensorInfo tensorInfo) {
-		inputTensorInfo = tensorInfo;
-		logTensorShape("Shape of input tensor", tensorInfo);
 	}
 
 	protected void logTensorShape(String title, final TensorInfo tensorInfo) {
@@ -382,27 +237,11 @@ public class TensorFlowModel<T extends RealType<T>> extends
 		log.info(title + ": " + Arrays.toString(dims));
 	}
 
-	private void setOutputTensor(final TensorInfo tensorInfo) {
-		outputTensorInfo = tensorInfo;
-		logTensorShape("Shape of output tensor", tensorInfo);
-	}
-
-	private TensorInfo getInputTensorInfo() {
-		return inputTensorInfo;
-	}
-
-	private TensorInfo getOutputTensorInfo() {
-		return outputTensorInfo;
-	}
-
 	@Override
 	public void clear() {
 		super.clear();
 		sig = null;
 		model = null;
-		inputTensorInfo = null;
-		outputTensorInfo = null;
-		axisToRemove = null;
 	}
 
 	@Override

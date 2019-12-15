@@ -56,4 +56,6 @@ public interface Task extends Cancelable {
 	void setCurrentStep(int currentStep);
 
 	void logWarning(String s);
+
+	boolean isFailed();
 }

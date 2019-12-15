@@ -37,62 +37,34 @@ import net.imagej.modelzoo.consumer.task.Task;
 import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;
 import net.imagej.modelzoo.consumer.tiling.DefaultInputTiler;
 import net.imagej.modelzoo.consumer.tiling.DefaultOutputTiler;
-import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
 import net.imagej.modelzoo.consumer.tiling.InputTiler;
 import net.imagej.modelzoo.consumer.tiling.OutputTiler;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.Cancelable;
 import org.scijava.Disposable;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
-@Plugin(type = Command.class)
-public class PredictionExecutor implements Command, Disposable, Cancelable {
+public class PredictionExecutor implements Runnable, Disposable, Cancelable {
 
-	@Parameter
-	private
-	List<RandomAccessibleInterval> input;
-
-	@Parameter
 	private Model model;
 
-	@Parameter(type = ItemIO.OUTPUT)
-	private
-	List<RandomAccessibleInterval<FloatType>> output;
-
-	@Parameter(label = "Number of tiles", min = "1")
 	private int nTiles = 8;
-
-	@Parameter(label = "Tile size has to be multiple of", min = "1")
-	private final int blockMultiple = 32;
-
-	@Parameter(label = "Overlap between tiles", min = "0", stepSize = "16")
-	private final int overlap = 32;
-
-	@Parameter(label = "Batch size", min = "1")
 	private int batchSize = 1;
-
 	private Tiling tiling;
+
 	private final ModelExecutor modelExecutor = new DefaultModelExecutor();
-	private final InputTiler inputTiler = new DefaultInputTiler();
-	private final OutputTiler outputTiler = new DefaultOutputTiler();
+//	private final InputTiler inputTiler = new DefaultInputTiler();
+//	private final OutputTiler outputTiler = new DefaultOutputTiler();
 	private ExecutorService pool = null;
 	private Future<?> future;
-
 	private int oldNTiles;
-	private int oldBatchesSize;
 
+	private int oldBatchesSize;
 	private boolean canceled = false;
 
 	@Override
@@ -102,10 +74,11 @@ public class PredictionExecutor implements Command, Disposable, Cancelable {
 
 		try {
 
-			future = pool.submit(this::mainThread);
-			future.get();
+			mainThread();
+//			future = pool.submit(this::mainThread);
+//			future.get();
 
-		} catch(OutOfMemoryError | InterruptedException | ExecutionException e) {
+		} catch(OutOfMemoryError e) {
 			dispose();
 			e.printStackTrace();
 		}
@@ -114,46 +87,46 @@ public class PredictionExecutor implements Command, Disposable, Cancelable {
 
 	private void mainThread() throws OutOfMemoryError {
 
-		initTiling();
-		List<AdvancedTiledView<FloatType>> tiledOutput = null;
 		try {
-			tiledOutput = tryToTileAndRunNetwork(input);
+			tryToRunModel();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		if(tiledOutput != null) {
-			if(model.getOutputNode().getTilingAllowed()) {
-				output = outputTiler.run(
-						tiledOutput, tiling, model.getOutputNode().getFinalAxesArray());
-			} else {
-				output = tiledOutput.stream().map(this::getSingleTile).collect(Collectors.toList());
-			}
-			for (AdvancedTiledView obj : tiledOutput) {
-				obj.dispose();
-			}
-		}
+
+//		initTiling();
+//		List<AdvancedTiledView<FloatType>> tiledOutput = null;
+//		try {
+//			tiledOutput = tryToTileAndRunNetwork(input);
+//		} catch (ExecutionException e) {
+//			e.printStackTrace();
+//		}
+//		if(tiledOutput != null) {
+//			if(model.getOutputNode().getTilingAllowed()) {
+//				output = outputTiler.run(
+//						tiledOutput, tiling, model.getOutputNode().getFinalAxesArray());
+//			} else {
+//				output = tiledOutput.stream().map(this::getSingleTile).collect(Collectors.toList());
+//			}
+//			for (AdvancedTiledView obj : tiledOutput) {
+//				obj.dispose();
+//			}
+//		}
 
 	}
 
 	private void initTiling() {
-		tiling = new DefaultTiling(nTiles, batchSize, blockMultiple, overlap);
+//		tiling = new DefaultTiling(nTiles);
 	}
 
-	private RandomAccessibleInterval<FloatType> getSingleTile(AdvancedTiledView<FloatType> tile) {
-		return tile.getProcessedTiles().get(0);
-	}
-
-	private List<AdvancedTiledView<FloatType>> tryToTileAndRunNetwork(
-			final List<RandomAccessibleInterval> normalizedInput)
+	private void tryToRunModel()
 			throws OutOfMemoryError, ExecutionException {
-		List<AdvancedTiledView<FloatType>> tiledOutput = null;
 
 		boolean isOutOfMemory = true;
 		boolean canHandleOutOfMemory = true;
 
 		while (isOutOfMemory && canHandleOutOfMemory) {
 			try {
-				tiledOutput = tileAndRunNetwork(normalizedInput);
+				runModel();
 				isOutOfMemory = false;
 			}
 			catch (final OutOfMemoryError e) {
@@ -163,34 +136,36 @@ public class PredictionExecutor implements Command, Disposable, Cancelable {
 
 		if (isOutOfMemory) throw new OutOfMemoryError(
 				"Out of memory exception occurred. Plugin exit.");
-
-		return tiledOutput;
 	}
 
-	private List tileAndRunNetwork(List<RandomAccessibleInterval> input) throws ExecutionException {
-		AxisType[] finalInputAxes = model.getInputNode().getFinalAxesArray();
-		Tiling.TilingAction[] tilingActions = model.getInputNode().getTilingActions();
-		final List<AdvancedTiledView> tiledInput;
-		if(model.getInputNode().getTilingAllowed()) {
-			tiledInput = inputTiler.run(
-					input, finalInputAxes, tiling, tilingActions);
-			nTiles = tiling.getTilesNum();
-		} else {
-			tiledInput = input.stream().map(image -> getSingleTileView(image, finalInputAxes)).collect(Collectors.toList());
-		}
-		if(tiledInput == null) return null;
-		return modelExecutor.run(tiledInput, model);
+	private void runModel() throws ExecutionException {
+		modelExecutor.run(model);
 	}
 
-	private AdvancedTiledView getSingleTileView(RandomAccessibleInterval image, AxisType[] finalInputAxes) {
-		long[] blockSize = new long[image.numDimensions()];
-		long[] overlap = new long[image.numDimensions()];
-		for (int i = 0; i < blockSize.length; i++) {
-			blockSize[i] = image.dimension(i);
-			overlap[i] = 0;
-		}
-		return new AdvancedTiledView(image, blockSize, overlap, finalInputAxes);
-	}
+//	private List tileAndRunNetwork(List<RandomAccessibleInterval> input) throws ExecutionException {
+//		AxisType[] finalInputAxes = model.getInputNode().getFinalAxesArray();
+//		Tiling.TilingAction[] tilingActions = model.getInputNode().getTilingActions();
+//		final List<AdvancedTiledView> tiledInput;
+//		if(model.getInputNode().getTilingAllowed()) {
+//			tiledInput = inputTiler.run(
+//					input, finalInputAxes, tiling, tilingActions);
+//			nTiles = tiling.getTilesNum();
+//		} else {
+//			tiledInput = input.stream().map(image -> getSingleTileView(image, finalInputAxes)).collect(Collectors.toList());
+//		}
+//		if(tiledInput == null) return null;
+//		return modelExecutor.run(tiledInput, model);
+//	}
+//
+//	private AdvancedTiledView getSingleTileView(RandomAccessibleInterval image, AxisType[] finalInputAxes) {
+//		long[] blockSize = new long[image.numDimensions()];
+//		long[] overlap = new long[image.numDimensions()];
+//		for (int i = 0; i < blockSize.length; i++) {
+//			blockSize[i] = image.dimension(i);
+//			overlap[i] = 0;
+//		}
+//		return new AdvancedTiledView(image, blockSize, overlap, finalInputAxes);
+//	}
 
 	private boolean tryHandleOutOfMemoryError() {
 		// We expect it to be an out of memory exception and
@@ -209,10 +184,10 @@ public class PredictionExecutor implements Command, Disposable, Cancelable {
 		nTiles = tiling.getTilesNum();
 		modelExecutorTask.logWarning(
 				"Out of memory exception occurred. Trying with " + nTiles +
-						" tiles, batch size " + batchSize + " and overlap " + overlap + "...");
+						" tiles, batch size " + batchSize + "...");
 
 		modelExecutorTask.startNewIteration();
-		inputTiler.addIteration();
+//		inputTiler.addIteration();
 		return true;
 	}
 
@@ -222,6 +197,10 @@ public class PredictionExecutor implements Command, Disposable, Cancelable {
 			batchSize = 1;
 			nTiles *= 2;
 		}
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
 	}
 
 	@Override
