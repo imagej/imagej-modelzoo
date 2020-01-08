@@ -33,11 +33,8 @@ import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.tensorflow.TensorFlowModel;
 import net.imagej.modelzoo.consumer.util.IOHelper;
 import org.scijava.Context;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 import org.scijava.prefs.PrefService;
 
 import java.io.File;

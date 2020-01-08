@@ -43,7 +43,6 @@ import org.scijava.command.CommandModule;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,9 +70,6 @@ public class ModelZooPredictionCommand implements Command {
 
 	@Parameter
 	private LogService log;
-
-	@Parameter
-	private UIService uiService;
 
 	@Parameter
 	private Context context;

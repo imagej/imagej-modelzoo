@@ -29,18 +29,11 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
-import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.network.DefaultModelExecutor;
 import net.imagej.modelzoo.consumer.network.ModelExecutor;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.task.Task;
-import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;
-import net.imagej.modelzoo.consumer.tiling.DefaultInputTiler;
-import net.imagej.modelzoo.consumer.tiling.DefaultOutputTiler;
-import net.imagej.modelzoo.consumer.tiling.InputTiler;
-import net.imagej.modelzoo.consumer.tiling.OutputTiler;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
-import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Cancelable;
 import org.scijava.Disposable;
 
