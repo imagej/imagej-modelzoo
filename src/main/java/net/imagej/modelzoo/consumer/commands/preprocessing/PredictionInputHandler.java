@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class PredictionInputHarvesting implements Runnable {
+public class PredictionInputHandler implements Runnable {
 
 	@Parameter
 	LogService log;
@@ -47,7 +47,18 @@ public class PredictionInputHarvesting implements Runnable {
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		success = new InputHandler().validateAndFitInputs(model);
+		success = validateAndFitInputs(model);
+	}
+
+	private boolean validateAndFitInputs(final Model model) {
+		boolean failed = false;
+		for (InputNode inputNode : model.getInputNodes()) {
+			boolean validInput = inputNode.makeDataFit();
+			if(!validInput) {
+				failed = true;
+			}
+		}
+		return !failed;
 	}
 
 	private void runInputHarvesting() throws InterruptedException, ExecutionException {

@@ -30,10 +30,6 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.commands.postprocessing.PredictionPostprocessing;
-import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionInputHarvesting;
-import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionPreprocessing;
-import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.scijava.Context;
@@ -49,7 +45,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 

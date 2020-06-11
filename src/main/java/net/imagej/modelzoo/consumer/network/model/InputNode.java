@@ -30,16 +30,12 @@
 package net.imagej.modelzoo.consumer.network.model;
 
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.task.Task;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class InputNode extends ModelZooNode {
 
@@ -62,6 +58,7 @@ public class InputNode extends ModelZooNode {
 					newsize = min;
 				} else {
 					if(step == null) {
+						attrs.put("actual", size);
 						continue;
 					}
 					if((int)step == 0) {

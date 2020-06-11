@@ -31,7 +31,7 @@ package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.consumer.commands.postprocessing.PredictionPostprocessing;
-import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionInputHarvesting;
+import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionInputHandler;
 import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionPreprocessing;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imglib2.RandomAccessibleInterval;
@@ -52,6 +52,7 @@ public class ModelZooPrediction {
 
 	private File modelFile;
 	private String modelUrl;
+	private int nTiles;
 	private RandomAccessibleInterval output;
 
 	@Parameter
@@ -59,10 +60,11 @@ public class ModelZooPrediction {
 
 	@Parameter
 	private Context context;
-	private PredictionInputHarvesting inputHarvesting;
+	private PredictionInputHandler inputHarvesting;
 
 	public ModelZooPrediction() {
-		inputHarvesting = new PredictionInputHarvesting();
+		inputHarvesting = new PredictionInputHandler();
+		nTiles = 1;
 	}
 
 	public void run() {
@@ -161,6 +163,10 @@ public class ModelZooPrediction {
 
 	public void setHarvestInputs(boolean harvestInputs) {
 		inputHarvesting.setAskUser(harvestInputs);
+	}
+
+	public void setNumberOfTiles(int nTiles) {
+		this.nTiles = nTiles;
 	}
 
 	public static void main(String...args) throws IOException, URISyntaxException {
