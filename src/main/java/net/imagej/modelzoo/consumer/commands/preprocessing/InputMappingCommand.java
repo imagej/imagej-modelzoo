@@ -43,11 +43,6 @@ public class InputMappingCommand extends DynamicCommand {
 				List<AxisType> axisTypes = parseMappingStr((String) val);
 				inputNode.setDataMapping(axisTypes);
 			}
-			for (OutputNode outputNode : model.getOutputNodes()) {
-				if(outputNode.getReference() != null) {
-					outputNode.setDataMapping(outputNode.getReference().getDataMapping());
-				}
-			}
 		}
 	}
 

@@ -80,17 +80,12 @@ public class ModelZooPredictionCommand implements Command {
 
 		try {
 
-			Model model = loadModel();
-
-			if(!model.isInitialized()) {
-				return;
-			}
-
-			if(!inputValidationAndMapping(model)) return;
-
-			preprocessing(model);
-			executePrediction(model);
-			postprocessing(model);
+			ModelZooPrediction prediction = new ModelZooPrediction();
+			context.inject(prediction);
+			prediction.setInput("input", input);
+			prediction.setModelFile(modelFile);
+			prediction.run();
+			output = prediction.getOutput();
 
 		} catch(CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
@@ -99,47 +94,6 @@ public class ModelZooPredictionCommand implements Command {
 		}
 		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
-	}
-
-	private Model loadModel() {
-		PredictionLoader loader = new PredictionLoader();
-		context.inject(loader);
-		loader.setModelFromFile(modelFile);
-		loader.setModelFromURL(modelUrl);
-		loader.run();
-		return loader.getModel();
-	}
-
-	private void preprocessing(Model model) {
-		PredictionPreprocessing preprocessing = new PredictionPreprocessing();
-		context.inject(preprocessing);
-		preprocessing.setModel(model);
-		preprocessing.run();
-	}
-
-	private void executePrediction(Model model) {
-		PredictionExecutor executor = new PredictionExecutor();
-		context.inject(executor);
-		executor.setModel(model);
-		executor.run();
-	}
-
-	private void postprocessing(Model model) {
-		PredictionPostprocessing postprocessing = new PredictionPostprocessing();
-		context.inject(postprocessing);
-		postprocessing.setModel(model);
-		postprocessing.run();
-		Map<String, Object> outputs = postprocessing.getOutputs();
-		this.output = (RandomAccessibleInterval) outputs.values().iterator().next();
-	}
-
-	private boolean inputValidationAndMapping(Model model) {
-		PredictionInputHarvesting inputHarvesting = new PredictionInputHarvesting();
-		context.inject(inputHarvesting);
-		inputHarvesting.setModel(model);
-		inputHarvesting.addInput("input", input);
-		inputHarvesting.run();
-		return inputHarvesting.getSuccess();
 	}
 
 	public static void main(String...args) throws IOException, URISyntaxException, ExecutionException, InterruptedException {

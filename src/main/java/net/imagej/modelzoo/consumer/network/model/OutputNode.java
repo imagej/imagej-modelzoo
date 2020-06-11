@@ -54,14 +54,29 @@ public class OutputNode extends ModelZooNode {
 
 		if(getReference() == null) return img;
 
+		long[] expectedSize = new long[img.numDimensions()];
 		int[] mappingIndices = getMappingIndices();
 		for (int i = 0; i < img.numDimensions(); i++) {
-			Map<String, Object> attrs = getReference().getAxis(mappingIndices[i]).getAttributes();
-			Object actual = attrs.get("actual");
-			if(actual == null) continue;
-			img = reduceDimToSize(img, i, (long)actual);
+			Long newSize = getExpectedSize(mappingIndices[i]);
+			if(newSize == null) expectedSize[i] = -1;
+			else expectedSize[i] = newSize;
+		}
+		for (int i = 0; i < expectedSize.length; i++) {
+			img = reduceDimToSize(img, i, expectedSize[i]);
 		}
 		return img;
+	}
+
+	private Long getExpectedSize(int mappingIndex) {
+		Map<String, Object> attrsIn = getReference().getAxis(mappingIndex).getAttributes();
+		Map<String, Object> attrsOut = getAxis(mappingIndex).getAttributes();
+		Object actual = attrsIn.get("actual");
+		Object offset = attrsOut.get("offset");
+		Object scale = attrsOut.get("scale");
+		Long newSize = actual != null? (Long) actual : 1;
+		if(scale != null) newSize = (long) (newSize * (float) scale);
+		if(offset != null) newSize += (int)offset;
+		return newSize;
 	}
 
 

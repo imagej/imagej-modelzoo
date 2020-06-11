@@ -5,6 +5,7 @@ import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.network.model.InputNode;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.ModelZooNode;
+import net.imagej.modelzoo.consumer.network.model.OutputNode;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
@@ -35,12 +36,14 @@ public class PredictionInputHarvesting implements Runnable {
 	private boolean success;
 
 	private final Map<String, Object> inputs = new HashMap<>();
+	private boolean askUser = true;
 
 	@Override
 	public void run() {
 		try {
 			runInputHarvesting();
 			runInputMapping();
+			runOutputMapping();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
@@ -50,12 +53,23 @@ public class PredictionInputHarvesting implements Runnable {
 	private void runInputHarvesting() throws InterruptedException, ExecutionException {
 		Map inputMap = new HashMap(inputs);
 		inputMap.put("model", model);
-		InputHarvestingCommand harvesting = new InputHarvestingCommand();
-		context.inject(harvesting);
-		for (InputNode inputNode : model.getInputNodes()) {
-			harvesting.addInput(inputNode.getName(), inputNode.getDataType());
+		if(askUser) {
+			InputHarvestingCommand harvesting = new InputHarvestingCommand();
+			context.inject(harvesting);
+			for (InputNode inputNode : model.getInputNodes()) {
+				harvesting.addInput(inputNode.getName(), inputNode.getDataType());
+			}
+			//TODO check what is actually supposed to happen here
+			commandService.moduleService().run(harvesting, true, inputMap).get();
+		} else {
+			if(model != null) {
+				for (InputNode inputNode : model.getInputNodes()) {
+					Object data = inputMap.get(inputNode.getName());
+					if(data == null) continue;
+					inputNode.setData(data);
+				}
+			}
 		}
-		commandService.moduleService().run(harvesting, true, inputMap).get();
 	}
 
 	private void runInputMapping() throws InterruptedException, ExecutionException {
@@ -71,6 +85,14 @@ public class PredictionInputHarvesting implements Runnable {
 		}
 		if(mappingCommandNeeded) {
 			commandService.moduleService().run(mapping, true, "model", model).get();
+		}
+	}
+
+	private void runOutputMapping() {
+		for (OutputNode outputNode : model.getOutputNodes()) {
+			if(outputNode.getReference() != null) {
+				outputNode.setDataMapping(outputNode.getReference().getDataMapping());
+			}
 		}
 	}
 
@@ -119,5 +141,9 @@ public class PredictionInputHarvesting implements Runnable {
 
 	public void addInput(String name, Object value) {
 		inputs.put(name, value);
+	}
+
+	public void setAskUser(boolean askUser) {
+		this.askUser = askUser;
 	}
 }

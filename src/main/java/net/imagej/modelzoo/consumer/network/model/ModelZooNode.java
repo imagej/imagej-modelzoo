@@ -7,7 +7,6 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.util.ArrayUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,19 +16,19 @@ public class ModelZooNode<T extends RealType<T>> {
 	private T dataType;
 	private Object data;
 
-	protected final List<ModelZooAxis> node = new ArrayList<>();
+	protected final List<ModelZooAxis> axes = new ArrayList<>();
 	private List<AxisType> mapping;
 
 	public void clearAxes() {
-		node.clear();
+		axes.clear();
 	}
 
 	public void addAxis(ModelZooAxis axis) {
-		node.add(axis);
+		axes.add(axis);
 	}
 
 	public AxisType[] getMapping() {
-		return node.stream().map(ModelZooAxis::getType).toArray(AxisType[]::new);
+		return axes.stream().map(ModelZooAxis::getType).toArray(AxisType[]::new);
 	}
 
 	public void printMapping() {
@@ -47,7 +46,7 @@ public class ModelZooNode<T extends RealType<T>> {
 //			}
 //			logFunction.accept("   datasetAxes:" + Arrays.toString(axes));
 //		}
-		logFunction.accept("   nodeAxes:" + node.toString());
+		logFunction.accept("   nodeAxes:" + axes.toString());
 //		logFunction.accept("   mapping:" + finalMapping.toString());
 	}
 
@@ -76,15 +75,15 @@ public class ModelZooNode<T extends RealType<T>> {
 	}
 
 	public AxisType[] getAxesArray() {
-		AxisType[] res = new AxisType[node.size()];
+		AxisType[] res = new AxisType[axes.size()];
 		for (int i = 0; i < res.length; i++) {
-			res[i] = node.get(i).getType();
+			res[i] = axes.get(i).getType();
 		}
 		return res;
 	}
 
 	public ModelZooAxis getAxis(int index) {
-		return node.get(index);
+		return axes.get(index);
 	}
 
 	public void setDataMapping(List<AxisType> axisTypes) {
@@ -96,14 +95,14 @@ public class ModelZooNode<T extends RealType<T>> {
 	}
 
 	public int[] getMappingIndices() {
-		int[] res = new int[node.size()];
+		int[] res = new int[axes.size()];
 
 		int i = 0;
 		// set mapping for axes which exist in the input image
 		for (; mapping != null && i < mapping.size(); i++) {
 			AxisType axis = mapping.get(i);
-			for (int j = 0; j < node.size(); j++) {
-				if(node.get(j).getType().equals(axis)) {
+			for (int j = 0; j < axes.size(); j++) {
+				if(axes.get(j).getType().equals(axis)) {
 					res[i] = j;
 				}
 			}

@@ -6,7 +6,6 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.real.FloatType;
 import org.junit.Test;
 import org.scijava.module.Module;

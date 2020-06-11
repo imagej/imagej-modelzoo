@@ -108,13 +108,13 @@ public class YamlReader {
 		String reference = (String) shape.get("reference_input");
 		List scale = (List) shape.get("scale");
 		List offset = (List) shape.get("offset");
-		List halo = (List) shape.get("halo");
+		List halo = (List) data.get("halo");
 		node.setReference(getInput(inputNodes, reference));
 		node.clearAxes();
 		for (int i = 0; i < axes.length(); i++) {
-			int scaleVal = (int) scale.get(i);
-			int offsetVal = (int) offset.get(i);
-			int haloVal = (int) halo.get(i);
+			float scaleVal = ((Number)scale.get(i)).floatValue();
+			int offsetVal = ((Number)offset.get(i)).intValue();
+			int haloVal = ((Number)halo.get(i)).intValue();
 			AxisType axisType = getAxisType(axes.substring(i, i + 1));
 			ModelZooAxis axis = new DefaultModelZooAxis(axisType);
 			axis.getAttributes().put("scale", scaleVal);

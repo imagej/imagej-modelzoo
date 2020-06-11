@@ -33,8 +33,6 @@ import net.imagej.modelzoo.consumer.network.model.Model;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
 
-import java.util.concurrent.ExecutionException;
-
 public class PredictionPreprocessing implements Runnable {
 
 	private Model model;
@@ -47,7 +45,7 @@ public class PredictionPreprocessing implements Runnable {
 		//TODO
 		// (1) get preprocessing steps from model config
 		// (2) run each preprocessing command with the input according to the config
-		// (4) set model node data from preprocessed outputs
+		// (3) set model node data from preprocessed outputs
 //		try {
 
 //			commandService.run(FitInputDataCommand.class, false, "model", model).get();
