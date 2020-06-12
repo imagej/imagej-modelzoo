@@ -1,0 +1,39 @@
+name: model name
+description: description
+cite:
+  - {text: 'Publication name, authors, yournal', doi: null}
+authors: [author1, author2]
+documentation: DOCUMENTATION_LINK
+tags: [tag1, tag2]
+license: bsd
+format_version: 0.1.0
+language: java
+framework: tensorflow
+source: source
+inputs:
+  - name: input
+    axes: XYZC
+    data_type: float
+    data_range: [-inf, inf]
+    halo: [16, 16, 16, 1]
+    shape:
+      min: [4, 4, 4, 1]
+      step: [16, 16, 16, 0]
+outputs:
+  - name: output
+    shape:
+      reference_input: input
+      scale: [2.0, 2.0, 2.0, 1.0]
+      offset: [0, 0, 0, 3]
+training:
+  source: trainingSource
+  kwargs: {arg1: 1}
+prediction:
+  weights: {source: ./variables/variables}
+  preprocess:
+    spec: MyClass::preprocessing
+    kwargs: {mean: 100}
+  postprocess:
+    spec: MyClass::postprocessing
+    kwargs: {mean: 100}
+  dependencies: ./dependencies.yaml
