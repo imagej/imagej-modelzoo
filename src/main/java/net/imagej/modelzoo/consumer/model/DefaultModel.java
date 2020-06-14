@@ -27,21 +27,49 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imagej.modelzoo.consumer.util.IOHelper;
+import org.scijava.io.location.Location;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class DefaultModel implements Model {
+
+	protected final List<InputImageNode<?>> inputNodes = new ArrayList<>();
+	protected final List<OutputImageNode<?, ?>> outputNodes = new ArrayList<>();
+
+	protected DefaultModel() {
+	}
+
+	protected abstract boolean loadModel(Location source, String modelName);
 
 	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+	public boolean loadModel(final String pathOrURL, final String modelName)
+			throws FileNotFoundException {
+
+		final Location source = IOHelper.loadFileOrURL(pathOrURL);
+		return loadModel(source, modelName);
+
+	}
+
+	@Override
+	public List<InputImageNode<?>> getInputNodes() {
+		return inputNodes;
+	}
+
+	@Override
+	public List<OutputImageNode<?, ?>> getOutputNodes() {
+		return outputNodes;
+	}
+
+	@Override
+	public abstract boolean isInitialized();
+
+	public void clear() {
+		inputNodes.clear();
+		outputNodes.clear();
 	}
 }

@@ -27,21 +27,35 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.model.tensorflow;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
+import org.tensorflow.Tensor;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+import java.util.List;
 
-	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+class TensorFlowRunner {
+
+	/*
+	 * runs graph on multiple input / output tensors
+	 *
+	 */
+	static List<Tensor<?>> executeGraph(final SavedModelBundle model,
+	                                    final List<Tensor> inputs, final List<String> inputNames,
+	                                    final List<String> outputNames) throws IllegalArgumentException {
+
+//		System.out.println("input operation: " + opName(inputTensorInfo));
+//		System.out.println("output operation: " + opName(outputTensorInfo));
+
+		Session.Runner runner = model.session().runner();
+		for (int i = 0; i < inputs.size(); i++) {
+			runner.feed(inputNames.get(i), inputs.get(i));
+		}
+		for (String outputName : outputNames) {
+			runner.fetch(outputName);
+		}
+		return runner.run();
 	}
+
 }

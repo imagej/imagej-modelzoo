@@ -30,6 +30,7 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.ImageJ;
+import net.imagej.modelzoo.consumer.SingleOutputPrediction;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.scijava.Context;
@@ -51,14 +52,24 @@ import java.util.concurrent.ExecutionException;
 @Plugin(type = Command.class)
 public class ModelZooPredictionCommand implements Command {
 
-	@Parameter
-	private Img input;
-
-	@Parameter(label = "Import model (.zip)", required = false)
+	@Parameter(label = "Import model (.zip) from file", required = false)
 	private File modelFile;
 
 	@Parameter(label = "Import model (.zip) from URL", required = false)
 	private String modelUrl;
+
+	@Parameter
+	private Img input;
+
+	@Parameter(label = "Mapping (subset of XYZCT)")
+	private String mapping = "XYZTC";
+
+	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
+	private int nTiles = 8;
+
+	@Parameter(label = "Batch size")
+	private int batchSize = 10;
+
 
 	@Parameter(type = ItemIO.OUTPUT)
 	private RandomAccessibleInterval output;
@@ -75,23 +86,25 @@ public class ModelZooPredictionCommand implements Command {
 
 		try {
 
-			ModelZooPrediction prediction = new ModelZooPrediction();
-			context.inject(prediction);
-			prediction.setInput("input", input);
+			SingleOutputPrediction prediction = new SingleOutputPrediction(context);
+			prediction.setInput("input", input, mapping);
 			prediction.setModelFile(modelFile);
+			prediction.setModelUrl(modelUrl);
+			prediction.setNumberOfTiles(nTiles);
+			prediction.setBatchSize(batchSize);
 			prediction.run();
 			output = prediction.getOutput();
 
-		} catch(CancellationException e) {
+		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
-		} catch(OutOfMemoryError e) {
+		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 		}
 		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
 	}
 
-	public static void main(String...args) throws IOException, URISyntaxException, ExecutionException, InterruptedException {
+	public static void main(String... args) throws IOException, URISyntaxException, ExecutionException, InterruptedException {
 		ImageJ ij = new ImageJ();
 		ij.launch();
 

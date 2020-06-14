@@ -27,21 +27,39 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.preprocessing;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imagej.modelzoo.consumer.model.Model;
+import org.scijava.Context;
+import org.scijava.command.CommandService;
+import org.scijava.plugin.Parameter;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+public class PredictionPreprocessing implements Runnable {
+
+	private Model model;
+
+	@Parameter
+	CommandService commandService;
+
+	public PredictionPreprocessing(Context context) {
+		context.inject(this);
+	}
 
 	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+	public void run() {
+		//TODO
+		// (1) get preprocessing steps from model config
+		// (2) run each preprocessing command with the input according to the config
+		// (3) set model node data from preprocessed outputs
+//		try {
+
+//			commandService.run(FitInputDataCommand.class, false, "model", model).get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			e.printStackTrace();
+//		}
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
 	}
 }

@@ -27,21 +27,83 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.tiling.Tiling;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+public class ModelZooAxis {
 
-	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+	private Integer min;
+	private Integer halo;
+	private Double scale;
+	private Integer offset;
+	private Tiling.TilingAction tiling;
+	private Long actual;
+	private AxisType type;
+	private Integer step;
+
+	public Integer getMin() {
+		return min;
+	}
+
+	public Integer getHalo() {
+		return halo;
+	}
+
+	public Double getScale() {
+		return scale;
+	}
+
+	public Integer getOffset() {
+		return offset;
+	}
+
+	public Tiling.TilingAction getTiling() {
+		return tiling;
+	}
+
+	public Long getActual() {
+		return actual;
+	}
+
+	public ModelZooAxis(AxisType axisType) {
+		type = axisType;
+	}
+
+	public AxisType getType() {
+		return type;
+	}
+
+	public void setMin(Integer min) {
+		this.min = min;
+	}
+
+	public void setHalo(Integer halo) {
+		this.halo = halo;
+	}
+
+	public void setScale(Double scale) {
+		this.scale = scale;
+	}
+
+	public void setOffset(Integer offset) {
+		this.offset = offset;
+	}
+
+	public void setTiling(Tiling.TilingAction tiling) {
+		this.tiling = tiling;
+	}
+
+	public void setActual(Long actual) {
+		this.actual = actual;
+	}
+
+	public Integer getStep() {
+		return step;
+	}
+
+	public void setStep(Integer step) {
+		this.step = step;
 	}
 }

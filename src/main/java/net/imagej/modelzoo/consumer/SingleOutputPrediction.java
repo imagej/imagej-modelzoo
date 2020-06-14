@@ -27,41 +27,59 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.tiling;
+package net.imagej.modelzoo.consumer;
 
+import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.img.Img;
+import org.scijava.Context;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 
-public interface Tiling<T extends RealType<T>> {
+public class SingleOutputPrediction extends ModelZooPrediction {
 
-	enum TilingAction {
-		NO_TILING, // e.g. Channel
-		TILE_WITH_PADDING, // e.g. X,Y,Z
-		TILE_WITHOUT_PADDING // e.g. TIME
+	private RandomAccessibleInterval output;
+
+	public SingleOutputPrediction(Context context) {
+		super(context);
 	}
 
-	void setNumberOfTiles(int nTiles);
+	public Map<String, Object> run() {
+		Map<String, Object> res = super.run();
+		if (res == null) return null;
+		output = (RandomAccessibleInterval) res.values().iterator().next();
+		return res;
+	}
 
-	void setBatchSize(int batchSize);
+	public RandomAccessibleInterval getOutput() {
+		return output;
+	}
 
-	void init();
+	public static void main(String... args) throws IOException, URISyntaxException {
+		ImageJ ij = new ImageJ();
+		ij.launch();
 
-	int getDoneTileCount();
+		Path img = Paths.get(SingleOutputPrediction.class.getClassLoader()
+				.getResource("denoise2D/input.tif").toURI());
 
-	void setResults(List<RandomAccessibleInterval<T>> results);
+		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
 
-	RandomAccessibleInterval<T> getResult();
+		ij.ui().show(input);
 
-	void resetTileCount();
+		File model = new File(SingleOutputPrediction.class.getClassLoader()
+				.getResource("denoise2D/model.zip").toURI());
 
-	void upTileCount();
+		SingleOutputPrediction prediction = new SingleOutputPrediction(ij.context());
+		prediction.setInput("input", input, "XY");
+		prediction.setModelFile(model);
+		prediction.run();
+		RandomAccessibleInterval output = prediction.getOutput();
 
-	void assignCurrentTile();
-
-	int getTilesNum();
-
-	int getBatchSize();
-
+		ij.ui().show(output);
+	}
 }

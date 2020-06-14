@@ -46,10 +46,10 @@ public class ModelSpecification {
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";
 
-	final static String modelFileName = "model.yaml";
 	final static String dependenciesFileName = "dependencies.yaml";
 	final static String modelZooSpecificationVersion = "0.1.0";
 
+	private String modelFileName = "model.yaml";
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
 	private String framework = "tensorflow";
@@ -58,17 +58,17 @@ public class ModelSpecification {
 	private Map<String, Object> trainingKwargs;
 	private String name;
 	private String description;
-	private List<CitationSpecification> citations = new ArrayList<>();
+	private final List<CitationSpecification> citations = new ArrayList<>();
 	private List<String> authors;
 	private String documentation;
 	private List<String> tags;
 	private String license;
 	private String source;
-	private List<InputNodeSpecification> inputNodes = new ArrayList<>();
-	private List<OutputNodeSpecification> outputNodes = new ArrayList<>();
+	private final List<InputNodeSpecification> inputNodes = new ArrayList<>();
+	private final List<OutputNodeSpecification> outputNodes = new ArrayList<>();
 	private String trainingSource;
-	private TransformationSpecification predictionPreprocessing;
-	private TransformationSpecification predictionPostprocessing;
+	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
+	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
 
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -79,17 +79,17 @@ public class ModelSpecification {
 		}
 	}
 
-	public boolean readFromDirectory(File directory) {
+	public boolean readFromDirectory(File directory) throws IOException {
 		return read(new File(directory, modelFileName));
 	}
 
+	public void read(String modelSpecificationFile) throws IOException {
+		read(new File(modelSpecificationFile));
+	}
 
-	public boolean read(File modelSpecificationFile) {
-		try (InputStream stream = new FileInputStream(modelSpecificationFile)){
+	public boolean read(File modelSpecificationFile) throws IOException {
+		try (InputStream stream = new FileInputStream(modelSpecificationFile)) {
 			return read(stream);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
 		}
 	}
 
@@ -109,25 +109,26 @@ public class ModelSpecification {
 		setName((String) obj.get(idName));
 		setDescription((String) obj.get(idDescription));
 		List<Map> citations = (List<Map>) obj.get(idCite);
-		for (Map citation : citations) {
-			addCitation(new CitationSpecification().fromMap(citation));
+		if (citations != null) {
+			for (Map citation : citations) {
+				addCitation(new CitationSpecification().fromMap(citation));
+			}
 		}
 		Object authors = obj.get(idAuthors);
-		if(authors != null) {
-			if(List.class.isAssignableFrom(authors.getClass())) {
-				setAuthors(((List<String>)authors));
-			}
-			else if(String.class.isAssignableFrom(authors.getClass())) {
-				setAuthors(Arrays.asList((String)authors));
+		if (authors != null) {
+			if (List.class.isAssignableFrom(authors.getClass())) {
+				setAuthors(((List<String>) authors));
+			} else if (String.class.isAssignableFrom(authors.getClass())) {
+				setAuthors(Arrays.asList((String) authors));
 			}
 		}
 		setDocumentation((String) obj.get(idDocumentation));
 		setTags((List<String>) obj.get(idTags));
 		setLicense((String) obj.get(idLicense));
 		setFormatVersion((String) obj.get(idFormatVersion));
-		setLanguage((String)obj.get(idLanguage));
-		setFramework((String)obj.get(idFramework));
-		setSource((String)obj.get(idSource));
+		setLanguage((String) obj.get(idLanguage));
+		setFramework((String) obj.get(idFramework));
+		setSource((String) obj.get(idSource));
 	}
 
 	private void readInputsOutputs(Map<String, Object> obj) {
@@ -143,7 +144,7 @@ public class ModelSpecification {
 
 	private void readTraining(Map<String, Object> obj) {
 		Map<String, Object> training = (Map<String, Object>) obj.get(idTraining);
-		if(training != null) {
+		if (training != null) {
 			setTrainingSource((String) training.get(idTrainingSource));
 			setTrainingKwargs((Map<String, Object>) training.get(idTrainingKwargs));
 		}
@@ -151,21 +152,29 @@ public class ModelSpecification {
 
 	private void readPrediction(Map<String, Object> obj) {
 		Map<String, Object> prediction = (Map<String, Object>) obj.get(idPrediction);
-		if(prediction != null) {
-			Map<String, Object> preprocess = (Map<String, Object>) prediction.get(idPredictionPreprocess);
-			if(preprocess != null) {
-				setPredictionPreprocessing(new TransformationSpecification().fromMap(preprocess));
+		if (prediction != null) {
+			List<Map<String, Object>> preprocess = (List<Map<String, Object>>) prediction.get(idPredictionPreprocess);
+			if (preprocess != null) {
+				for (Map<String, Object> transformation : preprocess) {
+					addPredictionPreprocessing(new TransformationSpecification().fromMap(transformation));
+				}
 			}
-			Map<String, Object> postprocess = (Map<String, Object>) prediction.get(idPredictionPostprocess);
-			if(postprocess != null) {
-				setPredictionPostprocessing(new TransformationSpecification().fromMap(postprocess));
+			List<Map<String, Object>> postprocess = (List<Map<String, Object>>) prediction.get(idPredictionPostprocess);
+			if (postprocess != null) {
+				for (Map<String, Object> transformation : postprocess) {
+					addPredictionPostprocessing(new TransformationSpecification().fromMap(transformation));
+				}
 			}
 			setPredictionWeightsSource((String) prediction.get(idPredictionWeightsSource));
 			setPredictionDependencies((String) prediction.get(idPredictionDependencies));
 		}
 	}
 
-	public void write(File targetDirectory) {
+	public void write(String targetDirectory) throws IOException {
+		write(new File(targetDirectory));
+	}
+
+	public void write(File targetDirectory) throws IOException {
 		writeDependenciesFile(targetDirectory);
 		Map<String, Object> data = new LinkedHashMap<>();
 		writeMeta(data);
@@ -173,10 +182,8 @@ public class ModelSpecification {
 		writeTraining(data);
 		writePrediction(data);
 		Yaml yaml = new Yaml();
-		try(FileWriter writer = new FileWriter(new File(targetDirectory, modelFileName))) {
+		try (FileWriter writer = new FileWriter(new File(targetDirectory, modelFileName))) {
 			yaml.dump(data, writer);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -185,16 +192,34 @@ public class ModelSpecification {
 		Map<String, Object> weights = new LinkedHashMap<>();
 		weights.put(idPredictionWeightsSource, predictionWeightsSource);
 		prediction.put(idPredictionWeights, weights);
-		if(predictionPreprocessing != null) prediction.put(idPredictionPreprocess, predictionPreprocessing.asMap());
-		if(predictionPostprocessing != null) prediction.put(idPredictionPostprocess, predictionPostprocessing.asMap());
+		if (predictionPreprocessing != null)
+			prediction.put(idPredictionPreprocess, buildTransformationList(predictionPreprocessing));
+		if (predictionPostprocessing != null)
+			prediction.put(idPredictionPostprocess, buildTransformationList(predictionPostprocessing));
 		prediction.put(idPredictionDependencies, predictionDependencies);
 		data.put(idPrediction, prediction);
+	}
+
+	private List<Map<String, Object>> buildTransformationList(List<TransformationSpecification> transformations) {
+		List<Map<String, Object>> res = new ArrayList<>();
+		for (TransformationSpecification transformation : transformations) {
+			res.add(transformation.asMap());
+		}
+		return res;
+	}
+
+	public void addPredictionPreprocessing(TransformationSpecification transformationSpecification) {
+		predictionPreprocessing.add(transformationSpecification);
+	}
+
+	public void addPredictionPostprocessing(TransformationSpecification transformationSpecification) {
+		predictionPostprocessing.add(transformationSpecification);
 	}
 
 	private void writeTraining(Map<String, Object> data) {
 		Map<String, Object> training = new LinkedHashMap<>();
 		training.put(idTrainingSource, trainingSource);
-		if(trainingKwargs != null) training.put(idTrainingKwargs, trainingKwargs);
+		if (trainingKwargs != null) training.put(idTrainingKwargs, trainingKwargs);
 		data.put(idTraining, training);
 	}
 
@@ -246,7 +271,7 @@ public class ModelSpecification {
 		Map<String, Object> data = new LinkedHashMap<>();
 		List<String> dependencies = new ArrayList<>();
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		for(URL url: ((URLClassLoader)cl).getURLs()){
+		for (URL url : ((URLClassLoader) cl).getURLs()) {
 			dependencies.add(url.getPath());
 		}
 		data.put("classPath", dependencies);
@@ -320,20 +345,16 @@ public class ModelSpecification {
 		this.trainingKwargs = trainingKwargs;
 	}
 
-	public void setPredictionPreprocessing(TransformationSpecification preprocessing) {
-		this.predictionPreprocessing = preprocessing;
-	}
-
-	public void setPredictionPostprocessing(TransformationSpecification postprocessing) {
-		this.predictionPostprocessing = postprocessing;
-	}
-
 	private void setPredictionWeightsSource(String weightsSource) {
 		this.predictionWeightsSource = weightsSource;
 	}
 
 	private void setPredictionDependencies(String predictionDependencies) {
 		this.predictionDependencies = predictionDependencies;
+	}
+
+	private void setModelFileName(String modelFileName) {
+		this.modelFileName = modelFileName;
 	}
 
 	private static InputStream extractFile(File zipFile, String fileName) throws IOException {
@@ -409,11 +430,15 @@ public class ModelSpecification {
 		return trainingSource;
 	}
 
-	public TransformationSpecification getPredictionPreprocessing() {
+	public List<TransformationSpecification> getPredictionPreprocessing() {
 		return predictionPreprocessing;
 	}
 
-	public TransformationSpecification getPredictionPostprocessing() {
+	public List<TransformationSpecification> getPredictionPostprocessing() {
 		return predictionPostprocessing;
+	}
+
+	public String getModelFileName() {
+		return modelFileName;
 	}
 }

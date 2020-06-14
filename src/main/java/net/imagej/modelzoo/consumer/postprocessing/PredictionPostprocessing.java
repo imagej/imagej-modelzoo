@@ -27,21 +27,44 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.postprocessing;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import org.scijava.Context;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+import java.util.HashMap;
+import java.util.Map;
+
+public class PredictionPostprocessing implements Runnable {
+
+	private Model model;
+
+	private final Map<String, Object> outputs = new HashMap<>();
+
+	public PredictionPostprocessing(Context context) {
+		context.inject(this);
+	}
 
 	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+	public void run() {
+		//TODO
+		// (1) get postprocessing steps from model config
+		// (2) run each postprocessing command with the input according to the config
+		// (3) collect outputs of postprocessing
+		model.getOutputNodes().forEach(OutputImageNode::makeDataFit);
+		model.getOutputNodes().forEach(this::addOutput);
+	}
+
+	private void addOutput(OutputImageNode node) {
+		outputs.put(node.getName(), node.getData());
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
+
+	public Map<String, Object> getOutputs() {
+		return outputs;
 	}
 }

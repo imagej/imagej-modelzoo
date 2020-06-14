@@ -50,8 +50,7 @@ import java.time.format.DateTimeFormatter;
 public class IOHelper {
 
 	public static Location loadFileOrURL(final String path)
-		throws FileNotFoundException
-	{
+			throws FileNotFoundException {
 		if (path == null) {
 			throw new FileNotFoundException("No path specified");
 		}
@@ -60,12 +59,10 @@ public class IOHelper {
 		if (!file.exists()) {
 			try {
 				source = new HTTPLocation(path);
-			}
-			catch (MalformedURLException | URISyntaxException exc) {
+			} catch (MalformedURLException | URISyntaxException exc) {
 				throw new FileNotFoundException("Could not find file or URL: " + path);
 			}
-		}
-		else {
+		} else {
 			source = new FileLocation(file);
 		}
 		return source;
@@ -82,7 +79,7 @@ public class IOHelper {
 			existingUrl = con.getResponseCode() == HttpURLConnection.HTTP_OK;
 		} catch (IOException | IllegalArgumentException e) {
 		} finally {
-			if(con != null){
+			if (con != null) {
 				con.disconnect();
 			}
 		}
@@ -101,8 +98,8 @@ public class IOHelper {
 	public static String getUrlCacheName(Class<? extends ModelZooPredictionCommand> parentClass, String modelUrl) throws IOException {
 		URL url = new URL(modelUrl);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setReadTimeout(1000*10*1);
-		connection.setConnectTimeout(1000*10*1);
+		connection.setReadTimeout(1000 * 10 * 1);
+		connection.setConnectTimeout(1000 * 10 * 1);
 		Long dateTime = connection.getLastModified();
 		connection.disconnect();
 		ZonedDateTime urlLastModified = ZonedDateTime.ofInstant(Instant.ofEpochMilli(dateTime), ZoneId.of("GMT"));

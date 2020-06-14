@@ -44,10 +44,10 @@ public class CitationSpecification {
 
 	@Override
 	public boolean equals(Object o) {
-		if(CitationSpecification.class.isAssignableFrom(o.getClass())) {
+		if (CitationSpecification.class.isAssignableFrom(o.getClass())) {
 			CitationSpecification other = (CitationSpecification) o;
 			return Objects.equals(this.getCitationText(), other.getCitationText())
-					&& Objects.equals(this.getDoiText(),other.getDoiText());
+					&& Objects.equals(this.getDoiText(), other.getDoiText());
 		}
 		return super.equals(o);
 	}

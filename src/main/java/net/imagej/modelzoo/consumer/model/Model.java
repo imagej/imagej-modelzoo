@@ -27,21 +27,29 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.converter;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imglib2.converter.Converter;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import org.scijava.Disposable;
 
-/**
- * @author Stephan Saalfeld
- * @author Stephan Preibisch
- */
-public class RealIntConverter<R extends RealType<R>> implements
-		Converter<R, IntType> {
+import java.io.FileNotFoundException;
+import java.util.List;
 
-	@Override
-	public void convert(final R input, final IntType output) {
-		output.set((int) input.getRealFloat());
+public interface Model extends Disposable {
+
+	boolean loadModel(String pathOrURL, String modelName)
+			throws FileNotFoundException;
+
+	List<InputImageNode<?>> getInputNodes();
+
+	List<OutputImageNode<?, ?>> getOutputNodes();
+
+	boolean isInitialized();
+
+	default void loadLibrary() {
 	}
+
+	boolean libraryLoaded();
+
+	void predict();
+
 }
