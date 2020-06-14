@@ -54,7 +54,7 @@ public class InputMappingHandler {
 		boolean failed = false;
 		for (InputImageNode inputNode : model.getInputNodes()) {
 			boolean validInput = inputNode.makeDataFit();
-			if(!validInput) {
+			if (!validInput) {
 				failed = true;
 			}
 		}
@@ -62,12 +62,12 @@ public class InputMappingHandler {
 	}
 
 	private void runInputHarvesting() {
-		if(model == null) return;
+		if (model == null) return;
 		Map<String, Object> inputMap = new HashMap<>(inputs);
 		inputMap.put("model", model);
 		for (InputImageNode<?> inputNode : model.getInputNodes()) {
 			RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
-			if(data == null) continue;
+			if (data == null) continue;
 			inputNode.setData(data);
 		}
 	}
@@ -79,18 +79,18 @@ public class InputMappingHandler {
 		boolean mappingCommandNeeded = false;
 		for (InputImageNode node : model.getInputNodes()) {
 			// TODO only do this for nodes of type image
-			if(handleMapping(mapping, node)) {
+			if (handleMapping(mapping, node)) {
 				mappingCommandNeeded = true;
 			}
 		}
-		if(mappingCommandNeeded) {
+		if (mappingCommandNeeded) {
 			commandService.moduleService().run(mapping, true, "model", model).get();
 		}
 	}
 
 	private void runOutputMapping() {
 		for (OutputImageNode<?, ?> outputNode : model.getOutputNodes()) {
-			if(outputNode.getReference() != null) {
+			if (outputNode.getReference() != null) {
 				outputNode.setDataMapping(outputNode.getReference().getDataMapping());
 			}
 		}
@@ -99,8 +99,8 @@ public class InputMappingHandler {
 	private boolean handleMapping(InputMappingCommand mappingCommand, ImageNode node) {
 		try {
 			RandomAccessibleInterval rai = node.getData();
-			if(rai.numDimensions() > 2) {
-				if(mapping.containsKey(node.getName())) {
+			if (rai.numDimensions() > 2) {
+				if (mapping.containsKey(node.getName())) {
 					node.setDataMapping(InputMappingCommand.parseMappingStr(mapping.get(node.getName())));
 					return false;
 				}
@@ -110,7 +110,8 @@ public class InputMappingHandler {
 				node.setDataMapping(get2DMapping());
 				return false;
 			}
-		} catch (ClassCastException ignored) {}
+		} catch (ClassCastException ignored) {
+		}
 		return false;
 	}
 

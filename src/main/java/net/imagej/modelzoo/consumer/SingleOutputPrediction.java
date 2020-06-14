@@ -51,7 +51,7 @@ public class SingleOutputPrediction extends ModelZooPrediction {
 
 	public Map<String, Object> run() {
 		Map<String, Object> res = super.run();
-		if(res == null) return null;
+		if (res == null) return null;
 		output = (RandomAccessibleInterval) res.values().iterator().next();
 		return res;
 	}
@@ -60,7 +60,7 @@ public class SingleOutputPrediction extends ModelZooPrediction {
 		return output;
 	}
 
-	public static void main(String...args) throws IOException, URISyntaxException {
+	public static void main(String... args) throws IOException, URISyntaxException {
 		ImageJ ij = new ImageJ();
 		ij.launch();
 

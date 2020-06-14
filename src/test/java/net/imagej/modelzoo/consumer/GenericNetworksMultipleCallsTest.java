@@ -28,26 +28,26 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(4, 5, 6);
 
 //		for (int i = 0; i < 3; i++) {
-			for(String networkSrc : networks) {
-				URL networkUrl = this.getClass().getResource(networkSrc);
-				CommandModule module = ij.command().run(ModelZooPredictionCommand.class,
-						false,
-						"input", input,
-						"mapping", "XYZ",
-						"modelFile", new File(networkUrl.getPath())).get();
-				final RandomAccessibleInterval output = (RandomAccessibleInterval) module.getOutput("output");
-				assertNotNull(output);
-				printDim("input", input);
-				printDim("output", output);
-				for (int j = 0; j < input.numDimensions(); j++) {
-					assertEquals(input.dimension(j), output.dimension(j));
-				}
+		for (String networkSrc : networks) {
+			URL networkUrl = this.getClass().getResource(networkSrc);
+			CommandModule module = ij.command().run(ModelZooPredictionCommand.class,
+					false,
+					"input", input,
+					"mapping", "XYZ",
+					"modelFile", new File(networkUrl.getPath())).get();
+			final RandomAccessibleInterval output = (RandomAccessibleInterval) module.getOutput("output");
+			assertNotNull(output);
+			printDim("input", input);
+			printDim("output", output);
+			for (int j = 0; j < input.numDimensions(); j++) {
+				assertEquals(input.dimension(j), output.dimension(j));
 			}
+		}
 //		}
 
 	}
 
-	public static void main(String...args) throws ExecutionException, InterruptedException {
+	public static void main(String... args) throws ExecutionException, InterruptedException {
 		new GenericNetworksMultipleCallsTest().testMultipleGenericNetworks();
 	}
 

@@ -15,14 +15,14 @@ public class InputNodeSpecification extends NodeSpecification {
 	@Override
 	public Map<String, Object> getShape() {
 		Map<String, Object> shape = new LinkedHashMap<>();
-		if(shapeMin != null) shape.put(idNodeShapeMin, shapeMin);
-		if(shapeStep != null) shape.put(idNodeShapeStep, shapeStep);
+		if (shapeMin != null) shape.put(idNodeShapeMin, shapeMin);
+		if (shapeStep != null) shape.put(idNodeShapeStep, shapeStep);
 		return shape;
 	}
 
 	@Override
 	protected void setShape(Map<String, Object> data) {
-		if(data == null) return;
+		if (data == null) return;
 		setShapeMin((List<Integer>) data.get(idNodeShapeMin));
 		setShapeStep((List<Integer>) data.get(idNodeShapeStep));
 	}

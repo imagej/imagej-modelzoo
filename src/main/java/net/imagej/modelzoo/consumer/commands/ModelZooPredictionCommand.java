@@ -95,16 +95,16 @@ public class ModelZooPredictionCommand implements Command {
 			prediction.run();
 			output = prediction.getOutput();
 
-		} catch(CancellationException e) {
+		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
-		} catch(OutOfMemoryError e) {
+		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 		}
 		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
 	}
 
-	public static void main(String...args) throws IOException, URISyntaxException, ExecutionException, InterruptedException {
+	public static void main(String... args) throws IOException, URISyntaxException, ExecutionException, InterruptedException {
 		ImageJ ij = new ImageJ();
 		ij.launch();
 

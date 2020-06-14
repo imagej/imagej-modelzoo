@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Plugin(type = Command.class, name="input mapping")
+@Plugin(type = Command.class, name = "input mapping")
 class InputMappingCommand extends DynamicCommand {
 
 	@Parameter
@@ -33,10 +33,10 @@ class InputMappingCommand extends DynamicCommand {
 
 	@Override
 	public void run() {
-		if(model != null) {
+		if (model != null) {
 			for (InputImageNode inputNode : model.getInputNodes()) {
 				Object val = getInput(inputNode.getName());
-				if(val == null) continue;
+				if (val == null) continue;
 				System.out.println(inputNode.getName() + " mapping: " + val);
 				List<AxisType> axisTypes = parseMappingStr((String) val);
 				inputNode.setDataMapping(axisTypes);
@@ -46,12 +46,12 @@ class InputMappingCommand extends DynamicCommand {
 
 	public static List<String> getMappingOptions(int numDimensions) {
 		List<String> res = new ArrayList<>();
-		if(numDimensions == 3) {
+		if (numDimensions == 3) {
 			res.add("XYC");
 			res.add("XYZ");
 			res.add("XYT");
 		}
-		if(numDimensions == 4) {
+		if (numDimensions == 4) {
 			res.add("XYZC");
 			res.add("XYZT");
 			res.add("XYTC");
@@ -62,7 +62,7 @@ class InputMappingCommand extends DynamicCommand {
 
 	static List<AxisType> parseMappingStr(String mappingStr) {
 		List<AxisType> mapping = new ArrayList<>();
-		for(int i = 0; i < mappingStr.length(); i++) {
+		for (int i = 0; i < mappingStr.length(); i++) {
 			mapping.add(axesMap.get(mappingStr.charAt(i)));
 		}
 		return mapping;

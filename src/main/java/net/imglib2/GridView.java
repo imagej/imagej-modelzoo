@@ -117,8 +117,7 @@ import java.util.Map;
  * @author Christian Dietz (University of Konstanz)
  */
 public class GridView<T> extends AbstractInterval implements
-	RandomAccessibleInterval<T>, IterableInterval<T>, View
-{
+		RandomAccessibleInterval<T>, IterableInterval<T>, View {
 	// TODO Implement SubIntervalIterable<T>?
 
 	private final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source;
@@ -132,8 +131,7 @@ public class GridView<T> extends AbstractInterval implements
 	private IterableInterval<? extends RandomAccessibleInterval<T>> sourceAsIterable;
 
 	public GridView(
-		final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source)
-	{
+			final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source) {
 		super(source.numDimensions());
 		this.source = source;
 		blockSize = new long[n];
@@ -152,8 +150,7 @@ public class GridView<T> extends AbstractInterval implements
 	}
 
 	public RandomAccessibleInterval<? extends RandomAccessibleInterval<T>>
-		getSource()
-	{
+	getSource() {
 		return source;
 	}
 
@@ -201,8 +198,7 @@ public class GridView<T> extends AbstractInterval implements
 	}
 
 	public static class GridViewRandomAccess<T> extends Point implements
-		RandomAccess<T>
-	{
+			RandomAccess<T> {
 
 		private final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source;
 
@@ -222,8 +218,7 @@ public class GridView<T> extends AbstractInterval implements
 
 		GridViewRandomAccess(
 				final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source,
-				final long[] blockSize)
-		{
+				final long[] blockSize) {
 			super(source.numDimensions());
 			this.source = source;
 			sourceAccess = source.randomAccess();
@@ -240,8 +235,7 @@ public class GridView<T> extends AbstractInterval implements
 			blockSize = ra.blockSize;
 			blockAccesses = new HashMap<>(ra.blockAccesses.size());
 			for (final Map.Entry<Long, RandomAccess<T>> entry : ra.blockAccesses
-				.entrySet())
-			{
+					.entrySet()) {
 				blockAccesses.put(entry.getKey(), entry.getValue().copyRandomAccess());
 			}
 			tempIndex = ra.tempIndex.clone();
@@ -298,8 +292,7 @@ public class GridView<T> extends AbstractInterval implements
 
 		GridViewCursor(
 				final IterableInterval<? extends RandomAccessibleInterval<T>> source,
-				final long[] blockSize, final long blockNumElements)
-		{
+				final long[] blockSize, final long blockNumElements) {
 			super(source.numDimensions());
 			this.source = source;
 			sourceCursor = source.cursor();
@@ -359,14 +352,14 @@ public class GridView<T> extends AbstractInterval implements
 			sourceCursor.localize(position);
 			for (int d = 0; d < n; ++d) {
 				position[d] = position[d] * blockSize[d] + tempBlockCursor
-					.getLongPosition(d);
+						.getLongPosition(d);
 			}
 		}
 
 		@Override
 		public long getLongPosition(final int d) {
 			return sourceCursor.getLongPosition(d) * blockSize[d] + tempBlockCursor
-				.getLongPosition(d);
+					.getLongPosition(d);
 		}
 
 		@Override

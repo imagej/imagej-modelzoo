@@ -46,43 +46,35 @@ import org.tensorflow.Tensor;
 class TensorFlowConverter {
 
 	static <T extends RealType<T>>
-		RandomAccessibleInterval<T> fromTensor(final Tensor tensor, final int[] mapping) {
+	RandomAccessibleInterval<T> fromTensor(final Tensor tensor, final int[] mapping) {
 		if (tensor.dataType().equals(DataType.DOUBLE)) {
 			return Tensors.imgDouble(tensor, mapping);
-		}
-		else if (tensor.dataType().equals(DataType.FLOAT)) {
+		} else if (tensor.dataType().equals(DataType.FLOAT)) {
 			return Tensors.imgFloat(tensor, mapping);
-		}
-		else if (tensor.dataType().equals(DataType.INT64)) {
+		} else if (tensor.dataType().equals(DataType.INT64)) {
 			return Tensors.imgLong(tensor, mapping);
-		}
-		else if (tensor.dataType().equals(DataType.INT32)) {
+		} else if (tensor.dataType().equals(DataType.INT32)) {
 			return Tensors.imgInt(tensor, mapping);
-		}
-		else if (tensor.dataType().equals(DataType.UINT8)) {
+		} else if (tensor.dataType().equals(DataType.UINT8)) {
 			return Tensors.imgByte(tensor, mapping);
 		}
 		return null;
 	}
 
 	private static <T extends RealType<T>> Tensor imageToTensor(
-			RandomAccessibleInterval<T> image, final int[] mapping)
-	{
+			RandomAccessibleInterval<T> image, final int[] mapping) {
 
 		Tensor tensor;
 		try {
 			tensor = Tensors.tensor(image, mapping);
-		}
-		catch (IllegalArgumentException e) {
-			if(AbstractIntegerType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
+		} catch (IllegalArgumentException e) {
+			if (AbstractIntegerType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
 				tensor = Tensors.tensor(Converters.convert(image,
 						new RealIntConverter<>(), new IntType()), mapping);
-			}
-			else if(DoubleType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
+			} else if (DoubleType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
 				tensor = Tensors.tensor(Converters.convert(image,
 						new RealDoubleConverter<>(), new DoubleType()), mapping);
-			}
-			else {
+			} else {
 				tensor = Tensors.tensor(Converters.convert(image,
 						new RealFloatConverter<>(), new FloatType()), mapping);
 			}
@@ -92,7 +84,7 @@ class TensorFlowConverter {
 
 	static <T extends RealType<T>> Tensor toTensor(Object data, int[] mapping) {
 		try {
-			return imageToTensor((RandomAccessibleInterval<T>)data, mapping);
+			return imageToTensor((RandomAccessibleInterval<T>) data, mapping);
 		} catch (ClassCastException e) {
 			e.printStackTrace();
 			return null;

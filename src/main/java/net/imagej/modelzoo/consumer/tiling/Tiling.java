@@ -41,6 +41,7 @@ public interface Tiling<T extends RealType<T>> {
 		TILE_WITH_PADDING, // e.g. X,Y,Z
 		TILE_WITHOUT_PADDING // e.g. TIME
 	}
+
 	void setNumberOfTiles(int nTiles);
 
 	void setBatchSize(int batchSize);

@@ -25,7 +25,7 @@ public class E03_ReadSpecification {
 
 	}
 
-	public static void main(String...args) throws IOException {
+	public static void main(String... args) throws IOException {
 		new E03_ReadSpecification().run();
 	}
 }

@@ -57,8 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TensorFlowModel extends DefaultModel
-{
+public class TensorFlowModel extends DefaultModel {
 	@Parameter
 	private TensorFlowService tensorFlowService;
 
@@ -80,10 +79,9 @@ public class TensorFlowModel extends DefaultModel
 	// API.
 	private static final String MODEL_TAG = "serve";
 	private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY =
-		"serving_default";
+			"serving_default";
 
-	public TensorFlowModel()
-	{
+	public TensorFlowModel() {
 	}
 
 	@Override
@@ -105,13 +103,13 @@ public class TensorFlowModel extends DefaultModel
 
 	@Override
 	protected boolean loadModel(final Location source, final String modelName) {
-		if(!tensorFlowLoaded) return false;
+		if (!tensorFlowLoaded) return false;
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
 		if (!loadModelFile(source, modelName)) return false;
 		// Extract names from the model signature.
 		// The strings "input", "probabilities" and "patches" are meant to be
 		// in sync with the model exporter (export_saved_model()) in Python.
-		if(!loadSignature()) return false;
+		if (!loadSignature()) return false;
 		return loadModelSettings(source, modelName);
 	}
 
@@ -128,11 +126,10 @@ public class TensorFlowModel extends DefaultModel
 	private boolean loadSignature() {
 		try {
 			sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
-				DEFAULT_SERVING_SIGNATURE_DEF_KEY);
+					DEFAULT_SERVING_SIGNATURE_DEF_KEY);
 			System.out.println("Model inputs: " + sig.getInputsMap());
 			System.out.println("Model outputs: " + sig.getOutputsMap());
-		}
-		catch (final InvalidProtocolBufferException e) {
+		} catch (final InvalidProtocolBufferException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -145,15 +142,14 @@ public class TensorFlowModel extends DefaultModel
 				model.close();
 			}
 			model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
-			model.model().graph().operations().forEachRemaining( op -> {
-				for ( int i = 0; i < op.numOutputs(); i++ ) {
-					Output< Object > opOutput = op.output( i );
+			model.model().graph().operations().forEachRemaining(op -> {
+				for (int i = 0; i < op.numOutputs(); i++) {
+					Output<Object> opOutput = op.output(i);
 					String name = opOutput.op().name();
-					System.out.println( name );
+					System.out.println(name);
 				}
-			} );
-		}
-		catch (TensorFlowException | IOException e) {
+			});
+		} catch (TensorFlowException | IOException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -161,10 +157,10 @@ public class TensorFlowModel extends DefaultModel
 	}
 
 	private void loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		if(!yamlFile.exists()) return;
+		if (!yamlFile.exists()) return;
 		ModelSpecification specification = new ModelSpecification();
 		boolean success = specification.read(yamlFile);
-		if(!success) {
+		if (!success) {
 			log.error("Model seems to be incompatible.");
 			return;
 		}
@@ -187,16 +183,16 @@ public class TensorFlowModel extends DefaultModel
 				getInputNames(),
 				outputNames);
 
-			setOutputTensors(outputTensors);
-			inputTensors.forEach(Tensor::close);
-			outputTensors.forEach(Tensor::close);
+		setOutputTensors(outputTensors);
+		inputTensors.forEach(Tensor::close);
+		outputTensors.forEach(Tensor::close);
 	}
 
 	private List<Tensor> getInputTensors() {
 		List<Tensor> res = new ArrayList<>();
 		for (InputImageNode node : getInputNodes()) {
 			final Tensor tensor = TensorFlowConverter.toTensor(node.getData(), node.getMappingIndices());
-			if(tensor == null) {
+			if (tensor == null) {
 				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
 			}
 			res.add(tensor);

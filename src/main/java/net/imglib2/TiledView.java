@@ -48,12 +48,10 @@ import net.imglib2.view.Views;
  * @author Christian Dietz (University of Konstanz)
  */
 public class TiledView<T> extends AbstractInterval implements
-	RandomAccessibleInterval<RandomAccessibleInterval<T>>, View
-{
+		RandomAccessibleInterval<RandomAccessibleInterval<T>>, View {
 
 	public static <T> TiledView<T> createFromBlocksPerDim(
-		final RandomAccessibleInterval<T> source, final long[] blocksPerDim)
-	{
+			final RandomAccessibleInterval<T> source, final long[] blocksPerDim) {
 		final long[] blockSize = new long[blocksPerDim.length];
 		for (int d = 0; d < blockSize.length; ++d) {
 			blockSize[d] = (source.dimension(d) - 1) / blocksPerDim[d] + 1;
@@ -68,14 +66,12 @@ public class TiledView<T> extends AbstractInterval implements
 	private final long[] overlap;
 
 	private TiledView(final RandomAccessibleInterval<T> source,
-	                  final long... blockSize)
-	{
+	                  final long... blockSize) {
 		this(source, blockSize, new long[blockSize.length]);
 	}
 
 	protected TiledView(final RandomAccessibleInterval<T> source,
-	                    final long[] blockSize, final long[] overlap)
-	{
+	                    final long[] blockSize, final long[] overlap) {
 		super(source.numDimensions());
 
 		// TODO: Fill missing block sizes with singleton dimensions. (Or
@@ -114,8 +110,7 @@ public class TiledView<T> extends AbstractInterval implements
 	}
 
 	public static class TiledViewRandomAccess<T> extends Point implements
-		RandomAccess<RandomAccessibleInterval<T>>
-	{
+			RandomAccess<RandomAccessibleInterval<T>> {
 
 		private final RandomAccessibleInterval<T> source;
 
@@ -130,8 +125,7 @@ public class TiledView<T> extends AbstractInterval implements
 		private final long[] tempMax;
 
 		TiledViewRandomAccess(final RandomAccessibleInterval<T> source,
-		                      final long[] blockSize, final long[] max, final long[] overlap)
-		{
+		                      final long[] blockSize, final long[] max, final long[] overlap) {
 			super(source.numDimensions());
 			this.source = source;
 			this.blockSize = blockSize;
@@ -157,8 +151,7 @@ public class TiledView<T> extends AbstractInterval implements
 				tempMin[d] = position[d] * blockSize[d];
 				if (position[d] < max[d]) {
 					tempMax[d] = tempMin[d] + blockSize[d] - 1;
-				}
-				else {
+				} else {
 					tempMax[d] = source.max(d);
 				}
 				// Add overlap

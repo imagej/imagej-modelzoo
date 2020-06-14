@@ -43,8 +43,7 @@ class TensorFlowRunner {
 	 */
 	static List<Tensor<?>> executeGraph(final SavedModelBundle model,
 	                                    final List<Tensor> inputs, final List<String> inputNames,
-	                                    final List<String> outputNames) throws IllegalArgumentException
-	{
+	                                    final List<String> outputNames) throws IllegalArgumentException {
 
 //		System.out.println("input operation: " + opName(inputTensorInfo));
 //		System.out.println("output operation: " + opName(outputTensorInfo));

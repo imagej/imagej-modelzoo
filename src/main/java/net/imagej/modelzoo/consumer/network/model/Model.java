@@ -34,11 +34,10 @@ import org.scijava.Disposable;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-public interface Model extends Disposable
-{
+public interface Model extends Disposable {
 
 	boolean loadModel(String pathOrURL, String modelName)
-		throws FileNotFoundException;
+			throws FileNotFoundException;
 
 	List<InputImageNode<?>> getInputNodes();
 
@@ -46,7 +45,8 @@ public interface Model extends Disposable
 
 	boolean isInitialized();
 
-	default void loadLibrary(){}
+	default void loadLibrary() {
+	}
 
 	boolean libraryLoaded();
 

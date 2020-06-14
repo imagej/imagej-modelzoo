@@ -15,7 +15,7 @@ public class AbstractModelZooTest {
 
 	@After
 	public void disposeIJ() {
-		if(ij != null) ij.context().dispose();
+		if (ij != null) ij.context().dispose();
 	}
 
 	protected void createImageJ() {
@@ -25,8 +25,7 @@ public class AbstractModelZooTest {
 		}
 	}
 
-	protected void testResultSize(final RandomAccessibleInterval input, final RandomAccessibleInterval output)
-	{
+	protected void testResultSize(final RandomAccessibleInterval input, final RandomAccessibleInterval output) {
 		printDim("input", input);
 		printDim("output", output);
 		int j = 0;
@@ -38,8 +37,7 @@ public class AbstractModelZooTest {
 	}
 
 	protected <T> void compareDimensions(final RandomAccessibleInterval<T> input,
-		final RandomAccessibleInterval<T> output)
-	{
+	                                     final RandomAccessibleInterval<T> output) {
 		for (int i = 0; i < input.numDimensions(); i++) {
 			assertEquals(input.dimension(i), output.dimension(i));
 		}

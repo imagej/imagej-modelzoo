@@ -24,7 +24,7 @@ public class OutputNodeSpecification extends NodeSpecification {
 
 	@Override
 	protected void setShape(Map<String, Object> data) {
-		if(data == null) return;
+		if (data == null) return;
 		setShapeReferenceInput((String) data.get(idNodeShapeReferenceInput));
 		setShapeScale((List<Number>) data.get(idNodeShapeScale));
 		setShapeOffset((List<Integer>) data.get(idNodeShapeOffset));

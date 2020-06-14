@@ -48,8 +48,7 @@ public abstract class DefaultModel implements Model {
 
 	@Override
 	public boolean loadModel(final String pathOrURL, final String modelName)
-		throws FileNotFoundException
-	{
+			throws FileNotFoundException {
 
 		final Location source = IOHelper.loadFileOrURL(pathOrURL);
 		return loadModel(source, modelName);

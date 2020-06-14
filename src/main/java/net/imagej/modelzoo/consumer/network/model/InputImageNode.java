@@ -35,7 +35,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
+public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
 
 	//TODO this is ugly
 	public boolean makeDataFit() {
@@ -51,24 +51,24 @@ public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
 				Object step = axis.getStep();
 				long size = img.dimension(i);
 				long newsize = size;
-				if(size < min) {
+				if (size < min) {
 					newsize = min;
 				} else {
-					if(step == null) {
+					if (step == null) {
 						axis.setActual(size);
 						continue;
 					}
-					if((int)step == 0) {
-						if(size != min) {
+					if ((int) step == 0) {
+						if (size != min) {
 							System.out.println("Input " + getName() + " dimension " + i + " should have size " + min + " but is " + size);
 							return false;
 						} else {
 							continue;
 						}
 					} else {
-						long rest = (size - min) % (int)step;
-						if(rest != 0) {
-							newsize = size - rest + (int)step;
+						long rest = (size - min) % (int) step;
+						if (rest != 0) {
+							newsize = size - rest + (int) step;
 						}
 					}
 				}
@@ -76,21 +76,21 @@ public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
 				axis.setActual(size);
 			}
 			setData(img);
-		} catch(ClassCastException ignored) {}
+		} catch (ClassCastException ignored) {
+		}
 		return true;
 	}
 
 	private RandomAccessibleInterval<T> addAxesIfNeeded(RandomAccessibleInterval<T> img) {
 		AxisType[] axes = getAxesArray();
-		while(img.numDimensions() < axes.length) {
+		while (img.numDimensions() < axes.length) {
 			img = Views.addDimension(img, 0, 0);
 		}
 		return img;
 	}
 
 	private RandomAccessibleInterval<T> expandDimToSize(
-			final RandomAccessibleInterval<T> im, final int d, final long size)
-	{
+			final RandomAccessibleInterval<T> im, final int d, final long size) {
 		final int n = im.numDimensions();
 		final long[] min = new long[n];
 		final long[] max = new long[n];

@@ -34,7 +34,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
+public class OutputImageNode<T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
 	private InputImageNode<U> reference;
 
 	public void makeDataFit() {
@@ -46,13 +46,13 @@ public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> exte
 
 	private RandomAccessibleInterval<T> toActualSize(RandomAccessibleInterval<T> img) {
 
-		if(getReference() == null) return img;
+		if (getReference() == null) return img;
 
 		long[] expectedSize = new long[img.numDimensions()];
 		int[] mappingIndices = getMappingIndices();
 		for (int i = 0; i < img.numDimensions(); i++) {
 			Long newSize = getExpectedSize(mappingIndices[i]);
-			if(newSize == null) expectedSize[i] = -1;
+			if (newSize == null) expectedSize[i] = -1;
 			else expectedSize[i] = newSize;
 		}
 		for (int i = 0; i < expectedSize.length; i++) {
@@ -67,16 +67,15 @@ public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> exte
 		Long actual = inAxis.getActual();
 		Integer offset = outAxis.getOffset();
 		Double scale = outAxis.getScale();
-		Long newSize = actual != null? actual : 1;
-		if(scale != null) newSize = (long) (newSize * scale);
-		if(offset != null) newSize += (int)offset;
+		Long newSize = actual != null ? actual : 1;
+		if (scale != null) newSize = (long) (newSize * scale);
+		if (offset != null) newSize += (int) offset;
 		return newSize;
 	}
 
 
 	private <T extends RealType<T>> RandomAccessibleInterval<T> reduceDimToSize(
-			final RandomAccessibleInterval<T> im, final int d, final long size)
-	{
+			final RandomAccessibleInterval<T> im, final int d, final long size) {
 		final int n = im.numDimensions();
 		final long[] min = new long[n];
 		final long[] max = new long[n];

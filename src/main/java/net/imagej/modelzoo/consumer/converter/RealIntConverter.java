@@ -38,8 +38,7 @@ import net.imglib2.type.numeric.integer.IntType;
  * @author Stephan Preibisch
  */
 public class RealIntConverter<R extends RealType<R>> implements
-	Converter<R, IntType>
-{
+		Converter<R, IntType> {
 
 	@Override
 	public void convert(final R input, final IntType output) {

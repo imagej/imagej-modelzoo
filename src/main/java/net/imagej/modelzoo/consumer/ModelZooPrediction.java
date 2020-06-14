@@ -75,22 +75,22 @@ public class ModelZooPrediction {
 
 		Map<String, Object> res = null;
 
-		if(model == null) loadModel();
+		if (model == null) loadModel();
 
 		try {
-			if(!model.isInitialized()) {
+			if (!model.isInitialized()) {
 				return res;
 			}
 
-			if(!inputValidationAndMapping(model)) return null;
+			if (!inputValidationAndMapping(model)) return null;
 
 			preprocessing(model);
 			executePrediction(model);
 			res = postprocessing(model);
 
-		} catch(CancellationException e) {
+		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
-		} catch(OutOfMemoryError e) {
+		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 		} finally {
 			model.dispose();
@@ -108,7 +108,7 @@ public class ModelZooPrediction {
 	}
 
 	public void setModelFile(String modelFile) {
-		if(modelFile != null && !modelFile.isEmpty()) setModelFile(new File(modelFile));
+		if (modelFile != null && !modelFile.isEmpty()) setModelFile(new File(modelFile));
 	}
 
 	public void setModelFile(File modelFile) {
@@ -149,8 +149,7 @@ public class ModelZooPrediction {
 			try {
 				executor.run();
 				isOutOfMemory = false;
-			}
-			catch (final OutOfMemoryError e) {
+			} catch (final OutOfMemoryError e) {
 				canHandleOutOfMemory = executor.increaseTiling();
 			}
 		}
@@ -177,7 +176,7 @@ public class ModelZooPrediction {
 		this.batchSize = batchSize;
 	}
 
-	public static void main(String...args) throws IOException, URISyntaxException {
+	public static void main(String... args) throws IOException, URISyntaxException {
 		ImageJ ij = new ImageJ();
 		ij.launch();
 

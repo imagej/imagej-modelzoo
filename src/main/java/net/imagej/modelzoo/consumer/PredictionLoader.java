@@ -62,7 +62,7 @@ public class PredictionLoader implements Runnable {
 		context.inject(this);
 	}
 
-	public enum NetworkInputSourceType { UNSET, FILE, URL }
+	public enum NetworkInputSourceType {UNSET, FILE, URL}
 
 	private NetworkInputSourceType networkInputSourceType = NetworkInputSourceType.UNSET;
 	private String cacheName;
@@ -84,7 +84,7 @@ public class PredictionLoader implements Runnable {
 
 		solveModelSource();
 
-		if(modelFileUrl.isEmpty()) return;
+		if (modelFileUrl.isEmpty()) return;
 		try {
 			model.loadModel(modelFileUrl, cacheName);
 		} catch (FileNotFoundException e) {
@@ -101,22 +101,22 @@ public class PredictionLoader implements Runnable {
 	}
 
 	private void solveModelSource() {
-		if(modelFileUrl.isEmpty()) modelFileChanged();
-		if(modelFileUrl.isEmpty()) modelUrlChanged();
+		if (modelFileUrl.isEmpty()) modelFileChanged();
+		if (modelFileUrl.isEmpty()) modelUrlChanged();
 	}
 
 	private void updateCacheName() {
-		switch(networkInputSourceType) {
+		switch (networkInputSourceType) {
 			case UNSET:
 			default:
 				break;
 			case FILE:
 				cacheName = getFileCacheName(this.getClass(), modelFile);
-				if(cacheName != null) savePreferences();
+				if (cacheName != null) savePreferences();
 				break;
 			case URL:
 				cacheName = getUrlCacheName(this.getClass(), modelUrl);
-				if(cacheName != null) savePreferences();
+				if (cacheName != null) savePreferences();
 				break;
 		}
 	}
@@ -141,19 +141,19 @@ public class PredictionLoader implements Runnable {
 
 	private void modelFileChanged() {
 		if (modelFile != null) {
-			if(modelFile.exists()) {
+			if (modelFile.exists()) {
 				modelUrl = null;
 				networkInputSourceType = NetworkInputSourceType.FILE;
 				modelFileUrl = modelFile.getAbsolutePath();
 				modelChanged();
-			}else {
+			} else {
 				log.error("Model file " + modelFile.getAbsolutePath() + " does not exist.");
 			}
 		}
 	}
 
 	private void modelUrlChanged() {
-		if(modelUrl != null && modelUrl.length() > "https://".length()) {
+		if (modelUrl != null && modelUrl.length() > "https://".length()) {
 			if (IOHelper.urlExists(modelUrl)) {
 				modelFile = null;
 				networkInputSourceType = NetworkInputSourceType.URL;
@@ -169,7 +169,7 @@ public class PredictionLoader implements Runnable {
 	}
 
 	private void savePreferences() {
-		if(modelFile != null) {
+		if (modelFile != null) {
 			prefService.put(this.getClass(), modelFileKey, modelFile.getAbsolutePath());
 		}
 	}

@@ -62,10 +62,10 @@ public abstract class NodeSpecification {
 	public Map<String, Object> asMap() {
 		Map<String, Object> res = new LinkedHashMap<>();
 		res.put(idNodeName, name);
-		if(axes != null) res.put(idNodeAxes, axes);
-		if(dataType != null) res.put(idNodeDataType, dataType);
-		if(dataRange != null) res.put(idNodeDataRange, dataRange);
-		if(halo != null) res.put(idNodeHalo, halo);
+		if (axes != null) res.put(idNodeAxes, axes);
+		if (dataType != null) res.put(idNodeDataType, dataType);
+		if (dataRange != null) res.put(idNodeDataRange, dataRange);
+		if (halo != null) res.put(idNodeHalo, halo);
 		res.put(idNodeShape, getShape());
 		return res;
 	}

@@ -22,7 +22,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 	@Test
 	public void testMissingNetwork() throws ExecutionException, InterruptedException {
 		createImageJ();
-		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2,2);
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2, 2);
 		ij.command().run(ModelZooPredictionCommand.class,
 				false, "input", input, "mapping", "XY", "modelFile", new File(
 						"/some/non/existing/path.zip")).get();
@@ -33,7 +33,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 		createImageJ();
 		String bla = new PredictionLoader(ij.context()).getModelFileKey();
 		ij.prefs().put(ModelZooPredictionCommand.class, bla, "/something/useless");
-		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2,2);
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2, 2);
 		ij.command().run(ModelZooPredictionCommand.class, true,
 				"input", input,
 				"mapping", "XY",
@@ -45,7 +45,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 		createImageJ();
 		for (int i = 0; i < 1; i++) {
 
-			testDataset(new FloatType(), new long[] { 5, 10, 33 }, "XYZ");
+			testDataset(new FloatType(), new long[]{5, 10, 33}, "XYZ");
 //			testDataset(new UnsignedIntType(), new long[] { 10, 10, 10 },
 //				new AxisType[] { Axes.X, Axes.Y, Axes.Z });
 //			testDataset(new ByteType(), new long[] { 10, 10, 10 }, new AxisType[] {

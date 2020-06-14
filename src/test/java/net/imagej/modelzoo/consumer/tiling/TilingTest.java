@@ -26,12 +26,12 @@ public class TilingTest extends AbstractModelZooTest {
 	@Test
 	public void testTilingZXY() {
 
-		final long[] datasetSize = { 10, 50, 100 };
+		final long[] datasetSize = {10, 50, 100};
 		List<ModelZooAxis> axes = new ArrayList<>();
 		axes.add(new ModelZooAxis(Axes.X));
 		axes.add(new ModelZooAxis(Axes.Y));
 		axes.add(new ModelZooAxis(Axes.Z));
-		final AxisType[] axesTypes = { Axes.Z, Axes.X, Axes.Y };
+		final AxisType[] axesTypes = {Axes.Z, Axes.X, Axes.Y};
 
 		createImageJ();
 
@@ -53,7 +53,7 @@ public class TilingTest extends AbstractModelZooTest {
 		AdvancedTiledView<FloatType, FloatType> tiledView = tiling.tiledView;
 		tiledView.getProcessedTiles().clear();
 		final Cursor<RandomAccessibleInterval<FloatType>> cursor = Views.iterable(
-			tiledView).cursor();
+				tiledView).cursor();
 		while (cursor.hasNext()) {
 			tiledView.getProcessedTiles().add(cursor.next());
 		}
@@ -258,14 +258,6 @@ public class TilingTest extends AbstractModelZooTest {
 //	}
 
 
-
-
-
-
-
-
-
-
 //
 //	@Test
 //	public void testNetworkTiling() {
@@ -331,7 +323,7 @@ public class TilingTest extends AbstractModelZooTest {
 
 	private Tiling.TilingAction[] getTilingActions(Dataset input) {
 		Tiling.TilingAction[] actions = new Tiling.TilingAction[input
-			.numDimensions()];
+				.numDimensions()];
 		Arrays.fill(actions, Tiling.TilingAction.NO_TILING);
 		for (int i = 0; i < actions.length; i++) {
 			AxisType type = input.axis(i).type();

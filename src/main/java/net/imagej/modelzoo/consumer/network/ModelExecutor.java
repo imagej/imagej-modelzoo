@@ -45,8 +45,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
-public class ModelExecutor implements Cancelable
-{
+public class ModelExecutor implements Cancelable {
 
 	@Parameter
 	private LogService log;
@@ -69,29 +68,26 @@ public class ModelExecutor implements Cancelable
 	public void run() throws OutOfMemoryError, IllegalArgumentException {
 
 		try {
-			if(model.getInputNodes().size() > 1) {
+			if (model.getInputNodes().size() > 1) {
 				// no tiling possible for now
 				model.predict();
 			} else {
 				initTiling();
-				while(processNextTile()) {
+				while (processNextTile()) {
 					model.predict();
 					setTileResult(model.getOutputNodes().get(0));
 				}
 				concatenateTiles(model.getOutputNodes().get(0));
 			}
-		}
-		catch(final CancellationException | RejectedExecutionException e) {
+		} catch (final CancellationException | RejectedExecutionException e) {
 			//canceled
 			String PROGRESS_CANCELED = "Canceled";
 			log.warn(PROGRESS_CANCELED);
 			cancel(PROGRESS_CANCELED);
-		}
-		catch(final IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			throw e;
-		}
-		catch (final IllegalStateException exc) {
-			if(exc.getMessage() != null && exc.getMessage().contains("OOM")) {
+		} catch (final IllegalStateException exc) {
+			if (exc.getMessage() != null && exc.getMessage().contains("OOM")) {
 				throw new OutOfMemoryError();
 			}
 			exc.printStackTrace();
@@ -113,7 +109,7 @@ public class ModelExecutor implements Cancelable
 		// try it again with more tiles or smaller batches.
 		int nTiles = tiling.getTilesNum();
 		int batchSize = tiling.getBatchSize();
-		if(oldNTiles == nTiles && oldBatchesSize == batchSize) {
+		if (oldNTiles == nTiles && oldBatchesSize == batchSize) {
 			return false;
 		}
 		oldNTiles = nTiles;
@@ -139,7 +135,7 @@ public class ModelExecutor implements Cancelable
 
 	private boolean processNextTile() {
 		// go to next tile
-		if(processedTiles || tiling.getDoneTileCount() == tiling.getTilesNum()) {
+		if (processedTiles || tiling.getDoneTileCount() == tiling.getTilesNum()) {
 			processedTiles = true;
 			return false;
 		}

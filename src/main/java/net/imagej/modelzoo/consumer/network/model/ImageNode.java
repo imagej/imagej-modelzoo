@@ -66,7 +66,7 @@ public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<Random
 		for (; mapping != null && i < mapping.size(); i++) {
 			AxisType axis = mapping.get(i);
 			for (int j = 0; j < axes.size(); j++) {
-				if(axes.get(j).getType().equals(axis)) {
+				if (axes.get(j).getType().equals(axis)) {
 					res[i] = j;
 				}
 			}
@@ -74,7 +74,7 @@ public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<Random
 		// set mapping for axes which will be added to the image to fit the tensor
 		for (int j = i; j < res.length; j++) {
 			for (int k = 0; k < res.length; k++) {
-				if(!ArrayUtils.contains(res, k)) res[j] = k;
+				if (!ArrayUtils.contains(res, k)) res[j] = k;
 			}
 		}
 		return res;

@@ -47,8 +47,7 @@ class AdvancedTiledView<TI extends RealType<TI>, TO extends RealType<TO>> extend
 	// protected long blockWidth;
 
 	AdvancedTiledView(final RandomAccessibleInterval<TI> source,
-	                  final long[] blockSize, final long[] overlap)
-	{
+	                  final long[] blockSize, final long[] overlap) {
 		super(source, blockSize, overlap);
 		processedTiles = new ArrayList<>();
 		originalDims = new HashMap<>();

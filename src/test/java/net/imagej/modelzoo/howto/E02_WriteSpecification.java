@@ -66,7 +66,7 @@ public class E02_WriteSpecification {
 
 	}
 
-	public static void main(String...args) throws IOException {
+	public static void main(String... args) throws IOException {
 		new E02_WriteSpecification().run();
 	}
 }
