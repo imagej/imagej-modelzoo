@@ -114,9 +114,9 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		long[] tiling = new long[inputNode.numDimensions()];
 		Arrays.fill(tiling, 1);
 		tiling = computeTiling(tiling);
-		tilesNum = (int) arrayProduct(tiling);
 		long[] padding = getPadding(tiling);
 		computeBatching(tiling);
+		tilesNum = (int) arrayProduct(tiling);
 		System.out.println("Input dimensions: " + Arrays.toString(Intervals.dimensionsAsIntArray(inputNode.getData())));
 		System.out.println("Axes: " + Arrays.toString(inputNode.getDataAxesArray()));
 		System.out.println("Dividing image into " + arrayProduct(tiling) + " tile(s)..");

@@ -1,11 +1,10 @@
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
 
-import net.imagej.Dataset;
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
+import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import org.junit.Test;
 import org.scijava.command.CommandModule;
@@ -15,7 +14,6 @@ import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
@@ -27,8 +25,7 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 
 		String[] networks = {"denoise2D/model.zip"};
 
-		Dataset input = createDataset(new FloatType(), new long[] { 4, 5, 6 }, new AxisType[] {
-				Axes.X, Axes.Y, Axes.Z });
+		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(4, 5, 6);
 
 //		for (int i = 0; i < 3; i++) {
 			for(String networkSrc : networks) {
@@ -36,11 +33,11 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 				CommandModule module = ij.command().run(ModelZooPredictionCommand.class,
 						false,
 						"input", input,
+						"mapping", "XYZ",
 						"modelFile", new File(networkUrl.getPath())).get();
 				final RandomAccessibleInterval output = (RandomAccessibleInterval) module.getOutput("output");
 				assertNotNull(output);
 				printDim("input", input);
-				printAxes("input", input);
 				printDim("output", output);
 				for (int j = 0; j < input.numDimensions(); j++) {
 					assertEquals(input.dimension(j), output.dimension(j));

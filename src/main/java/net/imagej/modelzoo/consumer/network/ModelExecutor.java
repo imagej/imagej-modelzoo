@@ -31,11 +31,11 @@ package net.imagej.modelzoo.consumer.network;
 
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.task.DefaultTask;
 import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
+import org.scijava.Cancelable;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
-public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> extends DefaultTask
+public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> implements Cancelable
 {
 
 	@Parameter
@@ -53,12 +53,13 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> ext
 
 	private final Model model;
 	private Tiling<TO> tiling;
-	private int nTiles;
+	private int nTiles = 8;
 	private int oldNTiles;
 	private int oldBatchesSize;
 	private boolean processedTiles = false;
 	private boolean canceled = false;
 	private List<RandomAccessibleInterval<TO>> results = new ArrayList<>();
+	private int batchSize = 10;
 
 	public ModelExecutor(Model model, Context context) {
 		this.model = model;
@@ -82,28 +83,28 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> ext
 		}
 		catch(final CancellationException | RejectedExecutionException e) {
 			//canceled
-			setFailed();
 			String PROGRESS_CANCELED = "Canceled";
-			log(PROGRESS_CANCELED);
+			log.warn(PROGRESS_CANCELED);
 			cancel(PROGRESS_CANCELED);
 		}
 		catch(final IllegalArgumentException e) {
-			setFailed();
 			throw e;
 		}
 		catch (final IllegalStateException exc) {
 			if(exc.getMessage() != null && exc.getMessage().contains("OOM")) {
-				setIdle();
 				throw new OutOfMemoryError();
 			}
 			exc.printStackTrace();
-			setFailed();
 			throw exc;
 		}
 	}
 
 	public void setNumberOfTiles(int nTiles) {
 		this.nTiles = nTiles;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 
 	public boolean increaseTiling() {
@@ -154,6 +155,7 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> ext
 		processedTiles = false;
 		tiling = new DefaultTiling<TO, TI>((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
 		tiling.setNumberOfTiles(nTiles);
+		tiling.setBatchSize(batchSize);
 		tiling.init();
 		results.clear();
 	}
@@ -169,7 +171,6 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> ext
 		outputImageNode.setData(result);
 	}
 
-
 	@Override
 	public boolean isCanceled() {
 		return canceled;
@@ -184,5 +185,4 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> ext
 	public String getCancelReason() {
 		return null;
 	}
-
 }

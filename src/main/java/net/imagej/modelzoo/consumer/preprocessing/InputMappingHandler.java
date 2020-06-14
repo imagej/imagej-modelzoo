@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer;
+package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class PredictionDataHandler {
+public class InputMappingHandler {
 
 	@Parameter
 	private LogService log;
@@ -38,9 +38,11 @@ public class PredictionDataHandler {
 	private boolean success;
 
 	private final Map<String, RandomAccessibleInterval<?>> inputs = new HashMap<>();
+	private final Map<String, String> mapping = new HashMap<>();
 	private boolean askUser = true;
 
-	void setupInputsAndOutputs() {
+	public void setModel(Model model) {
+		this.model = model;
 		try {
 			runInputHarvesting();
 			runInputMapping();
@@ -108,11 +110,15 @@ public class PredictionDataHandler {
 		}
 	}
 
-	private boolean handleMapping(InputMappingCommand mapping, ImageNode node) {
+	private boolean handleMapping(InputMappingCommand mappingCommand, ImageNode node) {
 		try {
-			RandomAccessibleInterval rai = (RandomAccessibleInterval) node.getData();
+			RandomAccessibleInterval rai = node.getData();
 			if(rai.numDimensions() > 2) {
-				createMappingChoice(mapping, node, rai);
+				if(mapping.containsKey(node.getName())) {
+					node.setDataMapping(InputMappingCommand.parseMappingStr(mapping.get(node.getName())));
+					return false;
+				}
+				createMappingChoice(mappingCommand, node, rai);
 				return true;
 			} else {
 				node.setDataMapping(get2DMapping());
@@ -143,16 +149,13 @@ public class PredictionDataHandler {
 		return moduleItem;
 	}
 
-	public void setModel(Model model) {
-		this.model = model;
-	}
-
 	public boolean getSuccess() {
 		return success;
 	}
 
-	public void addInput(String name, RandomAccessibleInterval<?> value) {
+	public void addInput(String name, RandomAccessibleInterval<?> value, String mapping) {
 		inputs.put(name, value);
+		this.mapping.put(name, mapping);
 	}
 
 	public void setAskUser(boolean askUser) {

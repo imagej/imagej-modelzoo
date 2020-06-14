@@ -8,24 +8,17 @@ import net.imagej.modelzoo.AbstractModelZooTest;
 import net.imagej.modelzoo.consumer.network.model.InputImageNode;
 import net.imagej.modelzoo.consumer.network.model.ModelZooAxis;
 import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.task.DefaultTask;
-import net.imagej.modelzoo.consumer.task.Task;
-import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;
-import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
-import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class TilingTest extends AbstractModelZooTest {

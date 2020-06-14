@@ -60,7 +60,7 @@ public class InputMappingCommand extends DynamicCommand {
 		return res;
 	}
 
-	public static List<AxisType> parseMappingStr(String mappingStr) {
+	static List<AxisType> parseMappingStr(String mappingStr) {
 		List<AxisType> mapping = new ArrayList<>();
 		for(int i = 0; i < mappingStr.length(); i++) {
 			mapping.add(axesMap.get(mappingStr.charAt(i)));

@@ -52,17 +52,24 @@ import java.util.concurrent.ExecutionException;
 @Plugin(type = Command.class)
 public class ModelZooPredictionCommand implements Command {
 
-	@Parameter
-	private Img input;
-
-	@Parameter(label = "Import model (.zip)", required = false)
+	@Parameter(label = "Import model (.zip) from file", required = false)
 	private File modelFile;
 
 	@Parameter(label = "Import model (.zip) from URL", required = false)
 	private String modelUrl;
 
+	@Parameter
+	private Img input;
+
+	@Parameter(label = "Mapping (subset of XYZCT)")
+	private String mapping = "XYZTC";
+
 	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
 	protected int nTiles = 8;
+
+	@Parameter(label = "Batch size")
+	private int batchSize = 10;
+
 
 	@Parameter(type = ItemIO.OUTPUT)
 	private RandomAccessibleInterval output;
@@ -80,9 +87,11 @@ public class ModelZooPredictionCommand implements Command {
 		try {
 
 			SingleOutputPrediction prediction = new SingleOutputPrediction(context);
-			prediction.setInput("input", input);
+			prediction.setInput("input", input, mapping);
 			prediction.setModelFile(modelFile);
+			prediction.setModelFile(modelUrl);
 			prediction.setNumberOfTiles(nTiles);
+			prediction.setBatchSize(batchSize);
 			prediction.run();
 			output = prediction.getOutput();
 

@@ -79,7 +79,7 @@ public class SingleOutputPrediction extends ModelZooPrediction {
 				.getResource("denoise2D/model.zip").toURI());
 
 		SingleOutputPrediction prediction = new SingleOutputPrediction(ij.context());
-		prediction.setInput("input", input);
+		prediction.setInput("input", input, "XY");
 		prediction.setModelFile(model);
 		prediction.run();
 		RandomAccessibleInterval output = prediction.getOutput();

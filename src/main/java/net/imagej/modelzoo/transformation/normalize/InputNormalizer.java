@@ -31,13 +31,11 @@ package net.imagej.modelzoo.transformation.normalize;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.modelzoo.consumer.task.Task;
 import net.imagej.ops.OpService;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public interface InputNormalizer<T extends RealType<T> & NativeType<T>> extends
-		Task
+public interface InputNormalizer<T extends RealType<T> & NativeType<T>>
 {
 
 	Dataset run(Dataset input, OpService opService,

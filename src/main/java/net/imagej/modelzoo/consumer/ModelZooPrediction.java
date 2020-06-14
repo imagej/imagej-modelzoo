@@ -33,6 +33,7 @@ import net.imagej.ImageJ;
 import net.imagej.modelzoo.consumer.network.ModelExecutor;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.postprocessing.PredictionPostprocessing;
+import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
 import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
@@ -59,11 +60,12 @@ public class ModelZooPrediction {
 
 	@Parameter
 	private Context context;
-	private PredictionDataHandler inputHandling;
-	private int nTiles;
+	private InputMappingHandler inputHandling;
+	private int nTiles = 8;
+	private int batchSize = 10;
 
 	public ModelZooPrediction(Context context) {
-		inputHandling = new PredictionDataHandler();
+		inputHandling = new InputMappingHandler();
 		context.inject(this);
 	}
 
@@ -97,8 +99,8 @@ public class ModelZooPrediction {
 		return res;
 	}
 
-	public void setInput(String name, RandomAccessibleInterval<?> value) {
-		inputHandling.addInput(name, value);
+	public void setInput(String name, RandomAccessibleInterval<?> value, String mapping) {
+		inputHandling.addInput(name, value, mapping);
 	}
 
 	public File getModelFile() {
@@ -106,7 +108,7 @@ public class ModelZooPrediction {
 	}
 
 	public void setModelFile(String modelFile) {
-		setModelFile(new File(modelFile));
+		if(modelFile != null && !modelFile.isEmpty()) setModelFile(new File(modelFile));
 	}
 
 	public void setModelFile(File modelFile) {
@@ -141,6 +143,7 @@ public class ModelZooPrediction {
 	private void executePrediction(Model model) {
 		ModelExecutor executor = new ModelExecutor(model, context);
 		executor.setNumberOfTiles(nTiles);
+		executor.setBatchSize(batchSize);
 		boolean isOutOfMemory = true;
 		boolean canHandleOutOfMemory = true;
 
@@ -166,7 +169,6 @@ public class ModelZooPrediction {
 	private boolean inputValidationAndMapping(Model model) {
 		context.inject(inputHandling);
 		inputHandling.setModel(model);
-		inputHandling.setupInputsAndOutputs();
 		return inputHandling.getSuccess();
 	}
 
@@ -176,6 +178,10 @@ public class ModelZooPrediction {
 
 	public void setNumberOfTiles(int nTiles) {
 		this.nTiles = nTiles;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 
 	public static void main(String...args) throws IOException, URISyntaxException {
@@ -193,7 +199,7 @@ public class ModelZooPrediction {
 				.getResource("denoise2D/model.zip").toURI());
 
 		ModelZooPrediction prediction = new ModelZooPrediction(ij.context());
-		prediction.setInput("input", input);
+		prediction.setInput("input", input, "XYZ");
 		prediction.setModelFile(model);
 		Map<String, Object> res = prediction.run();
 		RandomAccessibleInterval output = (RandomAccessibleInterval) res.values().iterator().next();

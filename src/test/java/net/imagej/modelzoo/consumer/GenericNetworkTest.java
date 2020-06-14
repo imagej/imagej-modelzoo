@@ -7,6 +7,7 @@ import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
 import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -24,9 +25,9 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 	@Test
 	public void testMissingNetwork() throws ExecutionException, InterruptedException {
 		createImageJ();
-		final Dataset input = createDataset(new FloatType(), new long[]{2,2}, new AxisType[]{Axes.X, Axes.Y});
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2,2);
 		ij.command().run(ModelZooPredictionCommand.class,
-				false, "input", input, "modelFile", new File(
+				false, "input", input, "mapping", "XY", "modelFile", new File(
 						"/some/non/existing/path.zip")).get();
 	}
 
@@ -35,9 +36,11 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 		createImageJ();
 		String bla = new PredictionLoader().getModelFileKey();
 		ij.prefs().put(ModelZooPredictionCommand.class, bla, "/something/useless");
-		final Dataset input = createDataset(new FloatType(), new long[]{2,2}, new AxisType[]{Axes.X, Axes.Y});
-		ij.command().run(ModelZooPredictionCommand.class,
-				true, "input", input, "modelUrl", "http://csbdeep.bioimagecomputing.com/model-tubulin.zip").get();
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2,2);
+		ij.command().run(ModelZooPredictionCommand.class, true,
+				"input", input,
+				"mapping", "XY",
+				"modelUrl", "http://csbdeep.bioimagecomputing.com/model-tubulin.zip").get();
 	}
 
 	@Test
@@ -45,8 +48,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 		createImageJ();
 		for (int i = 0; i < 1; i++) {
 
-			testDataset(new FloatType(), new long[] { 5, 10, 33 }, new AxisType[] {
-				Axes.X, Axes.Y, Axes.Z });
+			testDataset(new FloatType(), new long[] { 5, 10, 33 }, "XYZ");
 //			testDataset(new UnsignedIntType(), new long[] { 10, 10, 10 },
 //				new AxisType[] { Axes.X, Axes.Y, Axes.Z });
 //			testDataset(new ByteType(), new long[] { 10, 10, 10 }, new AxisType[] {
@@ -58,13 +60,15 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 	}
 
 	private <T extends RealType<T> & NativeType<T>> void testDataset(final T type,
-	                                                                 final long[] dims, final AxisType[] axes) throws ExecutionException, InterruptedException {
+	                                                                 final long[] dims, String mapping) throws ExecutionException, InterruptedException {
 
 		URL networkUrl = this.getClass().getResource("denoise2D/model.zip");
 
-		final RandomAccessibleInterval input = createDataset(type, dims, axes);
-		final Module module = ij.command().run(ModelZooPredictionCommand.class,
-			false, "input", input, "modelFile", new File(networkUrl.getPath())).get();
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(type).create(dims);
+		final Module module = ij.command().run(ModelZooPredictionCommand.class, false,
+				"input", input,
+				"modelFile", new File(networkUrl.getPath()),
+				"mapping", mapping).get();
 		RandomAccessibleInterval output = (RandomAccessibleInterval) module.getOutput("output");
 		assertNotNull(output);
 		testResultSize(input, output);

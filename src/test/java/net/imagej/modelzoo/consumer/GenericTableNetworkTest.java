@@ -1,10 +1,13 @@
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.Dataset;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
+import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -26,11 +29,12 @@ public class GenericTableNetworkTest extends AbstractModelZooTest {
 
 		URL networkUrl = this.getClass().getResource("denoise2D/model.zip");
 
-		final Dataset input = createDataset(new FloatType(), new long[] { 3, 3, 3 }, new AxisType[] {
-				Axes.X, Axes.Y, Axes.Z });
+		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(3, 3, 3);
 
-		final Module module = ij.command().run(ModelZooPredictionCommand.class,
-				false, "input", input, "modelFile", new File(networkUrl.getPath())).get();
+		final Module module = ij.command().run(ModelZooPredictionCommand.class, false,
+				"input", input,
+				"mapping", "XYZ",
+				"modelFile", new File(networkUrl.getPath())).get();
 		GenericTable output = (GenericTable) module.getOutput("output");
 		assertNotNull(output);
 		System.out.println(output);

@@ -1,7 +1,7 @@
 name: model name
 description: description
 cite:
-  - {text: 'Publication name, authors, yournal', doi: null}
+  - {text: 'Publication name, authors, yournal', doi: DOI}
 authors: [author1, author2]
 documentation: DOCUMENTATION_LINK
 tags: [tag1, tag2]
@@ -21,6 +21,7 @@ inputs:
       step: [16, 16, 16, 0]
 outputs:
   - name: output
+    axes: XYZC
     shape:
       reference_input: input
       scale: [2.0, 2.0, 2.0, 1.0]
@@ -31,9 +32,9 @@ training:
 prediction:
   weights: {source: ./variables/variables}
   preprocess:
-    spec: MyClass::preprocessing
-    kwargs: {mean: 100}
+    - spec: MyClass::preprocessing
+      kwargs: {mean: 100}
   postprocess:
-    spec: MyClass::postprocessing
-    kwargs: {mean: 100}
+    - spec: MyClass::postprocessing
+      kwargs: {mean: 100}
   dependencies: ./dependencies.yaml

@@ -1,16 +1,13 @@
 package net.imagej.modelzoo.consumer.network.model;
 
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.task.Task;
 import net.imglib2.EuclideanSpace;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<RandomAccessibleInterval<T>> implements EuclideanSpace {
 
@@ -25,29 +22,6 @@ public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<Random
 
 	public void addAxis(ModelZooAxis axis) {
 		axes.add(axis);
-	}
-
-	public AxisType[] getMapping() {
-		return axes.stream().map(ModelZooAxis::getType).toArray(AxisType[]::new);
-	}
-
-	public void printMapping() {
-		printMapping(null);
-	}
-
-	public void printMapping(Task task) {
-		Consumer<String> logFunction = System.out::println;
-		if(task != null) logFunction = task::log;
-		logFunction.accept("Mapping of tensor " + getName() + ": ");
-//		if (image != null) {
-//			final AxisType[] axes = new AxisType[this.image.size()];
-//			for (int i = 0; i < this.image.size(); i++) {
-//				axes[i] = this.image.get(i).getType();
-//			}
-//			logFunction.accept("   datasetAxes:" + Arrays.toString(axes));
-//		}
-		logFunction.accept("   nodeAxes:" + axes.toString());
-//		logFunction.accept("   mapping:" + finalMapping.toString());
 	}
 
 	public void setData(RandomAccessibleInterval<T> input) {
