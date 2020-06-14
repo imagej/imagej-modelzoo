@@ -67,14 +67,14 @@ public class TiledView<T> extends AbstractInterval implements
 
 	private final long[] overlap;
 
-	public TiledView(final RandomAccessibleInterval<T> source,
-		final long... blockSize)
+	private TiledView(final RandomAccessibleInterval<T> source,
+	                  final long... blockSize)
 	{
 		this(source, blockSize, new long[blockSize.length]);
 	}
 
-	public TiledView(final RandomAccessibleInterval<T> source,
-		final long[] blockSize, final long[] overlap)
+	protected TiledView(final RandomAccessibleInterval<T> source,
+	                    final long[] blockSize, final long[] overlap)
 	{
 		super(source.numDimensions());
 
@@ -129,8 +129,8 @@ public class TiledView<T> extends AbstractInterval implements
 
 		private final long[] tempMax;
 
-		public TiledViewRandomAccess(final RandomAccessibleInterval<T> source,
-			final long[] blockSize, final long[] max, final long[] overlap)
+		TiledViewRandomAccess(final RandomAccessibleInterval<T> source,
+		                      final long[] blockSize, final long[] max, final long[] overlap)
 		{
 			super(source.numDimensions());
 			this.source = source;

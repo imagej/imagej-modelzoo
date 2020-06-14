@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class E01_Prediction {
 
-	ImageJ ij;
+	private ImageJ ij;
 
 	@After
 	public void tearDown() {

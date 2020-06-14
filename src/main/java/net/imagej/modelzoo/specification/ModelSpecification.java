@@ -59,17 +59,17 @@ public class ModelSpecification {
 	private Map<String, Object> trainingKwargs;
 	private String name;
 	private String description;
-	private List<CitationSpecification> citations = new ArrayList<>();
+	private final List<CitationSpecification> citations = new ArrayList<>();
 	private List<String> authors;
 	private String documentation;
 	private List<String> tags;
 	private String license;
 	private String source;
-	private List<InputNodeSpecification> inputNodes = new ArrayList<>();
-	private List<OutputNodeSpecification> outputNodes = new ArrayList<>();
+	private final List<InputNodeSpecification> inputNodes = new ArrayList<>();
+	private final List<OutputNodeSpecification> outputNodes = new ArrayList<>();
 	private String trainingSource;
-	private List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
-	private List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
+	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
+	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
 
 	public boolean readFromZIP(File zippedModel) {
 		try {

@@ -39,6 +39,7 @@ import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.command.CommandService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
@@ -71,7 +72,7 @@ public class TensorFlowModel extends DefaultModel
 	private CommandService commandService;
 
 	@Parameter
-	private LogService logService;
+	private LogService log;
 
 	private CachedModelBundle model;
 	private SignatureDef sig;
@@ -96,7 +97,7 @@ public class TensorFlowModel extends DefaultModel
 			tensorFlowLoaded = true;
 		} else {
 			tensorFlowLoaded = false;
-			logService.error("Could not load TensorFlow. Check previous errors and warnings for details.");
+			log.error("Could not load TensorFlow. Check previous errors and warnings for details.");
 			JOptionPane.showMessageDialog(null,
 					"<html>Could not load TensorFlow.<br/>Opening the TensorFlow Library Management tool.</html>",
 					"Loading TensorFlow failed",
@@ -114,8 +115,7 @@ public class TensorFlowModel extends DefaultModel
 		// The strings "input", "probabilities" and "patches" are meant to be
 		// in sync with the model exporter (export_saved_model()) in Python.
 		if(!loadSignature()) return false;
-		if (!loadModelSettings(source, modelName)) return false;
-		return true;
+		return loadModelSettings(source, modelName);
 	}
 
 	private boolean loadModelSettings(Location source, String modelName) {
@@ -139,8 +139,7 @@ public class TensorFlowModel extends DefaultModel
 			e.printStackTrace();
 			return false;
 		}
-		if(sig == null) return false;
-		return true;
+		return sig != null;
 	}
 
 	private boolean loadModelFile(Location source, String modelName) {
@@ -216,12 +215,12 @@ public class TensorFlowModel extends DefaultModel
 		return getOutputNodes().stream().map(OutputImageNode::getName).collect(Collectors.toList());
 	}
 
-	private void setOutputTensors(List<Tensor<?>> tensors) {
+	private <TO extends RealType<TO>, TI extends RealType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {
 		for (int i = 0; i < tensors.size(); i++) {
 			Tensor tensor = tensors.get(i);
-			OutputImageNode node = getOutputNodes().get(i);
+			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
 //			System.out.println(Arrays.toString(node.getMappingIndices()));
-			RandomAccessibleInterval output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
+			RandomAccessibleInterval<TO> output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
 			node.setData(output);
 		}
 	}
@@ -234,14 +233,6 @@ public class TensorFlowModel extends DefaultModel
 	@Override
 	public boolean isInitialized() {
 		return model != null;
-	}
-
-	protected void logTensorShape(String title, final TensorInfo tensorInfo) {
-		long[] dims = new long[tensorInfo.getTensorShape().getDimCount()];
-		for (int i = 0; i < dims.length; i++) {
-			dims[i] = tensorInfo.getTensorShape().getDimList().get(i).getSize();
-		}
-		log.info(title + ": " + Arrays.toString(dims));
 	}
 
 	@Override

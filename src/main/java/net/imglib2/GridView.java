@@ -228,9 +228,9 @@ public class GridView<T> extends AbstractInterval implements
 
 		private RandomAccess<T> tempBlockAccess;
 
-		public GridViewRandomAccess(
-			final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source,
-			final long[] blockSize)
+		GridViewRandomAccess(
+				final RandomAccessibleInterval<? extends RandomAccessibleInterval<T>> source,
+				final long[] blockSize)
 		{
 			super(source.numDimensions());
 			this.source = source;
@@ -304,9 +304,9 @@ public class GridView<T> extends AbstractInterval implements
 
 		private Cursor<T> tempBlockCursor;
 
-		public GridViewCursor(
-			final IterableInterval<? extends RandomAccessibleInterval<T>> source,
-			final long[] blockSize, final long blockNumElements)
+		GridViewCursor(
+				final IterableInterval<? extends RandomAccessibleInterval<T>> source,
+				final long[] blockSize, final long blockNumElements)
 		{
 			super(source.numDimensions());
 			this.source = source;

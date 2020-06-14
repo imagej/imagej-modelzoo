@@ -40,7 +40,6 @@ public interface Tiling<T extends RealType<T>> {
 		NO_TILING, // e.g. Channel
 		TILE_WITH_PADDING, // e.g. X,Y,Z
 		TILE_WITHOUT_PADDING // e.g. TIME
-		;
 	}
 	void setNumberOfTiles(int nTiles);
 

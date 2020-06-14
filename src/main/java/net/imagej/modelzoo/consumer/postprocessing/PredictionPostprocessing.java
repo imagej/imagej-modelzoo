@@ -31,6 +31,7 @@ package net.imagej.modelzoo.consumer.postprocessing;
 
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import org.scijava.Context;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,10 @@ public class PredictionPostprocessing implements Runnable {
 	private Model model;
 
 	private final Map<String, Object> outputs = new HashMap<>();
+
+	public PredictionPostprocessing(Context context) {
+		context.inject(this);
+	}
 
 	@Override
 	public void run() {

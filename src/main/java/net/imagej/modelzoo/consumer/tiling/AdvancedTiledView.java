@@ -29,36 +29,36 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
+import net.imagej.axis.AxisType;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.TiledView;
+import net.imglib2.type.numeric.RealType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.imglib2.TiledView;
-import net.imagej.axis.AxisType;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
-
-public class AdvancedTiledView<TI extends RealType<TI>, TO extends RealType<TO>> extends TiledView<TI> {
+class AdvancedTiledView<TI extends RealType<TI>, TO extends RealType<TO>> extends TiledView<TI> {
 
 	private final Map<AxisType, Long> originalDims;
 	private final List<RandomAccessibleInterval<TO>> processedTiles;
 	// protected int blockMultiple;
 	// protected long blockWidth;
 
-	public AdvancedTiledView(final RandomAccessibleInterval<TI> source,
-		final long[] blockSize, final long[] overlap, final AxisType[] axes)
+	AdvancedTiledView(final RandomAccessibleInterval<TI> source,
+	                  final long[] blockSize, final long[] overlap)
 	{
 		super(source, blockSize, overlap);
 		processedTiles = new ArrayList<>();
 		originalDims = new HashMap<>();
 	}
 
-	public Map<AxisType, Long> getOriginalDims() {
+	Map<AxisType, Long> getOriginalDims() {
 		return originalDims;
 	}
 
-	public List<RandomAccessibleInterval<TO>> getProcessedTiles() {
+	List<RandomAccessibleInterval<TO>> getProcessedTiles() {
 		return processedTiles;
 	}
 

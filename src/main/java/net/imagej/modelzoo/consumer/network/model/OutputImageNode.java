@@ -37,15 +37,11 @@ import net.imglib2.view.Views;
 public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
 	private InputImageNode<U> reference;
 
-	public boolean makeDataFit() {
-		RandomAccessibleInterval<T> img = null;
-		try {
-			img = getData();
-		} catch(ClassCastException e) { return true; }
+	public void makeDataFit() {
+		RandomAccessibleInterval<T> img = getData();
 		img = toActualSize(img);
 		img = Views.dropSingletonDimensions(img);
 		setData(img);
-		return true;
 	}
 
 	private RandomAccessibleInterval<T> toActualSize(RandomAccessibleInterval<T> img) {
@@ -90,7 +86,7 @@ public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> exte
 		return Views.interval(im, new FinalInterval(min, max));
 	}
 
-	public void setReference(InputImageNode input) {
+	public void setReference(InputImageNode<U> input) {
 		this.reference = input;
 	}
 

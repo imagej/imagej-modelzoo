@@ -40,9 +40,6 @@ import java.util.List;
 
 public abstract class DefaultModel implements Model {
 
-	@Parameter
-	protected LogService log;
-
 	protected final List<InputImageNode<?>> inputNodes = new ArrayList<>();
 	protected final List<OutputImageNode<?, ?>> outputNodes = new ArrayList<>();
 

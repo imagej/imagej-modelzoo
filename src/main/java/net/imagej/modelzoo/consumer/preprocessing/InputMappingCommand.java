@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 
 @Plugin(type = Command.class, name="input mapping")
-public class InputMappingCommand extends DynamicCommand {
+class InputMappingCommand extends DynamicCommand {
 
 	@Parameter
-	Model model;
+	private Model model;
 
 	private static final Map<Character, AxisType> axesMap = Collections.unmodifiableMap(new HashMap<Character, AxisType>() {
 		{

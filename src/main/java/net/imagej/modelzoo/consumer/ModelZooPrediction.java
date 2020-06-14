@@ -60,7 +60,7 @@ public class ModelZooPrediction {
 
 	@Parameter
 	private Context context;
-	private InputMappingHandler inputHandling;
+	private final InputMappingHandler inputHandling;
 	private int nTiles = 8;
 	private int batchSize = 10;
 
@@ -124,8 +124,7 @@ public class ModelZooPrediction {
 	}
 
 	public Model loadModel() {
-		PredictionLoader loader = new PredictionLoader();
-		context.inject(loader);
+		PredictionLoader loader = new PredictionLoader(context);
 		loader.setModelFromFile(modelFile);
 		loader.setModelFromURL(modelUrl);
 		loader.run();
@@ -134,8 +133,7 @@ public class ModelZooPrediction {
 	}
 
 	private void preprocessing(Model model) {
-		PredictionPreprocessing preprocessing = new PredictionPreprocessing();
-		context.inject(preprocessing);
+		PredictionPreprocessing preprocessing = new PredictionPreprocessing(context);
 		preprocessing.setModel(model);
 		preprocessing.run();
 	}
@@ -159,8 +157,7 @@ public class ModelZooPrediction {
 	}
 
 	private Map<String, Object> postprocessing(Model model) {
-		PredictionPostprocessing postprocessing = new PredictionPostprocessing();
-		context.inject(postprocessing);
+		PredictionPostprocessing postprocessing = new PredictionPostprocessing(context);
 		postprocessing.setModel(model);
 		postprocessing.run();
 		return postprocessing.getOutputs();
@@ -170,10 +167,6 @@ public class ModelZooPrediction {
 		context.inject(inputHandling);
 		inputHandling.setModel(model);
 		return inputHandling.getSuccess();
-	}
-
-	public void setHarvestInputs(boolean harvestInputs) {
-		inputHandling.setAskUser(harvestInputs);
 	}
 
 	public void setNumberOfTiles(int nTiles) {

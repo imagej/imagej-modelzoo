@@ -11,6 +11,7 @@ import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.log.LogService;
 import org.tensorflow.framework.SignatureDef;
@@ -98,13 +99,13 @@ class SpecificationLoader {
 		}
 	}
 
-	private void setOutputNodeShape(OutputNodeSpecification data, OutputImageNode<?, ?> node, List<InputImageNode<?>> inputNodes) {
+	private <TO extends RealType<TO>, TI extends RealType<TI>> void setOutputNodeShape(OutputNodeSpecification data, OutputImageNode<TO, TI> node, List<InputImageNode<?>> inputNodes) {
 		String axes = data.getAxes();
 		String reference = data.getReferenceInputName();
 		List<? extends Number> scale = data.getShapeScale();
 		List<Integer> offset = data.getShapeOffset();
 		List<Integer> halo = data.getHalo();
-		node.setReference(getInput(inputNodes, reference));
+		node.setReference((InputImageNode<TI>) getInput(inputNodes, reference));
 		node.clearAxes();
 		for (int i = 0; i < axes.length(); i++) {
 			AxisType axisType = getAxisType(axes.substring(i, i + 1));

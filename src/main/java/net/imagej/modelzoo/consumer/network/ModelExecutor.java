@@ -45,20 +45,20 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
-public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> implements Cancelable
+public class ModelExecutor implements Cancelable
 {
 
 	@Parameter
-	LogService log;
+	private LogService log;
 
 	private final Model model;
-	private Tiling<TO> tiling;
+	private Tiling tiling;
 	private int nTiles = 8;
 	private int oldNTiles;
 	private int oldBatchesSize;
 	private boolean processedTiles = false;
 	private boolean canceled = false;
-	private List<RandomAccessibleInterval<TO>> results = new ArrayList<>();
+	private final List<RandomAccessibleInterval> results = new ArrayList<>();
 	private int batchSize = 10;
 
 	public ModelExecutor(Model model, Context context) {
@@ -76,9 +76,9 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> imp
 				initTiling();
 				while(processNextTile()) {
 					model.predict();
-					setTileResult((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
+					setTileResult(model.getOutputNodes().get(0));
 				}
-				concatenateTiles((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
+				concatenateTiles(model.getOutputNodes().get(0));
 			}
 		}
 		catch(final CancellationException | RejectedExecutionException e) {
@@ -137,7 +137,7 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> imp
 		return true;
 	}
 
-	public boolean processNextTile() {
+	private boolean processNextTile() {
 		// go to next tile
 		if(processedTiles || tiling.getDoneTileCount() == tiling.getTilesNum()) {
 			processedTiles = true;
@@ -149,25 +149,25 @@ public class ModelExecutor<TI extends RealType<TI>, TO extends RealType<TO>> imp
 		return true;
 	}
 
-	public void initTiling() {
+	private <TO extends RealType<TO>, TI extends RealType<TI>> void initTiling() {
 		//TODO reset tiling
 		// start with first tile
 		processedTiles = false;
-		tiling = new DefaultTiling<TO, TI>((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
+		tiling = new DefaultTiling<>((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
 		tiling.setNumberOfTiles(nTiles);
 		tiling.setBatchSize(batchSize);
 		tiling.init();
 		results.clear();
 	}
 
-	public void setTileResult(OutputImageNode<TO, TI> outputNode) {
+	private <TO extends RealType<TO>, TI extends RealType<TI>> void setTileResult(OutputImageNode<TO, TI> outputNode) {
 		//TODO store
 		results.add(outputNode.getData());
 	}
 
-	public void concatenateTiles(OutputImageNode<TO, TI> outputImageNode) {
+	private void concatenateTiles(OutputImageNode outputImageNode) {
 		tiling.setResults(results);
-		RandomAccessibleInterval<TO> result = tiling.getResult();
+		RandomAccessibleInterval result = tiling.getResult();
 		outputImageNode.setData(result);
 	}
 

@@ -12,9 +12,11 @@ import java.util.List;
 public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<RandomAccessibleInterval<T>> implements EuclideanSpace {
 
 	private RandomAccessibleInterval<T> data;
+	private T dataType;
 
-	protected final List<ModelZooAxis> axes = new ArrayList<>();
+	private final List<ModelZooAxis> axes = new ArrayList<>();
 	private List<AxisType> mapping;
+
 
 	public void clearAxes() {
 		axes.clear();
@@ -32,7 +34,7 @@ public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<Random
 		return data;
 	}
 
-	public AxisType[] getAxesArray() {
+	AxisType[] getAxesArray() {
 		AxisType[] res = new AxisType[axes.size()];
 		for (int i = 0; i < res.length; i++) {
 			res[i] = axes.get(i).getType();
@@ -90,5 +92,14 @@ public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<Random
 	public List<ModelZooAxis> getAxes() {
 		return axes;
 	}
+
+	public void setDataType(T type) {
+		this.dataType = type;
+	}
+
+	public T getDataType() {
+		return dataType;
+	}
+
 }
 

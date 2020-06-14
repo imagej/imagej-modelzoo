@@ -13,7 +13,7 @@ import org.scijava.service.Service;
 public class DefaultModelZooService extends AbstractService implements ModelZooService {
 
 	@Parameter
-	Context context;
+	private Context context;
 
 	@Override
 	public RandomAccessibleInterval predict(String modelLocation, RandomAccessibleInterval input, String mapping) {

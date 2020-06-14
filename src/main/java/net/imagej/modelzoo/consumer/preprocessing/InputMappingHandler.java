@@ -6,14 +6,12 @@ import net.imagej.modelzoo.consumer.network.model.ImageNode;
 import net.imagej.modelzoo.consumer.network.model.InputImageNode;
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.preprocessing.InputHarvestingCommand;
-import net.imagej.modelzoo.consumer.preprocessing.InputMappingCommand;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
-import org.scijava.module.ModuleItem;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
 
@@ -39,7 +37,6 @@ public class InputMappingHandler {
 
 	private final Map<String, RandomAccessibleInterval<?>> inputs = new HashMap<>();
 	private final Map<String, String> mapping = new HashMap<>();
-	private boolean askUser = true;
 
 	public void setModel(Model model) {
 		this.model = model;
@@ -64,25 +61,14 @@ public class InputMappingHandler {
 		return !failed;
 	}
 
-	private void runInputHarvesting() throws InterruptedException, ExecutionException {
+	private void runInputHarvesting() {
+		if(model == null) return;
 		Map<String, Object> inputMap = new HashMap<>(inputs);
 		inputMap.put("model", model);
-		if(askUser) {
-			InputHarvestingCommand harvesting = new InputHarvestingCommand();
-			context.inject(harvesting);
-			for (InputImageNode inputNode : model.getInputNodes()) {
-				harvesting.addInput(inputNode.getName(), inputNode.getDataType());
-			}
-			//TODO check what is actually supposed to happen here
-			commandService.moduleService().run(harvesting, true, inputMap).get();
-		} else {
-			if(model != null) {
-				for (InputImageNode inputNode : model.getInputNodes()) {
-					RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
-					if(data == null) continue;
-					inputNode.setData(data);
-				}
-			}
+		for (InputImageNode<?> inputNode : model.getInputNodes()) {
+			RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
+			if(data == null) continue;
+			inputNode.setData(data);
 		}
 	}
 
@@ -103,7 +89,7 @@ public class InputMappingHandler {
 	}
 
 	private void runOutputMapping() {
-		for (OutputImageNode outputNode : model.getOutputNodes()) {
+		for (OutputImageNode<?, ?> outputNode : model.getOutputNodes()) {
 			if(outputNode.getReference() != null) {
 				outputNode.setDataMapping(outputNode.getReference().getDataMapping());
 			}
@@ -118,7 +104,7 @@ public class InputMappingHandler {
 					node.setDataMapping(InputMappingCommand.parseMappingStr(mapping.get(node.getName())));
 					return false;
 				}
-				createMappingChoice(mappingCommand, node, rai);
+				addMappingChoice(mappingCommand, node, rai);
 				return true;
 			} else {
 				node.setDataMapping(get2DMapping());
@@ -140,13 +126,12 @@ public class InputMappingHandler {
 //		MutableModuleItem<String> item = command.addInput(text, String.class);
 	}
 
-	private ModuleItem<?> createMappingChoice(DynamicCommand command, ImageNode node, RandomAccessibleInterval rai) {
+	private <T extends RealType<T>> void addMappingChoice(DynamicCommand command, ImageNode<T> node, RandomAccessibleInterval<T> rai) {
 		String name = node.getName();
 		MutableModuleItem<String> moduleItem = command.addInput(name, String.class);
 		final List<String> choices = InputMappingCommand.getMappingOptions(rai.numDimensions());
 		moduleItem.setChoices(choices);
 		moduleItem.setDefaultValue(choices.get(0));
-		return moduleItem;
 	}
 
 	public boolean getSuccess() {
@@ -156,10 +141,6 @@ public class InputMappingHandler {
 	public void addInput(String name, RandomAccessibleInterval<?> value, String mapping) {
 		inputs.put(name, value);
 		this.mapping.put(name, mapping);
-	}
-
-	public void setAskUser(boolean askUser) {
-		this.askUser = askUser;
 	}
 
 }

@@ -58,11 +58,15 @@ public class PredictionLoader implements Runnable {
 	@Parameter
 	private LogService log;
 
+	public PredictionLoader(Context context) {
+		context.inject(this);
+	}
+
 	public enum NetworkInputSourceType { UNSET, FILE, URL }
 
 	private NetworkInputSourceType networkInputSourceType = NetworkInputSourceType.UNSET;
-	protected String cacheName;
-	protected String modelFileKey;
+	private String cacheName;
+	private String modelFileKey;
 
 	private String modelFileUrl = "";
 

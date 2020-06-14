@@ -70,7 +70,7 @@ public abstract class NodeSpecification {
 		return res;
 	}
 
-	public NodeSpecification fromMap(Map data) {
+	NodeSpecification fromMap(Map data) {
 		setName((String) data.get(idNodeName));
 		setAxes((String) data.get(idNodeAxes));
 		setDataType((String) data.get(idNodeDataType));

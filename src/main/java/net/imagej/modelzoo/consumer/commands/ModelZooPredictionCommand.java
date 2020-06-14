@@ -65,7 +65,7 @@ public class ModelZooPredictionCommand implements Command {
 	private String mapping = "XYZTC";
 
 	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
-	protected int nTiles = 8;
+	private int nTiles = 8;
 
 	@Parameter(label = "Batch size")
 	private int batchSize = 10;
@@ -89,7 +89,7 @@ public class ModelZooPredictionCommand implements Command {
 			SingleOutputPrediction prediction = new SingleOutputPrediction(context);
 			prediction.setInput("input", input, mapping);
 			prediction.setModelFile(modelFile);
-			prediction.setModelFile(modelUrl);
+			prediction.setModelUrl(modelUrl);
 			prediction.setNumberOfTiles(nTiles);
 			prediction.setBatchSize(batchSize);
 			prediction.run();

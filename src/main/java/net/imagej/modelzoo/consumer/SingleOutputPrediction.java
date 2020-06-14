@@ -60,10 +60,6 @@ public class SingleOutputPrediction extends ModelZooPrediction {
 		return output;
 	}
 
-	public void setOutput(RandomAccessibleInterval output) {
-		this.output = output;
-	}
-
 	public static void main(String...args) throws IOException, URISyntaxException {
 		ImageJ ij = new ImageJ();
 		ij.launch();

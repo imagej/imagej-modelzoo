@@ -164,7 +164,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 	}
 
-	public static long arrayProduct(long[] array) {
+	private static long arrayProduct(long[] array) {
 		long rtn = 1;
 		for (long i : array) {
 			rtn *= i;
@@ -263,7 +263,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 	private AdvancedTiledView<TI, TO> createTiledView(RandomAccessibleInterval<TI> input, long[] tileSize, long[] padding)
 	{
-		return new AdvancedTiledView<>(input, tileSize, padding, inputNode.getDataAxesArray());
+		return new AdvancedTiledView<>(input, tileSize, padding);
 	}
 
 	@Override

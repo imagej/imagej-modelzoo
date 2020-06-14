@@ -39,16 +39,15 @@ public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
 
 	//TODO this is ugly
 	public boolean makeDataFit() {
-		Object data = getData();
+		RandomAccessibleInterval<T> img = getData();
 		int[] mappingIndices = getMappingIndices();
 		try {
-			RandomAccessibleInterval img = (RandomAccessibleInterval) data;
 
 			img = addAxesIfNeeded(img);
 
 			for (int i = 0; i < img.numDimensions(); i++) {
 				ModelZooAxis axis = getAxes().get(mappingIndices[i]);
-				int min = (int) axis.getMin();
+				int min = axis.getMin();
 				Object step = axis.getStep();
 				long size = img.dimension(i);
 				long newsize = size;
@@ -81,7 +80,7 @@ public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
 		return true;
 	}
 
-	private RandomAccessibleInterval addAxesIfNeeded(RandomAccessibleInterval img) {
+	private RandomAccessibleInterval<T> addAxesIfNeeded(RandomAccessibleInterval<T> img) {
 		AxisType[] axes = getAxesArray();
 		while(img.numDimensions() < axes.length) {
 			img = Views.addDimension(img, 0, 0);

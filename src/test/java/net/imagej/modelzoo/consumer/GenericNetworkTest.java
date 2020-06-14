@@ -34,7 +34,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 	@Test
 	public void testNonExistingNetworkPref() throws ExecutionException, InterruptedException {
 		createImageJ();
-		String bla = new PredictionLoader().getModelFileKey();
+		String bla = new PredictionLoader(ij.context()).getModelFileKey();
 		ij.prefs().put(ModelZooPredictionCommand.class, bla, "/something/useless");
 		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(2,2);
 		ij.command().run(ModelZooPredictionCommand.class, true,
