@@ -27,13 +27,13 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.commands.postprocessing.PredictionPostprocessing;
-import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionInputHandler;
-import net.imagej.modelzoo.consumer.commands.preprocessing.PredictionPreprocessing;
+import net.imagej.modelzoo.consumer.network.ModelExecutor;
 import net.imagej.modelzoo.consumer.network.model.Model;
+import net.imagej.modelzoo.consumer.postprocessing.PredictionPostprocessing;
+import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.scijava.Context;
@@ -52,54 +52,61 @@ public class ModelZooPrediction {
 
 	private File modelFile;
 	private String modelUrl;
-	private int nTiles;
-	private RandomAccessibleInterval output;
+	private Model model;
 
 	@Parameter
 	private LogService log;
 
 	@Parameter
 	private Context context;
-	private PredictionInputHandler inputHarvesting;
+	private PredictionDataHandler inputHandling;
+	private int nTiles;
 
-	public ModelZooPrediction() {
-		inputHarvesting = new PredictionInputHandler();
-		nTiles = 1;
+	public ModelZooPrediction(Context context) {
+		inputHandling = new PredictionDataHandler();
+		context.inject(this);
 	}
 
-	public void run() {
+	public Map<String, Object> run() {
 
 		final long startTime = System.currentTimeMillis();
 
+		Map<String, Object> res = null;
+
+		if(model == null) loadModel();
+
 		try {
-
-			Model model = loadModel();
-
 			if(!model.isInitialized()) {
-				return;
+				return res;
 			}
 
-			if(!inputValidationAndMapping(model)) return;
+			if(!inputValidationAndMapping(model)) return null;
 
 			preprocessing(model);
 			executePrediction(model);
-			postprocessing(model);
+			res = postprocessing(model);
 
 		} catch(CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
 		} catch(OutOfMemoryError e) {
 			e.printStackTrace();
+		} finally {
+			model.dispose();
 		}
 		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
-
+		return res;
 	}
 
-	public void setInput(String name, Object value) {
-		inputHarvesting.addInput(name, value);
+	public void setInput(String name, RandomAccessibleInterval<?> value) {
+		inputHandling.addInput(name, value);
 	}
 
 	public File getModelFile() {
 		return modelFile;
+	}
+
+	public void setModelFile(String modelFile) {
+		setModelFile(new File(modelFile));
 	}
 
 	public void setModelFile(File modelFile) {
@@ -114,21 +121,14 @@ public class ModelZooPrediction {
 		this.modelUrl = modelUrl;
 	}
 
-	public RandomAccessibleInterval getOutput() {
-		return output;
-	}
-
-	public void setOutput(RandomAccessibleInterval output) {
-		this.output = output;
-	}
-
-	private Model loadModel() {
+	public Model loadModel() {
 		PredictionLoader loader = new PredictionLoader();
 		context.inject(loader);
 		loader.setModelFromFile(modelFile);
 		loader.setModelFromURL(modelUrl);
 		loader.run();
-		return loader.getModel();
+		this.model = loader.getModel();
+		return model;
 	}
 
 	private void preprocessing(Model model) {
@@ -139,30 +139,39 @@ public class ModelZooPrediction {
 	}
 
 	private void executePrediction(Model model) {
-		PredictionExecutor executor = new PredictionExecutor();
-		context.inject(executor);
-		executor.setModel(model);
-		executor.run();
+		ModelExecutor executor = new ModelExecutor(model, context);
+		executor.setNumberOfTiles(nTiles);
+		boolean isOutOfMemory = true;
+		boolean canHandleOutOfMemory = true;
+
+		while (isOutOfMemory && canHandleOutOfMemory) {
+			try {
+				executor.run();
+				isOutOfMemory = false;
+			}
+			catch (final OutOfMemoryError e) {
+				canHandleOutOfMemory = executor.increaseTiling();
+			}
+		}
 	}
 
-	private void postprocessing(Model model) {
+	private Map<String, Object> postprocessing(Model model) {
 		PredictionPostprocessing postprocessing = new PredictionPostprocessing();
 		context.inject(postprocessing);
 		postprocessing.setModel(model);
 		postprocessing.run();
-		Map<String, Object> outputs = postprocessing.getOutputs();
-		this.output = (RandomAccessibleInterval) outputs.values().iterator().next();
+		return postprocessing.getOutputs();
 	}
 
 	private boolean inputValidationAndMapping(Model model) {
-		context.inject(inputHarvesting);
-		inputHarvesting.setModel(model);
-		inputHarvesting.run();
-		return inputHarvesting.getSuccess();
+		context.inject(inputHandling);
+		inputHandling.setModel(model);
+		inputHandling.setupInputsAndOutputs();
+		return inputHandling.getSuccess();
 	}
 
 	public void setHarvestInputs(boolean harvestInputs) {
-		inputHarvesting.setAskUser(harvestInputs);
+		inputHandling.setAskUser(harvestInputs);
 	}
 
 	public void setNumberOfTiles(int nTiles) {
@@ -183,12 +192,11 @@ public class ModelZooPrediction {
 		File model = new File(ModelZooPrediction.class.getClassLoader()
 				.getResource("denoise2D/model.zip").toURI());
 
-		ModelZooPrediction prediction = new ModelZooPrediction();
-		ij.context().inject(prediction);
+		ModelZooPrediction prediction = new ModelZooPrediction(ij.context());
 		prediction.setInput("input", input);
 		prediction.setModelFile(model);
-		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
+		Map<String, Object> res = prediction.run();
+		RandomAccessibleInterval output = (RandomAccessibleInterval) res.values().iterator().next();
 
 		ij.ui().show(output);
 	}

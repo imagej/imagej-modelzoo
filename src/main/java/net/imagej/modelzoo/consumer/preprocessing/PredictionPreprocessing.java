@@ -27,18 +27,34 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.tiling;
+package net.imagej.modelzoo.consumer.preprocessing;
 
-import java.util.List;
+import net.imagej.modelzoo.consumer.network.model.Model;
+import org.scijava.command.CommandService;
+import org.scijava.plugin.Parameter;
 
-import net.imagej.modelzoo.consumer.task.Task;
-import net.imagej.axis.AxisType;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+public class PredictionPreprocessing implements Runnable {
 
-public interface OutputTiler<T extends RealType<T>> extends Task {
+	private Model model;
 
-	List<RandomAccessibleInterval<T>> run(List<AdvancedTiledView<T>> input,
-		Tiling tiling, AxisType[] axisTypes);
+	@Parameter
+	CommandService commandService;
 
+	@Override
+	public void run() {
+		//TODO
+		// (1) get preprocessing steps from model config
+		// (2) run each preprocessing command with the input according to the config
+		// (3) set model node data from preprocessed outputs
+//		try {
+
+//			commandService.run(FitInputDataCommand.class, false, "model", model).get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			e.printStackTrace();
+//		}
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
 }

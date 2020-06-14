@@ -35,9 +35,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-import java.util.Map;
-
-public class InputNode extends ModelZooNode {
+public class InputImageNode <T extends RealType<T>> extends ImageNode<T> {
 
 	//TODO this is ugly
 	public boolean makeDataFit() {
@@ -49,16 +47,16 @@ public class InputNode extends ModelZooNode {
 			img = addAxesIfNeeded(img);
 
 			for (int i = 0; i < img.numDimensions(); i++) {
-				Map<String, Object> attrs = getAxis(mappingIndices[i]).getAttributes();
-				int min = (int) attrs.get("min");
-				Object step = attrs.get("step");
+				ModelZooAxis axis = getAxes().get(mappingIndices[i]);
+				int min = (int) axis.getMin();
+				Object step = axis.getStep();
 				long size = img.dimension(i);
 				long newsize = size;
 				if(size < min) {
 					newsize = min;
 				} else {
 					if(step == null) {
-						attrs.put("actual", size);
+						axis.setActual(size);
 						continue;
 					}
 					if((int)step == 0) {
@@ -76,8 +74,7 @@ public class InputNode extends ModelZooNode {
 					}
 				}
 				img = expandDimToSize(img, i, newsize);
-				attrs.put("actual", size);
-
+				axis.setActual(size);
 			}
 			setData(img);
 		} catch(ClassCastException ignored) {}
@@ -92,7 +89,7 @@ public class InputNode extends ModelZooNode {
 		return img;
 	}
 
-	private <T extends RealType<T>> RandomAccessibleInterval<T> expandDimToSize(
+	private RandomAccessibleInterval<T> expandDimToSize(
 			final RandomAccessibleInterval<T> im, final int d, final long size)
 	{
 		final int n = im.numDimensions();

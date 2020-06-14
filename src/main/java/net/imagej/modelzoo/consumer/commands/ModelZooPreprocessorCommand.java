@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer.commands.preprocessing;
+package net.imagej.modelzoo.consumer.commands;
 
 import org.scijava.command.Command;
 

@@ -1,11 +1,13 @@
-package net.imagej.modelzoo.consumer.commands.preprocessing;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.network.model.InputNode;
+import net.imagej.modelzoo.consumer.network.model.ImageNode;
+import net.imagej.modelzoo.consumer.network.model.InputImageNode;
 import net.imagej.modelzoo.consumer.network.model.Model;
-import net.imagej.modelzoo.consumer.network.model.ModelZooNode;
-import net.imagej.modelzoo.consumer.network.model.OutputNode;
+import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.preprocessing.InputHarvestingCommand;
+import net.imagej.modelzoo.consumer.preprocessing.InputMappingCommand;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
@@ -21,25 +23,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class PredictionInputHandler implements Runnable {
+public class PredictionDataHandler {
 
 	@Parameter
-	LogService log;
+	private LogService log;
 
 	@Parameter
-	CommandService commandService;
+	private CommandService commandService;
 
 	@Parameter
-	Context context;
+	private Context context;
 
 	private Model model;
 	private boolean success;
 
-	private final Map<String, Object> inputs = new HashMap<>();
+	private final Map<String, RandomAccessibleInterval<?>> inputs = new HashMap<>();
 	private boolean askUser = true;
 
-	@Override
-	public void run() {
+	void setupInputsAndOutputs() {
 		try {
 			runInputHarvesting();
 			runInputMapping();
@@ -52,7 +53,7 @@ public class PredictionInputHandler implements Runnable {
 
 	private boolean validateAndFitInputs(final Model model) {
 		boolean failed = false;
-		for (InputNode inputNode : model.getInputNodes()) {
+		for (InputImageNode inputNode : model.getInputNodes()) {
 			boolean validInput = inputNode.makeDataFit();
 			if(!validInput) {
 				failed = true;
@@ -62,20 +63,20 @@ public class PredictionInputHandler implements Runnable {
 	}
 
 	private void runInputHarvesting() throws InterruptedException, ExecutionException {
-		Map inputMap = new HashMap(inputs);
+		Map<String, Object> inputMap = new HashMap<>(inputs);
 		inputMap.put("model", model);
 		if(askUser) {
 			InputHarvestingCommand harvesting = new InputHarvestingCommand();
 			context.inject(harvesting);
-			for (InputNode inputNode : model.getInputNodes()) {
+			for (InputImageNode inputNode : model.getInputNodes()) {
 				harvesting.addInput(inputNode.getName(), inputNode.getDataType());
 			}
 			//TODO check what is actually supposed to happen here
 			commandService.moduleService().run(harvesting, true, inputMap).get();
 		} else {
 			if(model != null) {
-				for (InputNode inputNode : model.getInputNodes()) {
-					Object data = inputMap.get(inputNode.getName());
+				for (InputImageNode inputNode : model.getInputNodes()) {
+					RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
 					if(data == null) continue;
 					inputNode.setData(data);
 				}
@@ -88,7 +89,7 @@ public class PredictionInputHandler implements Runnable {
 		context.inject(mapping);
 		addText(mapping, "Inputs");
 		boolean mappingCommandNeeded = false;
-		for (InputNode node : model.getInputNodes()) {
+		for (InputImageNode node : model.getInputNodes()) {
 			// TODO only do this for nodes of type image
 			if(handleMapping(mapping, node)) {
 				mappingCommandNeeded = true;
@@ -100,14 +101,14 @@ public class PredictionInputHandler implements Runnable {
 	}
 
 	private void runOutputMapping() {
-		for (OutputNode outputNode : model.getOutputNodes()) {
+		for (OutputImageNode outputNode : model.getOutputNodes()) {
 			if(outputNode.getReference() != null) {
 				outputNode.setDataMapping(outputNode.getReference().getDataMapping());
 			}
 		}
 	}
 
-	private boolean handleMapping(InputMappingCommand mapping, ModelZooNode node) {
+	private boolean handleMapping(InputMappingCommand mapping, ImageNode node) {
 		try {
 			RandomAccessibleInterval rai = (RandomAccessibleInterval) node.getData();
 			if(rai.numDimensions() > 2) {
@@ -133,7 +134,7 @@ public class PredictionInputHandler implements Runnable {
 //		MutableModuleItem<String> item = command.addInput(text, String.class);
 	}
 
-	private ModuleItem<?> createMappingChoice(DynamicCommand command, ModelZooNode node, RandomAccessibleInterval rai) {
+	private ModuleItem<?> createMappingChoice(DynamicCommand command, ImageNode node, RandomAccessibleInterval rai) {
 		String name = node.getName();
 		MutableModuleItem<String> moduleItem = command.addInput(name, String.class);
 		final List<String> choices = InputMappingCommand.getMappingOptions(rai.numDimensions());
@@ -150,11 +151,12 @@ public class PredictionInputHandler implements Runnable {
 		return success;
 	}
 
-	public void addInput(String name, Object value) {
+	public void addInput(String name, RandomAccessibleInterval<?> value) {
 		inputs.put(name, value);
 	}
 
 	public void setAskUser(boolean askUser) {
 		this.askUser = askUser;
 	}
+
 }

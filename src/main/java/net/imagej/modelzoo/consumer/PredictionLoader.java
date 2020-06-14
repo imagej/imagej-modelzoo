@@ -27,7 +27,7 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.consumer.network.model.Model;
 import net.imagej.modelzoo.consumer.network.model.tensorflow.TensorFlowModel;

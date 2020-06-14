@@ -1,17 +1,15 @@
-package net.imagej.modelzoo.consumer.commands.preprocessing;
+package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.network.model.InputNode;
+import net.imagej.modelzoo.consumer.network.model.InputImageNode;
 import net.imagej.modelzoo.consumer.network.model.Model;
-import net.imagej.modelzoo.consumer.network.model.OutputNode;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +34,7 @@ public class InputMappingCommand extends DynamicCommand {
 	@Override
 	public void run() {
 		if(model != null) {
-			for (InputNode inputNode : model.getInputNodes()) {
+			for (InputImageNode inputNode : model.getInputNodes()) {
 				Object val = getInput(inputNode.getName());
 				if(val == null) continue;
 				System.out.println(inputNode.getName() + " mapping: " + val);

@@ -34,15 +34,13 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-import java.util.Map;
-
-public class OutputNode extends ModelZooNode {
-	private InputNode reference;
+public class OutputImageNode <T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
+	private InputImageNode<U> reference;
 
 	public boolean makeDataFit() {
-		RandomAccessibleInterval img = null;
+		RandomAccessibleInterval<T> img = null;
 		try {
-			img = (RandomAccessibleInterval) getData();
+			img = getData();
 		} catch(ClassCastException e) { return true; }
 		img = toActualSize(img);
 		img = Views.dropSingletonDimensions(img);
@@ -50,7 +48,7 @@ public class OutputNode extends ModelZooNode {
 		return true;
 	}
 
-	private RandomAccessibleInterval toActualSize(RandomAccessibleInterval img) {
+	private RandomAccessibleInterval<T> toActualSize(RandomAccessibleInterval<T> img) {
 
 		if(getReference() == null) return img;
 
@@ -68,13 +66,13 @@ public class OutputNode extends ModelZooNode {
 	}
 
 	private Long getExpectedSize(int mappingIndex) {
-		Map<String, Object> attrsIn = getReference().getAxis(mappingIndex).getAttributes();
-		Map<String, Object> attrsOut = getAxis(mappingIndex).getAttributes();
-		Object actual = attrsIn.get("actual");
-		Object offset = attrsOut.get("offset");
-		Object scale = attrsOut.get("scale");
-		Long newSize = actual != null? (Long) actual : 1;
-		if(scale != null) newSize = (long) (newSize * (float) scale);
+		ModelZooAxis inAxis = getReference().getAxes().get(mappingIndex);
+		ModelZooAxis outAxis = getAxes().get(mappingIndex);
+		Long actual = inAxis.getActual();
+		Integer offset = outAxis.getOffset();
+		Double scale = outAxis.getScale();
+		Long newSize = actual != null? actual : 1;
+		if(scale != null) newSize = (long) (newSize * scale);
 		if(offset != null) newSize += (int)offset;
 		return newSize;
 	}
@@ -92,11 +90,11 @@ public class OutputNode extends ModelZooNode {
 		return Views.interval(im, new FinalInterval(min, max));
 	}
 
-	public void setReference(InputNode input) {
+	public void setReference(InputImageNode input) {
 		this.reference = input;
 	}
 
-	public InputNode getReference() {
+	public InputImageNode<U> getReference() {
 		return reference;
 	}
 }

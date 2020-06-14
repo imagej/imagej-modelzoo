@@ -39,46 +39,27 @@ import net.imagej.axis.AxisType;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 
-public class AdvancedTiledView<T extends RealType<T>> extends TiledView<T> {
+public class AdvancedTiledView<TI extends RealType<TI>, TO extends RealType<TO>> extends TiledView<TI> {
 
 	private final Map<AxisType, Long> originalDims;
-	private final AxisType[] originalAxes;
-	private final List<RandomAccessibleInterval<T>> processedTiles;
+	private final List<RandomAccessibleInterval<TO>> processedTiles;
 	// protected int blockMultiple;
 	// protected long blockWidth;
 
-	public AdvancedTiledView(final RandomAccessibleInterval<T> source,
+	public AdvancedTiledView(final RandomAccessibleInterval<TI> source,
 		final long[] blockSize, final long[] overlap, final AxisType[] axes)
 	{
 		super(source, blockSize, overlap);
 		processedTiles = new ArrayList<>();
 		originalDims = new HashMap<>();
-		this.originalAxes = axes;
-	}
-
-	public long[] getOverlapComplete() {
-		long[] overlap = new long[originalAxes.length];
-		for(int i = 0; i < numDimensions(); i++) {
-			overlap[i] = super.getOverlap()[i];
-		}
-		return overlap;
 	}
 
 	public Map<AxisType, Long> getOriginalDims() {
 		return originalDims;
 	}
 
-	public List<RandomAccessibleInterval<T>> getProcessedTiles() {
+	public List<RandomAccessibleInterval<TO>> getProcessedTiles() {
 		return processedTiles;
 	}
 
-	public AxisType[] getOriginalAxes() {
-		return originalAxes;
-	}
-
-	public void dispose() {
-		// if(originalDims != null) {
-		// originalDims.clear();
-		// }
-	}
 }

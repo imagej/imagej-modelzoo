@@ -30,6 +30,7 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.ImageJ;
+import net.imagej.modelzoo.consumer.SingleOutputPrediction;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.scijava.Context;
@@ -60,6 +61,9 @@ public class ModelZooPredictionCommand implements Command {
 	@Parameter(label = "Import model (.zip) from URL", required = false)
 	private String modelUrl;
 
+	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
+	protected int nTiles = 8;
+
 	@Parameter(type = ItemIO.OUTPUT)
 	private RandomAccessibleInterval output;
 
@@ -75,10 +79,10 @@ public class ModelZooPredictionCommand implements Command {
 
 		try {
 
-			ModelZooPrediction prediction = new ModelZooPrediction();
-			context.inject(prediction);
+			SingleOutputPrediction prediction = new SingleOutputPrediction(context);
 			prediction.setInput("input", input);
 			prediction.setModelFile(modelFile);
+			prediction.setNumberOfTiles(nTiles);
 			prediction.run();
 			output = prediction.getOutput();
 

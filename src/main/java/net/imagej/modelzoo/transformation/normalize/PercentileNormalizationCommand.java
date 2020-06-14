@@ -1,6 +1,6 @@
 package net.imagej.modelzoo.transformation.normalize;
 
-import net.imagej.modelzoo.consumer.commands.preprocessing.ModelZooPreprocessorCommand;
+import net.imagej.modelzoo.consumer.commands.ModelZooPreprocessorCommand;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
 import org.scijava.ItemIO;

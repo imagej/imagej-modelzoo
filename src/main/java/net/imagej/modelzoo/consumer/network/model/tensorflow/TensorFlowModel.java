@@ -32,26 +32,26 @@ package net.imagej.modelzoo.consumer.network.model.tensorflow;
 import com.google.protobuf.InvalidProtocolBufferException;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.network.model.DefaultModel;
-import net.imagej.modelzoo.consumer.network.model.InputNode;
-import net.imagej.modelzoo.consumer.network.model.OutputNode;
+import net.imagej.modelzoo.consumer.network.model.InputImageNode;
+import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
 import org.scijava.command.CommandService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
+import org.tensorflow.Output;
 import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlowException;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 import org.tensorflow.framework.TensorInfo;
 
-import javax.swing.*;
+import javax.swing.JOptionPane;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,8 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TensorFlowModel<T extends RealType<T>> extends
-		DefaultModel<T>
+public class TensorFlowModel extends DefaultModel
 {
 	@Parameter
 	private TensorFlowService tensorFlowService;
@@ -76,7 +75,6 @@ public class TensorFlowModel<T extends RealType<T>> extends
 
 	private CachedModelBundle model;
 	private SignatureDef sig;
-	private Map meta;
 	private boolean tensorFlowLoaded = false;
 	// Same as
 	// tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
@@ -151,6 +149,13 @@ public class TensorFlowModel<T extends RealType<T>> extends
 				model.close();
 			}
 			model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
+			model.model().graph().operations().forEachRemaining( op -> {
+				for ( int i = 0; i < op.numOutputs(); i++ ) {
+					Output< Object > opOutput = op.output( i );
+					String name = opOutput.op().name();
+					System.out.println( name );
+				}
+			} );
 		}
 		catch (TensorFlowException | IOException e) {
 			e.printStackTrace();
@@ -159,23 +164,25 @@ public class TensorFlowModel<T extends RealType<T>> extends
 		return true;
 	}
 
-	private void loadModelSettingsFromYaml(File yamlFile) throws FileNotFoundException {
+	private void loadModelSettingsFromYaml(File yamlFile) throws IOException {
 		if(!yamlFile.exists()) return;
-		YamlReader reader = new YamlReader(log, sig, yamlFile);
-		if(reader.isJavaModel()) {
-			inputNodes.clear();
-			inputNodes.addAll(reader.processInputs());
-			outputNodes.clear();
-			outputNodes.addAll(reader.processOutputs(inputNodes));
-			reader.processPrediction();
-		} else {
+		ModelSpecification specification = new ModelSpecification();
+		boolean success = specification.read(yamlFile);
+		if(!success) {
 			log.error("Model seems to be incompatible.");
+			return;
 		}
+		inputNodes.clear();
+		SpecificationLoader loader = new SpecificationLoader(log, sig, specification);
+		inputNodes.addAll(loader.processInputs());
+		outputNodes.clear();
+		outputNodes.addAll(loader.processOutputs(inputNodes));
+		loader.processPrediction();
 	}
 
 	// TODO this is the tensorflow runner
 	@Override
-	public void execute() throws IllegalArgumentException, OutOfMemoryError {
+	public void predict() throws IllegalArgumentException, OutOfMemoryError {
 		List<Tensor> inputTensors = getInputTensors();
 		List<String> outputNames = getOutputNames();
 		List<Tensor<?>> outputTensors = TensorFlowRunner.executeGraph(
@@ -191,7 +198,7 @@ public class TensorFlowModel<T extends RealType<T>> extends
 
 	private List<Tensor> getInputTensors() {
 		List<Tensor> res = new ArrayList<>();
-		for (InputNode node : getInputNodes()) {
+		for (InputImageNode node : getInputNodes()) {
 			final Tensor tensor = TensorFlowConverter.toTensor(node.getData(), node.getMappingIndices());
 			if(tensor == null) {
 				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
@@ -202,19 +209,19 @@ public class TensorFlowModel<T extends RealType<T>> extends
 	}
 
 	private List<String> getInputNames() {
-		return getInputNodes().stream().map(InputNode::getName).collect(Collectors.toList());
+		return getInputNodes().stream().map(InputImageNode::getName).collect(Collectors.toList());
 	}
 
 	private List<String> getOutputNames() {
-		return getOutputNodes().stream().map(OutputNode::getName).collect(Collectors.toList());
+		return getOutputNodes().stream().map(OutputImageNode::getName).collect(Collectors.toList());
 	}
 
 	private void setOutputTensors(List<Tensor<?>> tensors) {
 		for (int i = 0; i < tensors.size(); i++) {
 			Tensor tensor = tensors.get(i);
-			OutputNode node = getOutputNodes().get(i);
-			System.out.println(Arrays.toString(node.getMappingIndices()));
-			RandomAccessibleInterval<T> output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
+			OutputImageNode node = getOutputNodes().get(i);
+//			System.out.println(Arrays.toString(node.getMappingIndices()));
+			RandomAccessibleInterval output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
 			node.setData(output);
 		}
 	}

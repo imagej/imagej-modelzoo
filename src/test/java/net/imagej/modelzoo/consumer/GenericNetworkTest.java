@@ -1,12 +1,12 @@
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.Dataset;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
+import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;

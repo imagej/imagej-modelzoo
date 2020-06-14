@@ -29,28 +29,23 @@
 
 package net.imagej.modelzoo.consumer.network.model.tensorflow;
 
-import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.converter.RealIntConverter;
 import net.imagej.tensorflow.Tensors;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
+import net.imglib2.converter.RealDoubleConverter;
 import net.imglib2.converter.RealFloatConverter;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.integer.AbstractIntegerType;
 import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.LongType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.view.Views;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
 
-public class TensorFlowConverter {
+class TensorFlowConverter {
 
-	public static <T extends RealType<T>>
+	static <T extends RealType<T>>
 		RandomAccessibleInterval<T> fromTensor(final Tensor tensor, final int[] mapping) {
 		if (tensor.dataType().equals(DataType.DOUBLE)) {
 			return Tensors.imgDouble(tensor, mapping);
@@ -70,7 +65,7 @@ public class TensorFlowConverter {
 		return null;
 	}
 
-	public static <T extends RealType<T>> Tensor imageToTensor(
+	private static <T extends RealType<T>> Tensor imageToTensor(
 			RandomAccessibleInterval<T> image, final int[] mapping)
 	{
 
@@ -79,9 +74,13 @@ public class TensorFlowConverter {
 			tensor = Tensors.tensor(image, mapping);
 		}
 		catch (IllegalArgumentException e) {
-			if (image.randomAccess().get() instanceof UnsignedShortType) {
+			if(AbstractIntegerType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
 				tensor = Tensors.tensor(Converters.convert(image,
 						new RealIntConverter<>(), new IntType()), mapping);
+			}
+			else if(DoubleType.class.isAssignableFrom(image.randomAccess().get().getClass())) {
+				tensor = Tensors.tensor(Converters.convert(image,
+						new RealDoubleConverter<>(), new DoubleType()), mapping);
 			}
 			else {
 				tensor = Tensors.tensor(Converters.convert(image,
@@ -91,9 +90,9 @@ public class TensorFlowConverter {
 		return tensor;
 	}
 
-	public static Tensor toTensor(Object data, int[] mapping) {
+	static <T extends RealType<T>> Tensor toTensor(Object data, int[] mapping) {
 		try {
-			return imageToTensor((RandomAccessibleInterval)data, mapping);
+			return imageToTensor((RandomAccessibleInterval<T>)data, mapping);
 		} catch (ClassCastException e) {
 			e.printStackTrace();
 			return null;

@@ -29,30 +29,27 @@
 
 package net.imagej.modelzoo.consumer.network.model;
 
-import net.imglib2.TiledView;
-import org.scijava.Cancelable;
 import org.scijava.Disposable;
 
 import java.io.FileNotFoundException;
 import java.util.List;
 
-public interface Model extends
-	Runnable, Disposable, Cancelable
+public interface Model extends Disposable
 {
 
 	boolean loadModel(String pathOrURL, String modelName)
 		throws FileNotFoundException;
 
-	List<InputNode> getInputNodes();
+	List<InputImageNode<?>> getInputNodes();
 
-	List<OutputNode> getOutputNodes();
+	List<OutputImageNode<?, ?>> getOutputNodes();
 
 	boolean isInitialized();
-
-	void resetTileCount();
 
 	default void loadLibrary(){}
 
 	boolean libraryLoaded();
+
+	void predict();
 
 }

@@ -32,21 +32,18 @@ package net.imagej.modelzoo.consumer.network.model.tensorflow;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
-import org.tensorflow.framework.TensorInfo;
 
-import javax.swing.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-public class TensorFlowRunner {
+class TensorFlowRunner {
 
 	/*
 	 * runs graph on multiple input / output tensors
 	 *
 	 */
-	public static List<Tensor<?>> executeGraph(final SavedModelBundle model,
-	                                           final List<Tensor> inputs, final List<String> inputNames,
-	                                           final List<String> outputNames) throws IllegalArgumentException
+	static List<Tensor<?>> executeGraph(final SavedModelBundle model,
+	                                    final List<Tensor> inputs, final List<String> inputNames,
+	                                    final List<String> outputNames) throws IllegalArgumentException
 	{
 
 //		System.out.println("input operation: " + opName(inputTensorInfo));
@@ -60,20 +57,6 @@ public class TensorFlowRunner {
 			runner.fetch(outputName);
 		}
 		return runner.run();
-	}
-
-	/**
-	 * The SignatureDef inputs and outputs contain names of the form
-	 * {@code <operation_name>:<output_index>}, where for this model,
-	 * {@code <output_index>} is always 0. This function trims the {@code :0}
-	 * suffix to get the operation name.
-	 */
-	private static String opName(final TensorInfo t) {
-		final String n = t.getName();
-		if (n.endsWith(":0")) {
-			return n.substring(0, n.lastIndexOf(":0"));
-		}
-		return n;
 	}
 
 }

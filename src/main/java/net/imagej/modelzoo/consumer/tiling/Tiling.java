@@ -29,24 +29,39 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
-import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.task.Task;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
+
+import java.util.List;
 
 public interface Tiling<T extends RealType<T>> {
 
 	enum TilingAction {
-			NO_TILING, // e.g. Channel
-			TILE_WITH_PADDING, // e.g. X,Y,Z
-			TILE_WITHOUT_PADDING // e.g. TIME
+		NO_TILING, // e.g. Channel
+		TILE_WITH_PADDING, // e.g. X,Y,Z
+		TILE_WITHOUT_PADDING // e.g. TIME
+		;
 	}
+	void setNumberOfTiles(int nTiles);
 
-	AdvancedTiledView<T> preprocess(RandomAccessibleInterval<T> input, AxisType[] axes, TilingAction[] tilingActions, Task parent);
+	void setBatchSize(int batchSize);
 
-	RandomAccessibleInterval<T> postprocess(Task parent,
-	                                        final AdvancedTiledView<T> results, AxisType[] axisTypes);
+	void init();
+
+	int getDoneTileCount();
+
+	void setResults(List<RandomAccessibleInterval<T>> results);
+
+	RandomAccessibleInterval<T> getResult();
+
+	void resetTileCount();
+
+	void upTileCount();
+
+	void assignCurrentTile();
 
 	int getTilesNum();
+
+	int getBatchSize();
 
 }

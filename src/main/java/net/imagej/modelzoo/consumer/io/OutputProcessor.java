@@ -29,7 +29,7 @@
 
 package net.imagej.modelzoo.consumer.io;
 
-import net.imagej.modelzoo.consumer.network.model.InputNode;
+import net.imagej.modelzoo.consumer.network.model.InputImageNode;
 import net.imagej.modelzoo.consumer.task.Task;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
@@ -38,6 +38,6 @@ import java.util.List;
 
 public interface OutputProcessor<T extends RealType<T>, O> extends Task {
 
-	O run(final List<RandomAccessibleInterval<T>> result, final InputNode node);
+	O run(final List<RandomAccessibleInterval<T>> result, final InputImageNode node);
 
 }

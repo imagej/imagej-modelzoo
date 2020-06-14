@@ -27,35 +27,39 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.tiling;
+package net.imagej.modelzoo.consumer.postprocessing;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import net.imagej.modelzoo.consumer.network.model.Model;
+import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
 
-import net.imagej.modelzoo.consumer.task.DefaultTask;
-import net.imagej.axis.AxisType;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DefaultInputTiler<T extends RealType<T>> extends DefaultTask
-	implements InputTiler<T>
-{
+public class PredictionPostprocessing implements Runnable {
+
+	private Model model;
+
+	private final Map<String, Object> outputs = new HashMap<>();
 
 	@Override
-	public List<AdvancedTiledView<T>> run(
-		final List<RandomAccessibleInterval<T>> input, final AxisType[] axes,
-		final Tiling tiling, final Tiling.TilingAction[] tilingActions)
-	{
-
-		setStarted();
-
-		final List output = input.stream().map(image -> tiling.preprocess(image,
-			axes, tilingActions, this)).collect(Collectors.toList());
-
-		setFinished();
-
-		return output;
-
+	public void run() {
+		//TODO
+		// (1) get postprocessing steps from model config
+		// (2) run each postprocessing command with the input according to the config
+		// (3) collect outputs of postprocessing
+		model.getOutputNodes().forEach(OutputImageNode::makeDataFit);
+		model.getOutputNodes().forEach(this::addOutput);
 	}
 
+	private void addOutput(OutputImageNode node) {
+		outputs.put(node.getName(), node.getData());
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
+
+	public Map<String, Object> getOutputs() {
+		return outputs;
+	}
 }
