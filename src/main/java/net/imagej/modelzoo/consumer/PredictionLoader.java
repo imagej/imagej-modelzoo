@@ -41,7 +41,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class PredictionLoader implements Runnable {
+public class PredictionLoader {
 
 	private File modelFile;
 
@@ -70,8 +70,7 @@ public class PredictionLoader implements Runnable {
 
 	private String modelFileUrl = "";
 
-	@Override
-	public void run() {
+	public boolean run() {
 		cacheName = this.getClass().getSimpleName();
 		modelFileKey = getModelFileKey();
 		model = new TensorFlowModel();
@@ -79,16 +78,17 @@ public class PredictionLoader implements Runnable {
 		model.loadLibrary();
 		if (!model.libraryLoaded()) {
 			log.error("TensorFlow library could not be loaded");
-			return;
+			return false;
 		}
 
 		solveModelSource();
 
-		if (modelFileUrl.isEmpty()) return;
+		if (modelFileUrl.isEmpty()) return false;
 		try {
-			model.loadModel(modelFileUrl, cacheName);
+			return model.loadModel(modelFileUrl, cacheName);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 

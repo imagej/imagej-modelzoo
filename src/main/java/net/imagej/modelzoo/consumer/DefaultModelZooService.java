@@ -20,6 +20,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		SingleOutputPrediction prediction = new SingleOutputPrediction(context);
 		prediction.setModelFile(modelLocation);
 		Model model = prediction.loadModel();
+		if(model == null) return null;
 		InputImageNode inputNode = model.getInputNodes().get(0);
 		prediction.setInput(inputNode.getName(), input, mapping);
 		prediction.setNumberOfTiles(8);

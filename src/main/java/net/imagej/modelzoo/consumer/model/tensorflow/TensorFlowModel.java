@@ -115,12 +115,11 @@ public class TensorFlowModel extends DefaultModel {
 
 	private boolean loadModelSettings(Location source, String modelName) {
 		try {
-			loadModelSettingsFromYaml(tensorFlowService.loadFile(source, modelName, "model.yaml"));
+			return loadModelSettingsFromYaml(tensorFlowService.loadFile(source, modelName, "model.yaml"));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
 		}
-		return true;
 	}
 
 	private boolean loadSignature() {
@@ -156,13 +155,12 @@ public class TensorFlowModel extends DefaultModel {
 		return true;
 	}
 
-	private void loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		if (!yamlFile.exists()) return;
+	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
+		if (!yamlFile.exists()) return false;
 		ModelSpecification specification = new ModelSpecification();
-		boolean success = specification.read(yamlFile);
-		if (!success) {
+		if (!specification.read(yamlFile)) {
 			log.error("Model seems to be incompatible.");
-			return;
+			return false;
 		}
 		inputNodes.clear();
 		SpecificationLoader loader = new SpecificationLoader(log, sig, specification);
@@ -170,6 +168,7 @@ public class TensorFlowModel extends DefaultModel {
 		outputNodes.clear();
 		outputNodes.addAll(loader.processOutputs(inputNodes));
 		loader.processPrediction();
+		return true;
 	}
 
 	// TODO this is the tensorflow runner

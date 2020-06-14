@@ -76,13 +76,10 @@ public class ModelZooPrediction {
 
 		if (model == null) loadModel();
 
+		if (model == null || !model.isInitialized() || !inputValidationAndMapping(model)) {
+			return res;
+		}
 		try {
-			if (!model.isInitialized()) {
-				return res;
-			}
-
-			if (!inputValidationAndMapping(model)) return null;
-
 			preprocessing(model);
 			executePrediction(model);
 			res = postprocessing(model);
@@ -122,11 +119,12 @@ public class ModelZooPrediction {
 		this.modelUrl = modelUrl;
 	}
 
-	public Model loadModel() {
+	Model loadModel() {
 		PredictionLoader loader = new PredictionLoader(context);
 		loader.setModelFromFile(modelFile);
 		loader.setModelFromURL(modelUrl);
-		loader.run();
+		boolean loaded = loader.run();
+		if(!loaded) return null;
 		this.model = loader.getModel();
 		return model;
 	}
