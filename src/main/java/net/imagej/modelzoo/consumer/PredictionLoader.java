@@ -29,8 +29,8 @@
 
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.network.model.Model;
-import net.imagej.modelzoo.consumer.network.model.tensorflow.TensorFlowModel;
+import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
 import net.imagej.modelzoo.consumer.util.IOHelper;
 import org.scijava.Context;
 import org.scijava.log.LogService;

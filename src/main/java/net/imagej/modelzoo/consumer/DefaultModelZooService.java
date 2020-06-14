@@ -1,7 +1,7 @@
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.network.model.InputImageNode;
-import net.imagej.modelzoo.consumer.network.model.Model;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.Model;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
 import org.scijava.plugin.Parameter;

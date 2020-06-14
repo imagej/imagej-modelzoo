@@ -29,7 +29,7 @@
 
 package net.imagej.modelzoo.consumer.preprocessing;
 
-import net.imagej.modelzoo.consumer.network.model.Model;
+import net.imagej.modelzoo.consumer.model.Model;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;

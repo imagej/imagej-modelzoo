@@ -27,69 +27,54 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imagej.axis.AxisType;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
+public class OutputImageNode<T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
+	private InputImageNode<U> reference;
 
-	//TODO this is ugly
-	public boolean makeDataFit() {
+	public void makeDataFit() {
 		RandomAccessibleInterval<T> img = getData();
-		int[] mappingIndices = getMappingIndices();
-		try {
-
-			img = addAxesIfNeeded(img);
-
-			for (int i = 0; i < img.numDimensions(); i++) {
-				ModelZooAxis axis = getAxes().get(mappingIndices[i]);
-				int min = axis.getMin();
-				Object step = axis.getStep();
-				long size = img.dimension(i);
-				long newsize = size;
-				if (size < min) {
-					newsize = min;
-				} else {
-					if (step == null) {
-						axis.setActual(size);
-						continue;
-					}
-					if ((int) step == 0) {
-						if (size != min) {
-							System.out.println("Input " + getName() + " dimension " + i + " should have size " + min + " but is " + size);
-							return false;
-						} else {
-							continue;
-						}
-					} else {
-						long rest = (size - min) % (int) step;
-						if (rest != 0) {
-							newsize = size - rest + (int) step;
-						}
-					}
-				}
-				img = expandDimToSize(img, i, newsize);
-				axis.setActual(size);
-			}
-			setData(img);
-		} catch (ClassCastException ignored) {
-		}
-		return true;
+		img = toActualSize(img);
+		img = Views.dropSingletonDimensions(img);
+		setData(img);
 	}
 
-	private RandomAccessibleInterval<T> addAxesIfNeeded(RandomAccessibleInterval<T> img) {
-		AxisType[] axes = getAxesArray();
-		while (img.numDimensions() < axes.length) {
-			img = Views.addDimension(img, 0, 0);
+	private RandomAccessibleInterval<T> toActualSize(RandomAccessibleInterval<T> img) {
+
+		if (getReference() == null) return img;
+
+		long[] expectedSize = new long[img.numDimensions()];
+		int[] mappingIndices = getMappingIndices();
+		for (int i = 0; i < img.numDimensions(); i++) {
+			Long newSize = getExpectedSize(mappingIndices[i]);
+			if (newSize == null) expectedSize[i] = -1;
+			else expectedSize[i] = newSize;
+		}
+		for (int i = 0; i < expectedSize.length; i++) {
+			img = reduceDimToSize(img, i, expectedSize[i]);
 		}
 		return img;
 	}
 
-	private RandomAccessibleInterval<T> expandDimToSize(
+	private Long getExpectedSize(int mappingIndex) {
+		ModelZooAxis inAxis = getReference().getAxes().get(mappingIndex);
+		ModelZooAxis outAxis = getAxes().get(mappingIndex);
+		Long actual = inAxis.getActual();
+		Integer offset = outAxis.getOffset();
+		Double scale = outAxis.getScale();
+		Long newSize = actual != null ? actual : 1;
+		if (scale != null) newSize = (long) (newSize * scale);
+		if (offset != null) newSize += (int) offset;
+		return newSize;
+	}
+
+
+	private <T extends RealType<T>> RandomAccessibleInterval<T> reduceDimToSize(
 			final RandomAccessibleInterval<T> im, final int d, final long size) {
 		final int n = im.numDimensions();
 		final long[] min = new long[n];
@@ -97,7 +82,14 @@ public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
 		im.min(min);
 		im.max(max);
 		max[d] += (size - im.dimension(d));
-		return Views.interval(Views.extendMirrorDouble(im), new FinalInterval(min,
-				max));
+		return Views.interval(im, new FinalInterval(min, max));
+	}
+
+	public void setReference(InputImageNode<U> input) {
+		this.reference = input;
+	}
+
+	public InputImageNode<U> getReference() {
+		return reference;
 	}
 }

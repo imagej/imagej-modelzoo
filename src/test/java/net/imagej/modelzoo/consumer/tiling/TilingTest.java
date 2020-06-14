@@ -5,11 +5,12 @@ import net.imagej.Dataset;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.network.model.InputImageNode;
-import net.imagej.modelzoo.consumer.network.model.ModelZooAxis;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.TiledView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
@@ -50,12 +51,12 @@ public class TilingTest extends AbstractModelZooTest {
 		final DefaultTiling<FloatType, FloatType> tiling = new DefaultTiling<>(nodeOut);
 		tiling.setNumberOfTiles(8);
 		tiling.init();
-		AdvancedTiledView<FloatType, FloatType> tiledView = tiling.tiledView;
-		tiledView.getProcessedTiles().clear();
+		TiledView<FloatType> tiledView = tiling.tiledView;
+		tiling.getProcessedTiles().clear();
 		final Cursor<RandomAccessibleInterval<FloatType>> cursor = Views.iterable(
 				tiledView).cursor();
 		while (cursor.hasNext()) {
-			tiledView.getProcessedTiles().add(cursor.next());
+			tiling.getProcessedTiles().add(cursor.next());
 		}
 		assertNotNull(tiledView);
 		RandomAccessibleInterval<FloatType> output = tiling.getResult();

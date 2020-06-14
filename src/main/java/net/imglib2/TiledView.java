@@ -70,8 +70,8 @@ public class TiledView<T> extends AbstractInterval implements
 		this(source, blockSize, new long[blockSize.length]);
 	}
 
-	protected TiledView(final RandomAccessibleInterval<T> source,
-	                    final long[] blockSize, final long[] overlap) {
+	public TiledView(final RandomAccessibleInterval<T> source,
+	                 final long[] blockSize, final long[] overlap) {
 		super(source.numDimensions());
 
 		// TODO: Fill missing block sizes with singleton dimensions. (Or

@@ -27,13 +27,13 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model.tensorflow;
+package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import net.imagej.DatasetService;
-import net.imagej.modelzoo.consumer.network.model.DefaultModel;
-import net.imagej.modelzoo.consumer.network.model.InputImageNode;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.DefaultModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;

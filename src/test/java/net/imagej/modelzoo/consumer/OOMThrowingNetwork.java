@@ -11,7 +11,7 @@
 //import org.scijava.plugin.Parameter;
 //import org.scijava.plugin.Plugin;
 //
-//import net.imagej.modelzoo.consumer.network.ModelExecutor;
+//import net.imagej.modelzoo.consumer.ModelExecutor;
 //import net.imagej.modelzoo.consumer.network.model.Model;
 //import net.imagej.modelzoo.consumer.task.DefaultTask;
 //import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;

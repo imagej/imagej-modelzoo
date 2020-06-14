@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer.network.model;
+package net.imagej.modelzoo.consumer.model;
 
 import net.imagej.axis.AxisType;
 import net.imglib2.EuclideanSpace;

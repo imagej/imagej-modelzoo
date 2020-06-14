@@ -27,7 +27,7 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model.tensorflow;
+package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import net.imagej.modelzoo.consumer.converter.RealIntConverter;
 import net.imagej.tensorflow.Tensors;

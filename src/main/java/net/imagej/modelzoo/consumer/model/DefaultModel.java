@@ -27,35 +27,49 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model.tensorflow;
+package net.imagej.modelzoo.consumer.model;
 
-import org.tensorflow.SavedModelBundle;
-import org.tensorflow.Session;
-import org.tensorflow.Tensor;
+import net.imagej.modelzoo.consumer.util.IOHelper;
+import org.scijava.io.location.Location;
 
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
-class TensorFlowRunner {
+public abstract class DefaultModel implements Model {
 
-	/*
-	 * runs graph on multiple input / output tensors
-	 *
-	 */
-	static List<Tensor<?>> executeGraph(final SavedModelBundle model,
-	                                    final List<Tensor> inputs, final List<String> inputNames,
-	                                    final List<String> outputNames) throws IllegalArgumentException {
+	protected final List<InputImageNode<?>> inputNodes = new ArrayList<>();
+	protected final List<OutputImageNode<?, ?>> outputNodes = new ArrayList<>();
 
-//		System.out.println("input operation: " + opName(inputTensorInfo));
-//		System.out.println("output operation: " + opName(outputTensorInfo));
-
-		Session.Runner runner = model.session().runner();
-		for (int i = 0; i < inputs.size(); i++) {
-			runner.feed(inputNames.get(i), inputs.get(i));
-		}
-		for (String outputName : outputNames) {
-			runner.fetch(outputName);
-		}
-		return runner.run();
+	protected DefaultModel() {
 	}
 
+	protected abstract boolean loadModel(Location source, String modelName);
+
+	@Override
+	public boolean loadModel(final String pathOrURL, final String modelName)
+			throws FileNotFoundException {
+
+		final Location source = IOHelper.loadFileOrURL(pathOrURL);
+		return loadModel(source, modelName);
+
+	}
+
+	@Override
+	public List<InputImageNode<?>> getInputNodes() {
+		return inputNodes;
+	}
+
+	@Override
+	public List<OutputImageNode<?, ?>> getOutputNodes() {
+		return outputNodes;
+	}
+
+	@Override
+	public abstract boolean isInitialized();
+
+	public void clear() {
+		inputNodes.clear();
+		outputNodes.clear();
+	}
 }

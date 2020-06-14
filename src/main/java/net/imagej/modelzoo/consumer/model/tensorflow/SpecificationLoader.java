@@ -1,11 +1,11 @@
-package net.imagej.modelzoo.consumer.network.model.tensorflow;
+package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.network.model.ImageNode;
-import net.imagej.modelzoo.consumer.network.model.InputImageNode;
-import net.imagej.modelzoo.consumer.network.model.ModelZooAxis;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.ImageNode;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;

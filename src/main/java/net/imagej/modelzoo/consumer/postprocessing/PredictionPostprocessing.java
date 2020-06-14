@@ -29,8 +29,8 @@
 
 package net.imagej.modelzoo.consumer.postprocessing;
 
-import net.imagej.modelzoo.consumer.network.model.Model;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import org.scijava.Context;
 
 import java.util.HashMap;

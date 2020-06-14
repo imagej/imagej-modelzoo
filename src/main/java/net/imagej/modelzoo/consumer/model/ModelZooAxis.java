@@ -27,49 +27,83 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imagej.modelzoo.consumer.util.IOHelper;
-import org.scijava.io.location.Location;
+import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.tiling.Tiling;
 
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+public class ModelZooAxis {
 
-public abstract class DefaultModel implements Model {
+	private Integer min;
+	private Integer halo;
+	private Double scale;
+	private Integer offset;
+	private Tiling.TilingAction tiling;
+	private Long actual;
+	private AxisType type;
+	private Integer step;
 
-	protected final List<InputImageNode<?>> inputNodes = new ArrayList<>();
-	protected final List<OutputImageNode<?, ?>> outputNodes = new ArrayList<>();
-
-	protected DefaultModel() {
+	public Integer getMin() {
+		return min;
 	}
 
-	protected abstract boolean loadModel(Location source, String modelName);
-
-	@Override
-	public boolean loadModel(final String pathOrURL, final String modelName)
-			throws FileNotFoundException {
-
-		final Location source = IOHelper.loadFileOrURL(pathOrURL);
-		return loadModel(source, modelName);
-
+	public Integer getHalo() {
+		return halo;
 	}
 
-	@Override
-	public List<InputImageNode<?>> getInputNodes() {
-		return inputNodes;
+	public Double getScale() {
+		return scale;
 	}
 
-	@Override
-	public List<OutputImageNode<?, ?>> getOutputNodes() {
-		return outputNodes;
+	public Integer getOffset() {
+		return offset;
 	}
 
-	@Override
-	public abstract boolean isInitialized();
+	public Tiling.TilingAction getTiling() {
+		return tiling;
+	}
 
-	public void clear() {
-		inputNodes.clear();
-		outputNodes.clear();
+	public Long getActual() {
+		return actual;
+	}
+
+	public ModelZooAxis(AxisType axisType) {
+		type = axisType;
+	}
+
+	public AxisType getType() {
+		return type;
+	}
+
+	public void setMin(Integer min) {
+		this.min = min;
+	}
+
+	public void setHalo(Integer halo) {
+		this.halo = halo;
+	}
+
+	public void setScale(Double scale) {
+		this.scale = scale;
+	}
+
+	public void setOffset(Integer offset) {
+		this.offset = offset;
+	}
+
+	public void setTiling(Tiling.TilingAction tiling) {
+		this.tiling = tiling;
+	}
+
+	public void setActual(Long actual) {
+		this.actual = actual;
+	}
+
+	public Integer getStep() {
+		return step;
+	}
+
+	public void setStep(Integer step) {
+		this.step = step;
 	}
 }

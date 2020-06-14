@@ -27,29 +27,35 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network.model;
+package net.imagej.modelzoo.consumer.model.tensorflow;
 
-import org.scijava.Disposable;
+import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
+import org.tensorflow.Tensor;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
-public interface Model extends Disposable {
+class TensorFlowRunner {
 
-	boolean loadModel(String pathOrURL, String modelName)
-			throws FileNotFoundException;
+	/*
+	 * runs graph on multiple input / output tensors
+	 *
+	 */
+	static List<Tensor<?>> executeGraph(final SavedModelBundle model,
+	                                    final List<Tensor> inputs, final List<String> inputNames,
+	                                    final List<String> outputNames) throws IllegalArgumentException {
 
-	List<InputImageNode<?>> getInputNodes();
+//		System.out.println("input operation: " + opName(inputTensorInfo));
+//		System.out.println("output operation: " + opName(outputTensorInfo));
 
-	List<OutputImageNode<?, ?>> getOutputNodes();
-
-	boolean isInitialized();
-
-	default void loadLibrary() {
+		Session.Runner runner = model.session().runner();
+		for (int i = 0; i < inputs.size(); i++) {
+			runner.feed(inputNames.get(i), inputs.get(i));
+		}
+		for (String outputName : outputNames) {
+			runner.fetch(outputName);
+		}
+		return runner.run();
 	}
-
-	boolean libraryLoaded();
-
-	void predict();
 
 }

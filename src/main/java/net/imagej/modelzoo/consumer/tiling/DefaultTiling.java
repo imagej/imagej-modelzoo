@@ -29,19 +29,22 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
+import io.scif.codec.ByteVector;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.network.model.InputImageNode;
-import net.imagej.modelzoo.consumer.network.model.ModelZooAxis;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.GridView;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.TiledView;
 import net.imglib2.img.list.ListImg;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -53,13 +56,15 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 	private int tilesNum = 1;
 	private int batchSize = 10;
 
-	AdvancedTiledView<TI, TO> tiledView;
+	TiledView<TI> tiledView;
+	private final List<RandomAccessibleInterval<TO>> processedTiles;
 	private int doneTileCount = 0;
 	private Cursor<RandomAccessibleInterval<TI>> tiledViewCursor;
 
 	public DefaultTiling(OutputImageNode<TO, TI> outputNode) {
 		this.inputNode = outputNode.getReference();
 		this.outputNode = outputNode;
+		this.processedTiles = new ArrayList<>();
 	}
 
 	@Override
@@ -77,7 +82,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		//TODO check if tilesNum / batchSize works?!
 		resetTileCount();
 		createTiledView();
-		tiledView.getProcessedTiles().clear();
+		processedTiles.clear();
 		tiledViewCursor = Views.iterable(tiledView)
 				.cursor();
 
@@ -90,7 +95,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 	@Override
 	public void setResults(List<RandomAccessibleInterval<TO>> results) {
-		tiledView.getProcessedTiles().addAll(results);
+		processedTiles.addAll(results);
 	}
 
 	@Override
@@ -126,11 +131,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 		System.out.println("Size of single image tile: " + Arrays.toString(tileSize));
 
-		final AdvancedTiledView<TI, TO> tiledView = createTiledView(expandedInput, tileSize, padding);
-		for (int i = 0; i < inputNode.numDimensions(); i++) {
-			tiledView.getOriginalDims().put(inputNode.getDataAxesArray()[i], inputNode.getData().dimension(
-					i));
-		}
+		final TiledView<TI> tiledView = new TiledView<>(expandedInput, tileSize, padding);
 
 		System.out.println("Final image tiling: " + Arrays.toString(Intervals.dimensionsAsIntArray(tiledView)));
 		System.out.println("Final tile padding: " + Arrays.toString(padding));
@@ -252,18 +253,12 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		return tileSize;
 	}
 
-	private AdvancedTiledView<TI, TO> createTiledView(RandomAccessibleInterval<TI> input, long[] tileSize, long[] padding) {
-		return new AdvancedTiledView<>(input, tileSize, padding);
-	}
-
 	@Override
 	public RandomAccessibleInterval<TO> getResult() {
 
-		List<RandomAccessibleInterval<TO>> resultData = tiledView.getProcessedTiles();
+		if (processedTiles != null && processedTiles.size() > 0) {
 
-		if (resultData != null && resultData.size() > 0) {
-
-			System.out.println("result 0 before padding removement" + Arrays.toString(Intervals.dimensionsAsIntArray(resultData.get(0))));
+			System.out.println("result 0 before padding removement" + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
 
 			long[] grid = new long[outputNode.numDimensions()];
 			AxisType[] inputAxes = inputNode.getDataAxesArray();
@@ -277,18 +272,18 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 					}
 				}
 			}
-			for (int i = 0; i < resultData.size(); i++) {
-				resultData.set(i, removePadding(resultData.get(i), tiledView.getOverlap(),
+			for (int i = 0; i < processedTiles.size(); i++) {
+				processedTiles.set(i, removePadding(processedTiles.get(i), tiledView.getOverlap(),
 						inputAxes, outputAxes));
 			}
 
 			// TODO log padding / test padding
-			System.out.println("result 0 after padding removement: " + Arrays.toString(Intervals.dimensionsAsIntArray(resultData.get(0))));
+			System.out.println("result 0 after padding removement: " + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
 
 			System.out.println("Merging tiles..");
 
 			final RandomAccessibleInterval<TO> mergedResult = arrangeAndCombineTiles(
-					resultData, grid);
+					processedTiles, grid);
 
 			System.out.println("merge: " + Arrays.toString(Intervals.dimensionsAsIntArray(mergedResult)));
 
@@ -345,6 +340,10 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		max[d] += (size - im.dimension(d));
 		return Views.interval(Views.extendMirrorDouble(im), new FinalInterval(min,
 				max));
+	}
+
+	List<RandomAccessibleInterval<TO>> getProcessedTiles() {
+		return processedTiles;
 	}
 //
 //	private int getSteps(List<AdvancedTiledView<TO>> input) {

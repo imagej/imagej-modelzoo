@@ -30,8 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.network.ModelExecutor;
-import net.imagej.modelzoo.consumer.network.model.Model;
+import net.imagej.modelzoo.consumer.model.Model;
 import net.imagej.modelzoo.consumer.postprocessing.PredictionPostprocessing;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
 import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
@@ -139,7 +138,7 @@ public class ModelZooPrediction {
 	}
 
 	private void executePrediction(Model model) {
-		ModelExecutor executor = new ModelExecutor(model, context);
+		TiledPredictionExecutor executor = new TiledPredictionExecutor(model, context);
 		executor.setNumberOfTiles(nTiles);
 		executor.setBatchSize(batchSize);
 		boolean isOutOfMemory = true;

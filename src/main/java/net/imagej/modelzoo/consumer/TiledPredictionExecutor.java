@@ -27,10 +27,10 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.network;
+package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.network.model.Model;
-import net.imagej.modelzoo.consumer.network.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imglib2.RandomAccessibleInterval;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
-public class ModelExecutor implements Cancelable {
+public class TiledPredictionExecutor implements Cancelable {
 
 	@Parameter
 	private LogService log;
@@ -60,7 +60,7 @@ public class ModelExecutor implements Cancelable {
 	private final List<RandomAccessibleInterval> results = new ArrayList<>();
 	private int batchSize = 10;
 
-	public ModelExecutor(Model model, Context context) {
+	public TiledPredictionExecutor(Model model, Context context) {
 		this.model = model;
 		context.inject(this);
 	}

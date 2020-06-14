@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer.network.model;
+package net.imagej.modelzoo.consumer.model;
 
 public class DefaultModelZooNode<T> implements ModelZooNode<T> {
 
