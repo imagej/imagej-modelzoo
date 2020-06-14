@@ -100,20 +100,12 @@ package net.imglib2;
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-import java.util.HashMap;
-import java.util.Map;
 
-import net.imglib2.AbstractCursor;
-import net.imglib2.AbstractInterval;
-import net.imglib2.Cursor;
-import net.imglib2.Interval;
-import net.imglib2.IterableInterval;
-import net.imglib2.Point;
-import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.View;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Creates a single <em>n</em>-dimensional {@link RandomAccessibleInterval} by

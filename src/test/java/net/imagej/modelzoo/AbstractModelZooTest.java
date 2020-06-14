@@ -1,12 +1,8 @@
 
 package net.imagej.modelzoo;
 
-import net.imagej.Dataset;
 import net.imagej.ImageJ;
-import net.imagej.axis.AxisType;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
 import org.junit.After;
 
 import java.util.Arrays;

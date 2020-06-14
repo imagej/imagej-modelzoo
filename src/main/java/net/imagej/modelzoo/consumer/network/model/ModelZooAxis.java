@@ -32,9 +32,6 @@ package net.imagej.modelzoo.consumer.network.model;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class ModelZooAxis {
 
 	private Integer min;

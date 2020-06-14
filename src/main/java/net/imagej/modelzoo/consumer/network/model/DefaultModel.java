@@ -31,8 +31,6 @@ package net.imagej.modelzoo.consumer.network.model;
 
 import net.imagej.modelzoo.consumer.util.IOHelper;
 import org.scijava.io.location.Location;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
