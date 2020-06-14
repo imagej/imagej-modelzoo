@@ -10,7 +10,7 @@ public class OutputNodeSpecification extends NodeSpecification {
 	private final static String idNodeShapeScale = "scale";
 	private final static String idNodeShapeOffset = "offset";
 	private String referenceInputName;
-	private List<Double> shapeScale;
+	private List<? extends Number> shapeScale;
 	private List<Integer> shapeOffset;
 
 	@Override
@@ -26,7 +26,7 @@ public class OutputNodeSpecification extends NodeSpecification {
 	protected void setShape(Map<String, Object> data) {
 		if(data == null) return;
 		setShapeReferenceInput((String) data.get(idNodeShapeReferenceInput));
-		setShapeScale((List<Double>) data.get(idNodeShapeScale));
+		setShapeScale((List<Number>) data.get(idNodeShapeScale));
 		setShapeOffset((List<Integer>) data.get(idNodeShapeOffset));
 	}
 
@@ -40,7 +40,7 @@ public class OutputNodeSpecification extends NodeSpecification {
 		this.referenceInputName = referenceInputName;
 	}
 
-	public void setShapeScale(List<Double> shapeScale) {
+	public void setShapeScale(List<? extends Number> shapeScale) {
 		this.shapeScale = shapeScale;
 	}
 
@@ -52,7 +52,7 @@ public class OutputNodeSpecification extends NodeSpecification {
 		return referenceInputName;
 	}
 
-	public List<Double> getShapeScale() {
+	public List<? extends Number> getShapeScale() {
 		return shapeScale;
 	}
 
