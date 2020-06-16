@@ -43,10 +43,10 @@ import net.imglib2.type.numeric.real.FloatType;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
 
-class TensorFlowConverter {
+public class TensorFlowConverter {
 
-	static <T extends RealType<T>>
-	RandomAccessibleInterval<T> fromTensor(final Tensor tensor, final int[] mapping) {
+	public static <T extends RealType<T>>
+	RandomAccessibleInterval<T> tensorToImage(final Tensor tensor, final int[] mapping) {
 		if (tensor.dataType().equals(DataType.DOUBLE)) {
 			return Tensors.imgDouble(tensor, mapping);
 		} else if (tensor.dataType().equals(DataType.FLOAT)) {
@@ -61,7 +61,7 @@ class TensorFlowConverter {
 		return null;
 	}
 
-	private static <T extends RealType<T>> Tensor imageToTensor(
+	public static <T extends RealType<T>> Tensor imageToTensor(
 			RandomAccessibleInterval<T> image, final int[] mapping) {
 
 		Tensor tensor;
@@ -80,14 +80,5 @@ class TensorFlowConverter {
 			}
 		}
 		return tensor;
-	}
-
-	static <T extends RealType<T>> Tensor toTensor(Object data, int[] mapping) {
-		try {
-			return imageToTensor((RandomAccessibleInterval<T>) data, mapping);
-		} catch (ClassCastException e) {
-			e.printStackTrace();
-			return null;
-		}
 	}
 }

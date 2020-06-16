@@ -68,11 +68,11 @@ public class ModelZooPrediction {
 		context.inject(this);
 	}
 
-	public Map<String, Object> run() {
+	public Map<String, RandomAccessibleInterval<?>> run() {
 
 		final long startTime = System.currentTimeMillis();
 
-		Map<String, Object> res = null;
+		Map<String, RandomAccessibleInterval<?>> res = null;
 
 		if (model == null) loadModel();
 
@@ -152,7 +152,7 @@ public class ModelZooPrediction {
 		}
 	}
 
-	private Map<String, Object> postprocessing(Model model) {
+	private Map<String, RandomAccessibleInterval<?>> postprocessing(Model model) {
 		PredictionPostprocessing postprocessing = new PredictionPostprocessing(context);
 		postprocessing.setModel(model);
 		postprocessing.run();
@@ -190,8 +190,8 @@ public class ModelZooPrediction {
 		ModelZooPrediction prediction = new ModelZooPrediction(ij.context());
 		prediction.setInput("input", input, "XYZ");
 		prediction.setModelFile(model);
-		Map<String, Object> res = prediction.run();
-		RandomAccessibleInterval output = (RandomAccessibleInterval) res.values().iterator().next();
+		Map<String, RandomAccessibleInterval<?>> res = prediction.run();
+		RandomAccessibleInterval output = res.values().iterator().next();
 
 		ij.ui().show(output);
 	}

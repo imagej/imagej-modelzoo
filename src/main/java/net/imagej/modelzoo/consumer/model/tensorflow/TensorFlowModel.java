@@ -175,7 +175,7 @@ public class TensorFlowModel extends DefaultModel {
 	// TODO this is the tensorflow runner
 	@Override
 	public void predict() throws IllegalArgumentException, OutOfMemoryError {
-		List<Tensor> inputTensors = getInputTensors();
+		List<Tensor<?>> inputTensors = getInputTensors();
 		List<String> outputNames = getOutputNames();
 		List<Tensor<?>> outputTensors = TensorFlowRunner.executeGraph(
 				model.model(),
@@ -188,10 +188,10 @@ public class TensorFlowModel extends DefaultModel {
 		outputTensors.forEach(Tensor::close);
 	}
 
-	private List<Tensor> getInputTensors() {
-		List<Tensor> res = new ArrayList<>();
+	private List<Tensor<?>> getInputTensors() {
+		List<Tensor<?>> res = new ArrayList<>();
 		for (InputImageNode node : getInputNodes()) {
-			final Tensor tensor = TensorFlowConverter.toTensor(node.getData(), node.getMappingIndices());
+			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData(), node.getMappingIndices());
 			if (tensor == null) {
 				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
 			}
@@ -213,7 +213,7 @@ public class TensorFlowModel extends DefaultModel {
 			Tensor tensor = tensors.get(i);
 			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
 //			System.out.println(Arrays.toString(node.getMappingIndices()));
-			RandomAccessibleInterval<TO> output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
+			RandomAccessibleInterval<TO> output = TensorFlowConverter.tensorToImage(tensor, node.getMappingIndices());
 			node.setData(output);
 		}
 	}

@@ -49,10 +49,11 @@ public class SingleOutputPrediction extends ModelZooPrediction {
 		super(context);
 	}
 
-	public Map<String, Object> run() {
-		Map<String, Object> res = super.run();
+	@Override
+	public Map<String, RandomAccessibleInterval<?>> run() {
+		Map<String, RandomAccessibleInterval<?>> res = super.run();
 		if (res == null) return null;
-		output = (RandomAccessibleInterval) res.values().iterator().next();
+		output = res.values().iterator().next();
 		return res;
 	}
 
