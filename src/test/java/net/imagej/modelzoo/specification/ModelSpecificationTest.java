@@ -53,7 +53,7 @@ public class ModelSpecificationTest {
 
 		// create spec
 
-		ModelSpecification specification = new ModelSpecification();
+		ModelSpecification specification = new DefaultModelSpecification();
 
 		// write spec
 
@@ -64,7 +64,7 @@ public class ModelSpecificationTest {
 
 		File modelFile = new File(dir.getAbsolutePath(), specification.getModelFileName());
 		assertTrue(modelFile.exists());
-		File dependencyFile = new File(dir.getAbsolutePath(), ModelSpecification.dependenciesFileName);
+		File dependencyFile = new File(dir.getAbsolutePath(), DefaultModelSpecification.dependenciesFileName);
 		assertTrue(dependencyFile.exists());
 		String content = FileUtils.readFileToString(modelFile, StandardCharsets.UTF_8);
 		assertFalse(content.isEmpty());
@@ -72,11 +72,11 @@ public class ModelSpecificationTest {
 		assertFalse(content.isEmpty());
 
 		// read spec
-		ModelSpecification newSpec = new ModelSpecification();
+		ModelSpecification newSpec = new DefaultModelSpecification();
 		assertTrue(newSpec.readFromDirectory(dir));
 
 		// check default spec values
-		assertEquals(ModelSpecification.modelZooSpecificationVersion, newSpec.getFormatVersion());
+		assertEquals(DefaultModelSpecification.modelZooSpecificationVersion, newSpec.getFormatVersion());
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public class ModelSpecificationTest {
 		// create spec
 
 		File dir = Files.createTempDirectory("modelzoo").toFile();
-		ModelSpecification specification = new ModelSpecification();
+		ModelSpecification specification = new DefaultModelSpecification();
 		setExampleValues(specification);
 
 		// check values
@@ -99,7 +99,7 @@ public class ModelSpecificationTest {
 		System.out.println(content);
 
 		// read spec
-		ModelSpecification newSpec = new ModelSpecification();
+		ModelSpecification newSpec = new DefaultModelSpecification();
 		assertTrue(newSpec.readFromDirectory(dir));
 
 		// check values
@@ -116,7 +116,7 @@ public class ModelSpecificationTest {
 		specification.setLicense(license);
 		specification.setSource(source);
 		specification.setTags(tags);
-		CitationSpecification citation = new CitationSpecification();
+		CitationSpecification citation = new DefaultCitationSpecification();
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		specification.addCitation(citation);
@@ -124,16 +124,16 @@ public class ModelSpecificationTest {
 		specification.setTrainingKwargs(trainingKwargs);
 		specification.setTrainingSource(trainingSource);
 		// prediction
-		TransformationSpecification preprocessing = new TransformationSpecification();
+		TransformationSpecification preprocessing = new DefaultTransformationSpecification();
 		preprocessing.setKwargs(preprocessingKwargs);
 		preprocessing.setSpec(preprocessingSpec);
 		specification.addPredictionPreprocessing(preprocessing);
-		TransformationSpecification postprocessing = new TransformationSpecification();
+		TransformationSpecification postprocessing = new DefaultTransformationSpecification();
 		postprocessing.setKwargs(postprocessingKwargs);
 		postprocessing.setSpec(postprocessingSpec);
 		specification.addPredictionPostprocessing(postprocessing);
 		// input node
-		InputNodeSpecification inputNode = new InputNodeSpecification();
+		InputNodeSpecification inputNode = new DefaultInputNodeSpecification();
 		inputNode.setShapeMin(shapeMin);
 		inputNode.setShapeStep(shapeStep);
 		inputNode.setAxes(axes);
@@ -143,7 +143,7 @@ public class ModelSpecificationTest {
 		inputNode.setHalo(halo);
 		specification.addInputNode(inputNode);
 		// output node
-		OutputNodeSpecification outputNode = new OutputNodeSpecification();
+		OutputNodeSpecification outputNode = new DefaultOutputNodeSpecification();
 		outputNode.setName(output);
 		outputNode.setAxes(axes);
 		outputNode.setShapeOffset(shapeOffset);
@@ -162,7 +162,7 @@ public class ModelSpecificationTest {
 		assertEquals(source, specification.getSource());
 		assertArrayEquals(tags.toArray(), specification.getTags().toArray());
 		assertEquals(1, specification.getCitations().size());
-		CitationSpecification citation = new CitationSpecification();
+		CitationSpecification citation = new DefaultCitationSpecification();
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		assertEquals(citation, specification.getCitations().get(0));

@@ -1,6 +1,10 @@
 package net.imagej.modelzoo.howto;
 
 import net.imagej.modelzoo.specification.CitationSpecification;
+import net.imagej.modelzoo.specification.DefaultCitationSpecification;
+import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
+import net.imagej.modelzoo.specification.DefaultOutputNodeSpecification;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
@@ -19,7 +23,7 @@ public class E02_WriteSpecification {
 	public void run() throws IOException {
 
 		// create specification
-		ModelSpecification specification = new ModelSpecification();
+		ModelSpecification specification = new DefaultModelSpecification();
 
 		// set specification values
 
@@ -28,14 +32,14 @@ public class E02_WriteSpecification {
 		specification.setAuthors(Arrays.asList("Maya", "Selma"));
 		specification.setLicense("bsd");
 		specification.setName("OurAwesomeModel");
-		CitationSpecification citation = new CitationSpecification();
+		CitationSpecification citation = new DefaultCitationSpecification();
 		citation.setCitationText("Krull, A. and Buchholz, T. and Jug, F. Noise2void - learning denoising from single noisy images.\n" +
 				"Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (2019)");
 		citation.setDOIText("arXiv:1811.10980");
 		specification.addCitation(citation);
 
 		// input nodes
-		InputNodeSpecification input = new InputNodeSpecification();
+		InputNodeSpecification input = new DefaultInputNodeSpecification();
 		input.setName("input");
 		input.setDataType("float");
 		input.setAxes("XYZC");
@@ -46,7 +50,7 @@ public class E02_WriteSpecification {
 		specification.addInputNode(input);
 
 		// output nodes
-		OutputNodeSpecification output = new OutputNodeSpecification();
+		OutputNodeSpecification output = new DefaultOutputNodeSpecification();
 		output.setName("output");
 		output.setAxes("XYZC");
 		output.setShapeReferenceInput(input.getName());

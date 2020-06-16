@@ -34,6 +34,7 @@ import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.model.DefaultModel;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
@@ -157,7 +158,7 @@ public class TensorFlowModel extends DefaultModel {
 
 	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
 		if (!yamlFile.exists()) return false;
-		ModelSpecification specification = new ModelSpecification();
+		ModelSpecification specification = new DefaultModelSpecification();
 		if (!specification.read(yamlFile)) {
 			log.error("Model seems to be incompatible.");
 			return false;
