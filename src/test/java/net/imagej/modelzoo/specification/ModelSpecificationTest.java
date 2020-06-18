@@ -47,6 +47,8 @@ public class ModelSpecificationTest {
 	private final static String output = "output";
 	private final static List<Integer> shapeOffset = Arrays.asList(0, 0, 0, 3);
 	private final static List<Double> shapeScale = Arrays.asList(2., 2., 2., 1.);
+	private final static String testInput = "input.png";
+	private final static String testOutput = "output.png";
 
 	@Test
 	public void testEmptySpec() throws IOException {
@@ -120,6 +122,8 @@ public class ModelSpecificationTest {
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		specification.addCitation(citation);
+		specification.setTestInput(testInput);
+		specification.setTestOutput(testOutput);
 		// training
 		specification.setTrainingKwargs(trainingKwargs);
 		specification.setTrainingSource(trainingSource);
@@ -166,6 +170,8 @@ public class ModelSpecificationTest {
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		assertEquals(citation, specification.getCitations().get(0));
+		assertEquals(testInput, specification.getTestInput());
+		assertEquals(testOutput, specification.getTestOutput());
 		// training
 		assertTrue(trainingKwargs.equals(specification.getTrainingKwargs()));
 		assertEquals(trainingSource, specification.getTrainingSource());

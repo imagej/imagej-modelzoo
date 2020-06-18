@@ -1,43 +1,61 @@
-//package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer;
+
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.tiling.Tiling;
+import org.scijava.ItemIO;
+import org.scijava.io.location.Location;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class OOMThrowingNetwork implements ModelZooModel
+{
+
+	@Parameter
+	Tiling.TilingAction[] actions;
+
+	@Parameter(type = ItemIO.OUTPUT)
+	List nTilesHistory = new ArrayList();
+
+	@Parameter(type = ItemIO.OUTPUT)
+	List batchSizeHistory = new ArrayList();
+
+	@Override
+	public boolean loadModel(Location location, String modelName) throws FileNotFoundException {
+		return true;
+	}
+
+	@Override
+	public List<InputImageNode<?>> getInputNodes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<OutputImageNode<?, ?>> getOutputNodes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return true;
+	}
+
+	@Override
+	public boolean libraryLoaded() {
+		return true;
+	}
+
+	@Override
+	public void predict() {
+		throw new OutOfMemoryError();
+	}
 //
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.concurrent.ExecutionException;
-//
-//import net.imagej.modelzoo.consumer.network.DefaultModelExecutor;
-//import net.imagej.modelzoo.consumer.tiling.DefaultInputTiler;
-//import org.scijava.ItemIO;
-//import org.scijava.command.Command;
-//import org.scijava.plugin.Parameter;
-//import org.scijava.plugin.Plugin;
-//
-//import net.imagej.modelzoo.consumer.ModelExecutor;
-//import net.imagej.modelzoo.consumer.network.model.Model;
-//import net.imagej.modelzoo.consumer.task.DefaultTask;
-//import net.imagej.modelzoo.consumer.tiling.AdvancedTiledView;
-//import net.imagej.modelzoo.consumer.tiling.Tiling;
-//import net.imagej.axis.AxisType;
-//import net.imglib2.RandomAccessibleInterval;
-//
-//@Plugin(type = Command.class)
-//public class OOMThrowingNetwork extends ModelZooPrediction
-//{
-//
-//	@Parameter
-//	Tiling.TilingAction[] actions;
-//
-//	@Parameter(type = ItemIO.OUTPUT)
-//	List nTilesHistory = new ArrayList();
-//
-//	@Parameter(type = ItemIO.OUTPUT)
-//	List batchSizeHistory = new ArrayList();
-//
-//	private class OOMThrowingModelExecutor extends DefaultTask implements ModelExecutor {
-//		@Override
-//		public List<AdvancedTiledView> run(List input, Model network) {
-//			throw new OutOfMemoryError();
-//		}
-//	}
 //
 //	@Override
 //	protected ModelExecutor initModelExecutor() {
@@ -92,6 +110,6 @@
 //		batchSizeHistory.add(batchSize);
 //		super.handleOutOfMemoryError();
 //	}
-//
-//
-//}
+
+
+}

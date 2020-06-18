@@ -2,6 +2,8 @@ package net.imagej.modelzoo.specification;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -11,17 +13,31 @@ import java.util.Map;
  */
 public interface ModelSpecification {
 
+	String getTestInput();
+
+	void setTestInput(String testInput);
+
+	String getTestOutput();
+
+	void setTestOutput(String testOutput);
+
 	boolean readFromZIP(File zippedModel);
 
 	boolean readFromDirectory(File directory) throws IOException;
 
-	void read(String modelSpecificationFile) throws IOException;
+	boolean read(String modelSpecificationFile) throws IOException;
+
+	boolean read(Path specPath) throws IOException;
 
 	boolean read(File modelSpecificationFile) throws IOException;
+
+	boolean read(InputStream in);
 
 	void write(String targetDirectory) throws IOException;
 
 	void write(File targetDirectory) throws IOException;
+
+	void write(Path specPath) throws IOException;
 
 	void addPredictionPreprocessing(TransformationSpecification transformationSpecification);
 
@@ -90,4 +106,6 @@ public interface ModelSpecification {
 	List<TransformationSpecification> getPredictionPostprocessing();
 
 	String getModelFileName();
+
+	void setFramework(String framework);
 }

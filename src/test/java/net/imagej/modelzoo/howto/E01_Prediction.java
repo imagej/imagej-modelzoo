@@ -1,8 +1,10 @@
 package net.imagej.modelzoo.howto;
 
+import io.scif.MissingLibraryException;
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.ModelZooService;
-import net.imagej.modelzoo.consumer.SingleOutputPrediction;
+import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.After;
@@ -20,13 +22,13 @@ public class E01_Prediction {
 	}
 
 	@Test
-	public void useService() throws IOException {
+	public void useService() throws IOException, MissingLibraryException {
 
 		ij = new ImageJ();
 
 		// resource paths
 		String imgPath = "/home/random/Development/imagej/project/CSBDeep/data/N2V/pred_validation.tif";
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.zip").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
 
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
@@ -36,20 +38,22 @@ public class E01_Prediction {
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
 
-		RandomAccessibleInterval output = modelZooService.predict(modelPath, input, "XY");
+		ModelZooArchive model = modelZooService.open(modelPath);
+
+		RandomAccessibleInterval output = modelZooService.predict(model, input, "XY");
 
 		ij.ui().show(output);
 
 	}
 
 	@Test
-	public void usePredictionAPI() throws IOException {
+	public void usePredictionAPI() throws IOException, MissingLibraryException {
 
 		ij = new ImageJ();
 
 		// resource paths
 		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.zip").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
 
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
@@ -58,11 +62,11 @@ public class E01_Prediction {
 		input = ij.op().convert().float32(input);
 
 		// create prediction
-		SingleOutputPrediction prediction = new SingleOutputPrediction(ij.context());
+		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
 
 		// setup prediction
 		prediction.setInput("input", input, "XY");
-		prediction.setModelFile(modelPath);
+		prediction.setTrainedModel(modelPath);
 		prediction.setNumberOfTiles(8);
 		prediction.run();
 		RandomAccessibleInterval output = prediction.getOutput();
@@ -71,7 +75,8 @@ public class E01_Prediction {
 
 	}
 
-	public static void main(String... args) throws IOException {
-		new E01_Prediction().useService();
+	public static void main(String... args) throws IOException, MissingLibraryException {
+//		new E01_Prediction().useService();
+		new E01_Prediction().usePredictionAPI();
 	}
 }

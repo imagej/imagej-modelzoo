@@ -7,8 +7,11 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -33,6 +36,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idLanguage = "language";
 	private final static String idFramework = "framework";
 	private final static String idSource = "source";
+	private final static String idTestInput = "test_input";
+	private final static String idTestOutput = "test_output";
 	private final static String idInputs = "inputs";
 	private final static String idOutputs = "outputs";
 	private final static String idPrediction = "prediction";
@@ -53,6 +58,9 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
 	private String framework = "tensorflow";
+	private String testInput = "testinput.tif";
+	private String testOutput = "testoutput.tif";
+
 	private String predictionWeightsSource = "./variables/variables";
 	private String predictionDependencies = "./" + dependenciesFileName;
 	private Map<String, Object> trainingKwargs;
@@ -69,7 +77,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
-
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -86,8 +93,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public void read(String modelSpecificationFile) throws IOException {
-		read(new File(modelSpecificationFile));
+	public boolean read(String modelSpecificationFile) throws IOException {
+		return read(new File(modelSpecificationFile));
 	}
 
 	@Override
@@ -98,6 +105,26 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
+	public boolean read(Path modelSpecificationPath) throws IOException {
+		try (InputStream stream = Files.newInputStream(modelSpecificationPath)) {
+			return read(stream);
+		}
+	}
+
+	@Override
+	public boolean read(InputStream stream) {
+		Yaml yaml = new Yaml();
+		Map<String, Object> obj = yaml.load(stream);
+		System.out.println(obj);
+		if (obj == null) return false;
+		readMeta(obj);
+		readInputsOutputs(obj);
+		readTraining(obj);
+		readPrediction(obj);
+		return true;
+	}
+
+	@Override
 	public void write(String targetDirectory) throws IOException {
 		write(new File(targetDirectory));
 	}
@@ -105,13 +132,18 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public void write(File targetDirectory) throws IOException {
 		writeDependenciesFile(targetDirectory);
-		Map<String, Object> data = new LinkedHashMap<>();
-		writeMeta(data);
-		writeInputsOutputs(data);
-		writeTraining(data);
-		writePrediction(data);
+		Map<String, Object> data = toMap();
 		Yaml yaml = new Yaml();
 		try (FileWriter writer = new FileWriter(new File(targetDirectory, modelFileName))) {
+			yaml.dump(data, writer);
+		}
+	}
+
+	@Override
+	public void write(Path modelSpecificationPath) throws IOException {
+		Map<String, Object> data = toMap();
+		Yaml yaml = new Yaml();
+		try (Writer writer = Files.newBufferedWriter(modelSpecificationPath)) {
 			yaml.dump(data, writer);
 		}
 	}
@@ -286,16 +318,29 @@ public class DefaultModelSpecification implements ModelSpecification {
 		return modelFileName;
 	}
 
-	private boolean read(InputStream stream) {
-		Yaml yaml = new Yaml();
-		Map<String, Object> obj = yaml.load(stream);
-//		System.out.println(obj);
-		if (obj == null) return false;
-		readMeta(obj);
-		readInputsOutputs(obj);
-		readTraining(obj);
-		readPrediction(obj);
-		return true;
+	@Override
+	public String getTestInput() {
+		return testInput;
+	}
+
+	@Override
+	public void setTestInput(String testInput) {
+		this.testInput = testInput;
+	}
+
+	@Override
+	public String getTestOutput() {
+		return testOutput;
+	}
+
+	@Override
+	public void setTestOutput(String testOutput) {
+		this.testOutput = testOutput;
+	}
+
+	@Override
+	public void setFramework(String framework) {
+		this.framework = framework;
 	}
 
 	private void readMeta(Map<String, Object> obj) {
@@ -322,6 +367,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 		setLanguage((String) obj.get(idLanguage));
 		setFramework((String) obj.get(idFramework));
 		setSource((String) obj.get(idSource));
+		setTestInput((String) obj.get(idTestInput));
+		setTestOutput((String) obj.get(idTestOutput));
 	}
 
 	private void readInputsOutputs(Map<String, Object> obj) {
@@ -408,6 +455,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 		data.put(idLanguage, language);
 		data.put(idFramework, framework);
 		data.put(idSource, source);
+		data.put(idTestInput, testInput);
+		data.put(idTestOutput, testOutput);
 	}
 
 	private List<Map<String, Object>> buildInputList() {
@@ -461,10 +510,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 		this.language = language;
 	}
 
-	private void setFramework(String framework) {
-		this.framework = framework;
-	}
-
 	private void setPredictionWeightsSource(String weightsSource) {
 		this.predictionWeightsSource = weightsSource;
 	}
@@ -475,6 +520,15 @@ public class DefaultModelSpecification implements ModelSpecification {
 
 	private void setModelFileName(String modelFileName) {
 		this.modelFileName = modelFileName;
+	}
+
+	public Map<String, Object> toMap() {
+		Map<String, Object> data = new LinkedHashMap<>();
+		writeMeta(data);
+		writeInputsOutputs(data);
+		writeTraining(data);
+		writePrediction(data);
+		return data;
 	}
 
 	private static InputStream extractFile(File zipFile, String fileName) throws IOException {

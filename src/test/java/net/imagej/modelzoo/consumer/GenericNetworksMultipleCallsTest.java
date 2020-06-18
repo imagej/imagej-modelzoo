@@ -2,7 +2,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -23,17 +23,17 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 
 		createImageJ();
 
-		String[] networks = {"denoise2D/model.zip"};
+		String[] networks = {"denoise2D/model.bioimage.io.zip"};
 
 		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(4, 5, 6);
 
 //		for (int i = 0; i < 3; i++) {
 		for (String networkSrc : networks) {
 			URL networkUrl = this.getClass().getResource(networkSrc);
-			CommandModule module = ij.command().run(ModelZooPredictionCommand.class,
+			CommandModule module = ij.command().run(DefaultModelZooPredictionCommand.class,
 					false,
 					"input", input,
-					"mapping", "XYZ",
+					"axes", "XYZ",
 					"modelFile", new File(networkUrl.getPath())).get();
 			final RandomAccessibleInterval output = (RandomAccessibleInterval) module.getOutput("output");
 			assertNotNull(output);

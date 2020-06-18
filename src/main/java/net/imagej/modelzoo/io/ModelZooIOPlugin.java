@@ -30,42 +30,146 @@
 
 package net.imagej.modelzoo.io;
 
+import com.sun.imageio.plugins.png.PNGImageWriter;
+import io.scif.media.imageioimpl.plugins.tiff.TIFFImageWriter;
+import io.scif.services.DatasetIOService;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
+import net.imagej.modelzoo.DefaultModelZooArchive;
+import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
+import net.imagej.ops.OpService;
+import net.imagej.tensorflow.TensorFlowService;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.view.Views;
+import org.apache.commons.compress.utils.IOUtils;
 import org.scijava.io.AbstractIOPlugin;
-import org.scijava.table.Table;
+import org.scijava.io.IOPlugin;
+import org.scijava.io.IOService;
+import org.scijava.io.location.Location;
+import org.scijava.io.location.LocationService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
- * Abstract plugin class for saving and loading tables
+ * Abstract plugin class for saving and loading bioimage model zoo archives
  *
  * @author Deborah Schmidt
  */
-public class TableIOPlugin extends AbstractIOPlugin<Table> {
+@Plugin(type = IOPlugin.class)
+public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
+
+	@Parameter
+	private TensorFlowService tensorFlowService;
+
+	@Parameter
+	private LocationService locationService;
+
+	@Parameter
+	private DatasetIOService datasetIOService;
+
+	@Parameter
+	private DatasetService datasetService;
 
 	@Override
-	public Table<?, ?> open(String source) throws IOException {
-		return open(source, new TableIOOptions());
-	}
-
-	/** Opens data from the given source. */
-	@SuppressWarnings("unused")
-	public Table<?, ?> open(final String source, final TableIOOptions options) throws IOException {
-		throw new UnsupportedOperationException();
+	public ModelZooArchive open(String source) throws IOException {
+		Location location = null;
+		try {
+			location = locationService.resolve(source);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		DefaultModelZooArchive archive = new DefaultModelZooArchive();
+		getContext().inject(archive);
+		archive.setSource(location);
+		DefaultModelSpecification specification = new DefaultModelSpecification();
+		try (ZipFile zf = new ZipFile(source)) {
+			InputStream inSpec = zf.getInputStream(zf.getEntry(specification.getModelFileName()));
+			specification.read(inSpec);
+			archive.setSpecification(specification);
+			String testInputPath = specification.getTestInput();
+			String testOutputPath = specification.getTestOutput();
+			if(testInputPath != null) archive.setTestInput(extractImage(zf, testInputPath));
+			if(testOutputPath != null) archive.setTestOutput(extractImage(zf, testOutputPath));
+		}
+		return archive;
 	}
 
 	@Override
-	public void save(Table data, String destination) throws IOException {
-		save(data, destination, new TableIOOptions());
+	public void save(ModelZooArchive archive, String destination) throws IOException {
+		Path destinationPath = Paths.get(destination);
+		Path sourcePath = new File(archive.getSource().getURI()).toPath();
+		Files.copy(sourcePath, destinationPath, REPLACE_EXISTING);
+		Path tmpTestInput = null;
+		Path tmpTestOutput = null;
+		if(archive.getTestInput() != null && archive.getTestOutput() != null) {
+			tmpTestInput = Files.createTempFile("input", archive.getSpecification().getTestInput());
+			tmpTestOutput = Files.createTempFile("output", archive.getSpecification().getTestOutput());
+			datasetIOService.save(getDataset(archive.getTestInput()), tmpTestInput.toFile().getAbsolutePath());
+			datasetIOService.save(getDataset(archive.getTestOutput()), tmpTestOutput.toFile().getAbsolutePath());
+		}
+
+		try (FileSystem fileSystem = FileSystems.newFileSystem(destinationPath, null)) {
+			Path specPath = fileSystem.getPath(archive.getSpecification().getModelFileName());
+			archive.getSpecification().write(specPath);
+			if(tmpTestInput != null) {
+				Path testInputPath = fileSystem.getPath(archive.getSpecification().getTestInput());
+				Path testOutputPath = fileSystem.getPath(archive.getSpecification().getTestOutput());
+				Files.copy(tmpTestInput, testInputPath, REPLACE_EXISTING);
+				Files.copy(tmpTestOutput, testOutputPath, REPLACE_EXISTING);
+			}
+		}
 	}
 
-	/** Saves the given data to the specified destination. */
-	@SuppressWarnings("unused")
-	public void save(final Table<?, ?> data, final String destination, final TableIOOptions options) throws IOException {
-		throw new UnsupportedOperationException();
+	private Dataset getDataset(RandomAccessibleInterval testInput) {
+		return datasetService.create(testInput);
 	}
 
 	@Override
-	public Class<Table> getDataType() {
-		return Table.class;
+	public Class<ModelZooArchive> getDataType() {
+		return ModelZooArchive.class;
+	}
+
+	@Override
+	public boolean supportsOpen(String source) {
+		return source.endsWith("bioimage.io.zip");
+	}
+
+	@Override
+	public boolean supportsSave(String destination) {
+		return destination.endsWith("bioimage.io.zip");
+	}
+
+	private Dataset extractImage(ZipFile zf, String testInputLocation) throws IOException {
+		ZipEntry entry = zf.getEntry(testInputLocation);
+		if(entry == null) return null;
+		InputStream inputStream = zf.getInputStream(entry);
+		File tmpTestInput = Files.createTempFile("img", ".tif").toFile();
+		byte[] buffer = new byte[8 * 1024];
+		int bytesRead;
+		OutputStream outStream = new FileOutputStream(tmpTestInput);
+		while ((bytesRead = inputStream.read(buffer)) != -1) {
+			outStream.write(buffer, 0, bytesRead);
+		}
+		IOUtils.closeQuietly(inputStream);
+		IOUtils.closeQuietly(outStream);
+		return datasetIOService.open(tmpTestInput.getAbsolutePath());
 	}
 }

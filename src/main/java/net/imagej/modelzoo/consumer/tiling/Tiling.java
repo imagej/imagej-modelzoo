@@ -36,12 +36,15 @@ import java.util.List;
 
 public interface Tiling<T extends RealType<T>> {
 
+
+	boolean hasTilesLeft();
+
 	enum TilingAction {
 		NO_TILING, // e.g. Channel
 		TILE_WITH_PADDING, // e.g. X,Y,Z
 		TILE_WITHOUT_PADDING // e.g. TIME
+		;
 	}
-
 	void setNumberOfTiles(int nTiles);
 
 	void setBatchSize(int batchSize);
@@ -63,5 +66,7 @@ public interface Tiling<T extends RealType<T>> {
 	int getTilesNum();
 
 	int getBatchSize();
+
+	void resetInputData();
 
 }

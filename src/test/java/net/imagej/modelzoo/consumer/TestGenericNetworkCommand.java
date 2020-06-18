@@ -2,7 +2,7 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.module.Module;
@@ -39,7 +39,7 @@ public class TestGenericNetworkCommand implements Command {
 	public void run() {
 		Module module = null;
 		try {
-			module = command.run(ModelZooPredictionCommand.class, false, "input", input,
+			module = command.run(DefaultModelZooPredictionCommand.class, false, "input", input,
 					"modelUrl", "http://csbdeep.bioimagecomputing.com/model-project.zip").get();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();

@@ -29,14 +29,14 @@
 
 package net.imagej.modelzoo.consumer.preprocessing;
 
-import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
 
 public class PredictionPreprocessing implements Runnable {
 
-	private Model model;
+	private ModelZooModel model;
 
 	@Parameter
 	CommandService commandService;
@@ -59,7 +59,7 @@ public class PredictionPreprocessing implements Runnable {
 //		}
 	}
 
-	public void setModel(Model model) {
+	public void setModel(ModelZooModel model) {
 		this.model = model;
 	}
 }

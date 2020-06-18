@@ -15,14 +15,13 @@ public class E03_ReadSpecification {
 		String specificationPath = ModelSpecification.class.getResource("/example.model.yaml").getPath();
 
 		// create specification
-		ModelSpecification specification = new DefaultModelSpecification();
+		DefaultModelSpecification specification = new DefaultModelSpecification();
 
 		// read specification
 		specification.read(specificationPath);
 
 		// access specification
-		System.out.println(specification.getName());
-		System.out.println(specification.getDescription());
+		System.out.println(specification.toMap());
 
 	}
 
