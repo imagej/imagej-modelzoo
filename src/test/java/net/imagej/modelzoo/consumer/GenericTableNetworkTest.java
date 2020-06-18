@@ -2,7 +2,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.ModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -24,11 +24,11 @@ public class GenericTableNetworkTest extends AbstractModelZooTest {
 	public void testGenericNetwork() throws ExecutionException, InterruptedException {
 		createImageJ();
 
-		URL networkUrl = this.getClass().getResource("denoise2D/model.zip");
+		URL networkUrl = this.getClass().getResource("denoise2D/model.bioimage.io.zip");
 
 		final RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(3, 3, 3);
 
-		final Module module = ij.command().run(ModelZooPredictionCommand.class, false,
+		final Module module = ij.command().run(DefaultModelZooPredictionCommand.class, false,
 				"input", input,
 				"mapping", "XYZ",
 				"modelFile", new File(networkUrl.getPath())).get();

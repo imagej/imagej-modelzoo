@@ -30,10 +30,13 @@
 package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.model.DefaultModel;
+import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
@@ -44,6 +47,7 @@ import org.scijava.command.CommandService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 import org.tensorflow.Output;
 import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlowException;
@@ -57,7 +61,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TensorFlowModel extends DefaultModel {
+@Plugin(type= ModelZooModel.class, name = "tensorflow")
+public class TensorFlowModel extends DefaultModelZooModel {
 	@Parameter
 	private TensorFlowService tensorFlowService;
 
@@ -81,28 +86,25 @@ public class TensorFlowModel extends DefaultModel {
 	private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY =
 			"serving_default";
 
-	public TensorFlowModel() {
-	}
-
 	@Override
-	public void loadLibrary() {
+	public void loadLibrary() throws MissingLibraryException {
 		tensorFlowService.loadLibrary();
 		if (tensorFlowService.getStatus().isLoaded()) {
 			log.info(tensorFlowService.getStatus().getInfo());
 			tensorFlowLoaded = true;
 		} else {
 			tensorFlowLoaded = false;
-			log.error("Could not load TensorFlow. Check previous errors and warnings for details.");
 			JOptionPane.showMessageDialog(null,
 					"<html>Could not load TensorFlow.<br/>Opening the TensorFlow Library Management tool.</html>",
 					"Loading TensorFlow failed",
 					JOptionPane.ERROR_MESSAGE);
 			commandService.run(TensorFlowLibraryManagementCommand.class, true);
+			throw new MissingLibraryException("Could not load TensorFlow. Check previous errors and warnings for details.");
 		}
 	}
 
 	@Override
-	protected boolean loadModel(final Location source, final String modelName) {
+	public boolean loadModel(final Location source, final String modelName) {
 		if (!tensorFlowLoaded) return false;
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
 		if (!loadModelFile(source, modelName)) return false;
@@ -141,13 +143,13 @@ public class TensorFlowModel extends DefaultModel {
 				model.close();
 			}
 			model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
-			model.model().graph().operations().forEachRemaining(op -> {
-				for (int i = 0; i < op.numOutputs(); i++) {
-					Output<Object> opOutput = op.output(i);
-					String name = opOutput.op().name();
-					System.out.println(name);
-				}
-			});
+//			model.model().graph().operations().forEachRemaining(op -> {
+//				for (int i = 0; i < op.numOutputs(); i++) {
+//					Output<Object> opOutput = op.output(i);
+//					String name = opOutput.op().name();
+//					System.out.println(name);
+//				}
+//			});
 		} catch (TensorFlowException | IOException e) {
 			e.printStackTrace();
 			return false;
@@ -156,8 +158,12 @@ public class TensorFlowModel extends DefaultModel {
 	}
 
 	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		if (!yamlFile.exists()) return false;
-		ModelSpecification specification = new ModelSpecification();
+		System.out.println("load settings from yaml file " + yamlFile);
+		if (!yamlFile.exists()) {
+			log.warn("Could not load settings from YAML " + yamlFile + ": file does not exist.");
+			return false;
+		}
+		ModelSpecification specification = new DefaultModelSpecification();
 		if (!specification.read(yamlFile)) {
 			log.error("Model seems to be incompatible.");
 			return false;
@@ -171,10 +177,9 @@ public class TensorFlowModel extends DefaultModel {
 		return true;
 	}
 
-	// TODO this is the tensorflow runner
 	@Override
 	public void predict() throws IllegalArgumentException, OutOfMemoryError {
-		List<Tensor> inputTensors = getInputTensors();
+		List<Tensor<?>> inputTensors = getInputTensors();
 		List<String> outputNames = getOutputNames();
 		List<Tensor<?>> outputTensors = TensorFlowRunner.executeGraph(
 				model.model(),
@@ -187,10 +192,10 @@ public class TensorFlowModel extends DefaultModel {
 		outputTensors.forEach(Tensor::close);
 	}
 
-	private List<Tensor> getInputTensors() {
-		List<Tensor> res = new ArrayList<>();
+	private List<Tensor<?>> getInputTensors() {
+		List<Tensor<?>> res = new ArrayList<>();
 		for (InputImageNode node : getInputNodes()) {
-			final Tensor tensor = TensorFlowConverter.toTensor(node.getData(), node.getMappingIndices());
+			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData(), node.getMappingIndices());
 			if (tensor == null) {
 				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
 			}
@@ -212,7 +217,7 @@ public class TensorFlowModel extends DefaultModel {
 			Tensor tensor = tensors.get(i);
 			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
 //			System.out.println(Arrays.toString(node.getMappingIndices()));
-			RandomAccessibleInterval<TO> output = TensorFlowConverter.fromTensor(tensor, node.getMappingIndices());
+			RandomAccessibleInterval<TO> output = TensorFlowConverter.tensorToImage(tensor, node.getMappingIndices());
 			node.setData(output);
 		}
 	}
@@ -228,17 +233,11 @@ public class TensorFlowModel extends DefaultModel {
 	}
 
 	@Override
-	public void clear() {
-		super.clear();
-		sig = null;
-		model = null;
-	}
-
-	@Override
 	public void dispose() {
 		super.dispose();
 		tensorFlowLoaded = false;
-		clear();
+		sig = null;
+		model = null;
 	}
 
 }

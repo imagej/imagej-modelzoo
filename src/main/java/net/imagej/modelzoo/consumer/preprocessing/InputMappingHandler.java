@@ -4,16 +4,25 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.model.ImageNode;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
-import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.ops.OpService;
+import net.imagej.ops.convert.RealTypeConverter;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.Converter;
+import net.imglib2.converter.Converters;
+import net.imglib2.converter.RealDoubleConverter;
+import net.imglib2.converter.RealFloatConverter;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
+import org.tensorflow.op.core.Real;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,13 +41,16 @@ public class InputMappingHandler {
 	@Parameter
 	private Context context;
 
-	private Model model;
+	@Parameter
+	private OpService opService;
+
+	private ModelZooModel model;
 	private boolean success;
 
 	private final Map<String, RandomAccessibleInterval<?>> inputs = new HashMap<>();
 	private final Map<String, String> mapping = new HashMap<>();
 
-	public void setModel(Model model) {
+	public void setModel(ModelZooModel model) {
 		this.model = model;
 		try {
 			runInputHarvesting();
@@ -50,7 +62,7 @@ public class InputMappingHandler {
 		success = validateAndFitInputs(model);
 	}
 
-	private boolean validateAndFitInputs(final Model model) {
+	private boolean validateAndFitInputs(final ModelZooModel model) {
 		boolean failed = false;
 		for (InputImageNode inputNode : model.getInputNodes()) {
 			boolean validInput = inputNode.makeDataFit();
@@ -67,8 +79,27 @@ public class InputMappingHandler {
 		inputMap.put("model", model);
 		for (InputImageNode<?> inputNode : model.getInputNodes()) {
 			RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
-			if (data == null) continue;
-			inputNode.setData(data);
+			assignData(inputNode, data);
+		}
+	}
+
+	private <T extends RealType<T>, U extends RealType<U>> void assignData(InputImageNode<U> inputNode, RandomAccessibleInterval<T> data) {
+		if (data == null) return;
+		if(inputNode.getDataType().getClass().isAssignableFrom(data.randomAccess().get().getClass())) {
+			inputNode.setData((RandomAccessibleInterval<U>) data);
+		} else {
+			Converter<? super T, ? super U> converter = null;
+			if(FloatType.class.isAssignableFrom(inputNode.getDataType().getClass())) {
+				converter = new RealFloatConverter();
+			}
+			if(DoubleType.class.isAssignableFrom(inputNode.getDataType().getClass())) {
+				converter = new RealDoubleConverter();
+			}
+			if(converter != null) {
+				inputNode.setData(Converters.convert(data, converter, inputNode.getDataType()));
+			} else {
+				inputNode.setData((RandomAccessibleInterval<U>) data);
+			}
 		}
 	}
 

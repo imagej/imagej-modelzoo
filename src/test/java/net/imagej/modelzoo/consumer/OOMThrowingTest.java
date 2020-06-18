@@ -3,9 +3,18 @@
 //import static org.junit.Assert.assertEquals;
 //import static org.junit.Assert.assertNotEquals;
 //
+//import java.io.FileNotFoundException;
 //import java.util.List;
 //import java.util.concurrent.Future;
 //
+//import io.scif.MissingLibraryException;
+//import net.imagej.modelzoo.DefaultModelZooArchive;
+//import net.imagej.modelzoo.ModelZooArchive;
+//import net.imagej.modelzoo.ModelZooService;
+//import net.imagej.modelzoo.consumer.OOMThrowingNetwork;
+//import net.imagej.modelzoo.consumer.model.ModelZooModel;
+//import net.imagej.modelzoo.specification.DefaultModelSpecification;
+//import net.imagej.modelzoo.specification.ModelSpecification;
 //import org.junit.Test;
 //import org.scijava.command.CommandModule;
 //import org.scijava.module.Module;
@@ -23,14 +32,23 @@
 //	public void testHandlingOfOOMs() {
 //		ImageJ ij = new ImageJ();
 //		final Dataset input =  ij.dataset().create(new FloatType(), new long[]{10,20,30}, "", new AxisType[]{Axes.X, Axes.Y, Axes.Z});
-//		final Future<CommandModule> future = ij.command().run(OOMThrowingNetwork.class, false,
-//				"input", input,
-//				"nTiles", 1,
-//				"overlap", 0,
-//				"blockMultiple", 10,
-//				"actions", new Tiling.TilingAction[]{Tiling.TilingAction.TILE_WITH_PADDING, Tiling.TilingAction.TILE_WITH_PADDING, Tiling.TilingAction.TILE_WITH_PADDING});
-//		assertNotEquals(null, future);
-//		final Module module = ij.module().waitFor(future);
+//		ModelSpecification specification = new DefaultModelSpecification();
+//		specification.setFramework("oom");
+//		ModelZooArchive archive = new DefaultModelZooArchive() {
+//			@Override
+//			public ModelZooModel createModelInstance() throws FileNotFoundException, MissingLibraryException {
+//				return new OOMThrowingNetwork();
+//			}
+//		};
+//		ij.get(ModelZooService.class).predict(archive, input.getImgPlus(), "XYZ");
+////		final Future<CommandModule> future = ij.command().run(OOMThrowingNetwork.class, false,
+////				"input", input,
+////				"nTiles", 1,
+////				"overlap", 0,
+////				"blockMultiple", 10,
+////				"actions", new Tiling.TilingAction[]{Tiling.TilingAction.TILE_WITH_PADDING, Tiling.TilingAction.TILE_WITH_PADDING, Tiling.TilingAction.TILE_WITH_PADDING});
+////		assertNotEquals(null, future);
+////		final Module module = ij.module().waitFor(future);
 //		List nTilesHistory = (List) module.getOutput("nTilesHistory");
 //		List batchSizeHistory = (List) module.getOutput("batchSizeHistory");
 //		assertEquals(nTilesHistory.size(), batchSizeHistory.size());

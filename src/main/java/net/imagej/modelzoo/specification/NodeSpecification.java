@@ -1,86 +1,32 @@
 package net.imagej.modelzoo.specification;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class NodeSpecification {
+public interface NodeSpecification {
 
-	private final static String idNodeName = "name";
-	private final static String idNodeAxes = "axes";
-	private final static String idNodeDataType = "data_type";
-	private final static String idNodeDataRange = "data_range";
-	private final static String idNodeShape = "shape";
-	private final static String idNodeHalo = "halo";
+	String getName();
 
-	private String name;
-	private String axes;
-	private String dataType;
-	private List<?> dataRange;
-	private List<Integer> halo;
+	String getAxes();
 
-	public String getName() {
-		return name;
-	}
+	String getDataType();
 
-	public String getAxes() {
-		return axes;
-	}
+	List<?> getDataRange();
 
-	public String getDataType() {
-		return dataType;
-	}
+	List<Integer> getHalo();
 
-	public List<?> getDataRange() {
-		return dataRange;
-	}
+	void setName(String name);
 
-	public List<Integer> getHalo() {
-		return halo;
-	}
+	void setAxes(String axes);
 
-	public void setName(String name) {
-		this.name = name;
-	}
+	void setDataType(String dataType);
 
-	public void setAxes(String axes) {
-		this.axes = axes;
-	}
+	void setDataRange(List<?> dataRange);
 
-	public void setDataType(String dataType) {
-		this.dataType = dataType;
-	}
+	void setHalo(List<Integer> halo);
 
-	public void setDataRange(List<?> dataRange) {
-		this.dataRange = dataRange;
-	}
+	Map<String, Object> asMap();
 
-	public void setHalo(List<Integer> halo) {
-		this.halo = halo;
-	}
+	NodeSpecification fromMap(Map data);
 
-	public Map<String, Object> asMap() {
-		Map<String, Object> res = new LinkedHashMap<>();
-		res.put(idNodeName, name);
-		if (axes != null) res.put(idNodeAxes, axes);
-		if (dataType != null) res.put(idNodeDataType, dataType);
-		if (dataRange != null) res.put(idNodeDataRange, dataRange);
-		if (halo != null) res.put(idNodeHalo, halo);
-		res.put(idNodeShape, getShape());
-		return res;
-	}
-
-	NodeSpecification fromMap(Map data) {
-		setName((String) data.get(idNodeName));
-		setAxes((String) data.get(idNodeAxes));
-		setDataType((String) data.get(idNodeDataType));
-		setDataRange((List<?>) data.get(idNodeDataRange));
-		setShape((Map<String, Object>) data.get(idNodeShape));
-		setHalo((List<Integer>) data.get(idNodeHalo));
-		return this;
-	}
-
-	protected abstract Map<String, Object> getShape();
-
-	protected abstract void setShape(Map<String, Object> data);
 }

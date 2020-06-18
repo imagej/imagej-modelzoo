@@ -29,7 +29,6 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
-import io.scif.codec.ByteVector;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooAxis;
@@ -56,6 +55,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 	private int tilesNum = 1;
 	private int batchSize = 10;
 
+	private RandomAccessibleInterval<TI> originalData;
 	TiledView<TI> tiledView;
 	private final List<RandomAccessibleInterval<TO>> processedTiles;
 	private int doneTileCount = 0;
@@ -65,6 +65,12 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		this.inputNode = outputNode.getReference();
 		this.outputNode = outputNode;
 		this.processedTiles = new ArrayList<>();
+		this.originalData = inputNode.getData();
+	}
+
+	@Override
+	public boolean hasTilesLeft() {
+		return arrayProduct(Intervals.dimensionsAsLongArray(tiledView)) > doneTileCount;
 	}
 
 	@Override
@@ -81,10 +87,10 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 	public void init() {
 		//TODO check if tilesNum / batchSize works?!
 		resetTileCount();
+		inputNode.setData(originalData);
 		createTiledView();
 		processedTiles.clear();
-		tiledViewCursor = Views.iterable(tiledView)
-				.cursor();
+		tiledViewCursor = Views.iterable(tiledView).cursor();
 
 	}
 
@@ -119,14 +125,18 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		Arrays.fill(tiling, 1);
 		tiling = computeTiling(tiling);
 		long[] padding = getPadding(tiling);
-		computeBatching(tiling);
 		tilesNum = (int) arrayProduct(tiling);
+		computeBatching(tiling);
 		System.out.println("Input dimensions: " + Arrays.toString(Intervals.dimensionsAsIntArray(inputNode.getData())));
 		System.out.println("Axes: " + Arrays.toString(inputNode.getDataAxesArray()));
 		System.out.println("Dividing image into " + arrayProduct(tiling) + " tile(s)..");
 
 		RandomAccessibleInterval<TI> expandedInput = expandToFitBatchSize(inputNode.getData(), tiling);
+//		System.out.println("expandedinput: " + Arrays.toString(Intervals.dimensionsAsIntArray(expandedInput)));
+//		System.out.println("tiling: " + Arrays.toString(tiling));
 		expandedInput = expandToFitBlockSize(expandedInput, tiling);
+//		System.out.println("expandedinput: " + Arrays.toString(Intervals.dimensionsAsIntArray(expandedInput)));
+//		System.out.println("tiling: " + Arrays.toString(tiling));
 		long[] tileSize = calculateTileSize(expandedInput, tiling);
 
 		System.out.println("Size of single image tile: " + Arrays.toString(tileSize));
@@ -184,7 +194,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 			for (int i = 0; i < singleTile.length; i++) {
 				ModelZooAxis axis = inputNode.getDataAxis(i);
 				if (axis.getTiling() == TilingAction.TILE_WITH_PADDING) {
-					singleTile[i] = getTileSize(inputNode.getData(), i, tiling, axis);
+					singleTile[i] = getTileSize(inputNode.getData().dimension(i), tiling[i], axis);
 					if (singleTile[i] > axis.getMin() && (maxDim < 0 ||
 							singleTile[i] > singleTile[maxDim])) {
 						maxDim = i;
@@ -200,13 +210,14 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		}
 	}
 
-	private long getTileSize(RandomAccessibleInterval<TI> img, int dimension, long[] tiling, ModelZooAxis axis) {
+	private long getTileSize(long imgDimension, long tiling, ModelZooAxis axis) {
 		Integer step = axis.getStep();
 		Integer min = axis.getMin();
 		if (step == null) step = 1;
 		if (min == null) min = 1;
-		long res = (long) (Math.ceil(img.dimension(dimension)
-				/ (float) tiling[dimension] / (double) step) * step);
+		long stepsTotal = (long) Math.ceil((imgDimension
+				/ (float) tiling) / (double) step);
+		long res = stepsTotal * step;
 		return Math.max(res, min);
 	}
 
@@ -227,7 +238,9 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		for (int i = 0; i < dataset.numDimensions(); i++) {
 			ModelZooAxis axis = inputNode.getDataAxis(i);
 			if (axis.getTiling() == TilingAction.TILE_WITH_PADDING) {
-				dataset = expandDimToSize(dataset, i, getTileSize(dataset, i, tiling, axis) * tiling[i]);
+				long tileSize = getTileSize(dataset.dimension(i), tiling[i], axis);
+				System.out.println("tile size " + i + ": " + tileSize + " step: " + axis.getStep());
+				dataset = expandDimToSize(dataset, i, tileSize * tiling[i]);
 			}
 		}
 		return dataset;
@@ -237,7 +250,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		for (int i = 0; i < inputNode.numDimensions(); i++) {
 			ModelZooAxis axis = inputNode.getDataAxis(i);
 			if (axis.getTiling() == TilingAction.TILE_WITHOUT_PADDING) {
-				img = expandDimToSize(img, i, getTileSize(inputNode.getData(), i, tiling, axis) *
+				img = expandDimToSize(img, i, getTileSize(inputNode.getData().dimension(i), tiling[i], axis) *
 						tiling[i]);
 			}
 		}
@@ -258,7 +271,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 		if (processedTiles != null && processedTiles.size() > 0) {
 
-			System.out.println("result 0 before padding removement" + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
+//			System.out.println("result 0 before padding removement" + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
 
 			long[] grid = new long[outputNode.numDimensions()];
 			AxisType[] inputAxes = inputNode.getDataAxesArray();
@@ -278,7 +291,7 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 			}
 
 			// TODO log padding / test padding
-			System.out.println("result 0 after padding removement: " + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
+//			System.out.println("result 0 after padding removement: " + Arrays.toString(Intervals.dimensionsAsIntArray(processedTiles.get(0))));
 
 			System.out.println("Merging tiles..");
 
@@ -303,7 +316,12 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 
 	@Override
 	public int getBatchSize() {
-		return 0;
+		return batchSize;
+	}
+
+	@Override
+	public void resetInputData() {
+		inputNode.setData(originalData);
 	}
 
 	private RandomAccessibleInterval<TO> removePadding(

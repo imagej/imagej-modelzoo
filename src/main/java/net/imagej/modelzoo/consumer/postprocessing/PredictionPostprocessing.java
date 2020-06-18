@@ -29,8 +29,9 @@
 
 package net.imagej.modelzoo.consumer.postprocessing;
 
-import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
 
 import java.util.HashMap;
@@ -38,9 +39,9 @@ import java.util.Map;
 
 public class PredictionPostprocessing implements Runnable {
 
-	private Model model;
+	private ModelZooModel model;
 
-	private final Map<String, Object> outputs = new HashMap<>();
+	private final Map<String, RandomAccessibleInterval<?>> outputs = new HashMap<>();
 
 	public PredictionPostprocessing(Context context) {
 		context.inject(this);
@@ -60,11 +61,11 @@ public class PredictionPostprocessing implements Runnable {
 		outputs.put(node.getName(), node.getData());
 	}
 
-	public void setModel(Model model) {
+	public void setModel(ModelZooModel model) {
 		this.model = model;
 	}
 
-	public Map<String, Object> getOutputs() {
+	public Map<String, RandomAccessibleInterval<?>> getOutputs() {
 		return outputs;
 	}
 }

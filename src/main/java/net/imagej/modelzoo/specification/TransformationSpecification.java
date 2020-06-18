@@ -1,42 +1,18 @@
 package net.imagej.modelzoo.specification;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class TransformationSpecification {
+public interface TransformationSpecification {
 
-	private final static String idSpec = "spec";
-	private final static String idKwargs = "kwargs";
+	void setSpec(String specification);
 
-	private String specification;
-	private Map<String, Object> kwargs;
+	void setKwargs(Map<String, Object> kwargs);
 
-	public void setSpec(String specification) {
-		this.specification = specification;
-	}
+	Map<String, Object> asMap();
 
-	public void setKwargs(Map<String, Object> kwargs) {
-		this.kwargs = kwargs;
-	}
+	TransformationSpecification fromMap(Map<String, Object> data);
 
-	public Map<String, Object> asMap() {
-		Map<String, Object> res = new LinkedHashMap<>();
-		res.put(idSpec, specification);
-		res.put(idKwargs, kwargs);
-		return res;
-	}
+	String getSpecification();
 
-	public TransformationSpecification fromMap(Map<String, Object> data) {
-		setSpec((String) data.get(idSpec));
-		setKwargs((Map<String, Object>) data.get(idKwargs));
-		return this;
-	}
-
-	public String getSpecification() {
-		return specification;
-	}
-
-	public Map<String, Object> getKwargs() {
-		return kwargs;
-	}
+	Map<String, Object> getKwargs();
 }

@@ -3,7 +3,7 @@ package net.imagej.modelzoo.consumer.preprocessing;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
-import net.imagej.modelzoo.consumer.model.Model;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.plugin.Parameter;
@@ -19,7 +19,7 @@ import java.util.Map;
 class InputMappingCommand extends DynamicCommand {
 
 	@Parameter
-	private Model model;
+	private ModelZooModel model;
 
 	private static final Map<Character, AxisType> axesMap = Collections.unmodifiableMap(new HashMap<Character, AxisType>() {
 		{
