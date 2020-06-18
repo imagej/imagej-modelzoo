@@ -131,7 +131,9 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		addCard(leftPanel, rightPanel, group, createOverviewPanel(model), "Overview");
 		addCard(leftPanel, rightPanel, group, createMetaPanel(model), "Metadata");
 		addCard(leftPanel, rightPanel, group, createInputsOutputsPanel(model), "Inputs & Outputs");
-		addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
+		if(model.getSpecification().getTrainingKwargs() != null) {
+			addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
+		}
 		cardLayout.first(rightPanel);
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
 		panel.add(rightPanel, "width 450:450:null, height 100%");

@@ -29,72 +29,36 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
-import io.scif.MissingLibraryException;
+import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import org.scijava.Context;
-import org.scijava.ItemIO;
-import org.scijava.log.LogService;
+import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CancellationException;
 
-@Plugin(type = SingleImagePredictionCommand.class, menuPath = "Plugins>ModelZoo>ModelZoo Prediction")
-public class DefaultModelZooPredictionCommand implements SingleImagePredictionCommand {
+@Plugin(type = Command.class, menuPath = "File>Import>bioimage.io.zip")
+public class ModelZooArchiveImportCommand implements Command {
 
-	@Parameter(label = "Import model (.zip) from file")
+	@Parameter
 	private File modelFile;
-
-	@Parameter
-	private Img input;
-
-	@Parameter(label = "Axes (subset of XYZCT)")
-	private String axes = "XY";
-
-	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
-	private int nTiles = 8;
-
-	@Parameter(label = "Batch size")
-	private int batchSize = 10;
-
-	@Parameter(type = ItemIO.OUTPUT)
-	private RandomAccessibleInterval output;
-
-	@Parameter
-	private LogService log;
-
-	@Parameter
-	private Context context;
 
 	@Parameter
 	private ModelZooService modelZooService;
 
+	@Parameter
+	private UIService uiService;
+
 	public void run() {
 
-		final long startTime = System.currentTimeMillis();
-
 		try {
-
-			DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(context);
-			prediction.setInput("input", input, axes);
-			prediction.setTrainedModel(modelZooService.open(modelFile));
-			prediction.setNumberOfTiles(nTiles);
-			prediction.setBatchSize(batchSize);
-			prediction.run();
-			output = prediction.getOutput();
-
-		} catch (CancellationException e) {
-			log.warn("ModelZoo prediction canceled.");
-		} catch (OutOfMemoryError | IOException | MissingLibraryException e) {
+			ModelZooArchive model = modelZooService.open(modelFile);
+			uiService.show(model);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
-
 	}
 
 }

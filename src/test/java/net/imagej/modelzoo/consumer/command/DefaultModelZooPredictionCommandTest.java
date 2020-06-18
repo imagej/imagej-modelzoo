@@ -21,13 +21,11 @@ public class DefaultModelZooPredictionCommandTest {
 	public void testCommand() throws IOException, URISyntaxException, ExecutionException, InterruptedException {
 		ImageJ ij = new ImageJ();
 
-		Path img = Paths.get(DefaultModelZooPredictionCommand.class.getClassLoader()
-				.getResource("denoise2D/input.tif").toURI());
+		Path img = Paths.get(getClass().getResource("../denoise2D/input.tif").toURI());
 
 		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
 
-		Path model = Paths.get(DefaultModelZooPredictionCommand.class.getClassLoader()
-				.getResource("denoise2D/model.bioimage.io.zip").toURI());
+		Path model = Paths.get(getClass().getResource("../denoise2D/model.bioimage.io.zip").toURI());
 
 		CommandModule module = ij.command().run(DefaultModelZooPredictionCommand.class,
 				false,

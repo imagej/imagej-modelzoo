@@ -30,29 +30,19 @@
 
 package net.imagej.modelzoo.io;
 
-import com.sun.imageio.plugins.png.PNGImageWriter;
-import io.scif.media.imageioimpl.plugins.tiff.TIFFImageWriter;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.DefaultModelZooArchive;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
-import net.imagej.ops.OpService;
-import net.imagej.tensorflow.TensorFlowService;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.view.Views;
-import org.apache.commons.compress.utils.IOUtils;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
-import org.scijava.io.IOService;
 import org.scijava.io.location.Location;
 import org.scijava.io.location.LocationService;
-import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,25 +63,14 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  *
  * @author Deborah Schmidt
  */
-@Plugin(type = IOPlugin.class)
+@Plugin(type = IOPlugin.class, priority = 100.0)
 public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
-
-	@Parameter
-	private TensorFlowService tensorFlowService;
-
-	@Parameter
-	private LocationService locationService;
-
-	@Parameter
-	private DatasetIOService datasetIOService;
-
-	@Parameter
-	private DatasetService datasetService;
 
 	@Override
 	public ModelZooArchive open(String source) throws IOException {
 		Location location = null;
 		try {
+			LocationService locationService = getContext().service(LocationService.class);
 			location = locationService.resolve(source);
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
@@ -122,8 +101,10 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		if(archive.getTestInput() != null && archive.getTestOutput() != null) {
 			tmpTestInput = Files.createTempFile("input", archive.getSpecification().getTestInput());
 			tmpTestOutput = Files.createTempFile("output", archive.getSpecification().getTestOutput());
-			datasetIOService.save(getDataset(archive.getTestInput()), tmpTestInput.toFile().getAbsolutePath());
-			datasetIOService.save(getDataset(archive.getTestOutput()), tmpTestOutput.toFile().getAbsolutePath());
+			DatasetIOService datasetIOService = getContext().service(DatasetIOService.class);
+			DatasetService datasetService = getContext().service(DatasetService.class);
+			datasetIOService.save(datasetService.create(archive.getTestInput()), tmpTestInput.toFile().getAbsolutePath());
+			datasetIOService.save(datasetService.create(archive.getTestOutput()), tmpTestOutput.toFile().getAbsolutePath());
 		}
 
 		try (FileSystem fileSystem = FileSystems.newFileSystem(destinationPath, null)) {
@@ -136,10 +117,6 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 				Files.copy(tmpTestOutput, testOutputPath, REPLACE_EXISTING);
 			}
 		}
-	}
-
-	private Dataset getDataset(RandomAccessibleInterval testInput) {
-		return datasetService.create(testInput);
 	}
 
 	@Override
@@ -168,8 +145,9 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		while ((bytesRead = inputStream.read(buffer)) != -1) {
 			outStream.write(buffer, 0, bytesRead);
 		}
-		IOUtils.closeQuietly(inputStream);
-		IOUtils.closeQuietly(outStream);
+		outStream.close();
+		inputStream.close();
+		DatasetIOService datasetIOService = getContext().service(DatasetIOService.class);
 		return datasetIOService.open(tmpTestInput.getAbsolutePath());
 	}
 }

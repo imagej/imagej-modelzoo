@@ -26,14 +26,12 @@ public class DefaultModelZooPredictionTest {
 	public void testPrediction() throws URISyntaxException, IOException, MissingLibraryException {
 		ImageJ ij = new ImageJ();
 
-		Path img = Paths.get(DefaultModelZooPrediction.class.getClassLoader()
-				.getResource("denoise2D/input.tif").toURI());
+		Path img = Paths.get(getClass().getResource("denoise2D/input.tif").toURI());
 
 		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
 		Img inputFloat = ij.op().convert().float32(input);
 
-		File archiveFile = new File(DefaultModelZooPrediction.class.getClassLoader()
-				.getResource("denoise2D/model.bioimage.io.zip").toURI());
+		File archiveFile = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
 
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 		prediction.setInput("input", inputFloat, "XY");
@@ -48,8 +46,7 @@ public class DefaultModelZooPredictionTest {
 	@Test
 	public void testNoTiling() throws URISyntaxException, IOException, MissingLibraryException {
 		ImageJ ij = new ImageJ();
-		File archiveFile = new File(DefaultModelZooPrediction.class.getClassLoader()
-				.getResource("denoise2D/model.bioimage.io.zip").toURI());
+		File archiveFile = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
 		Img inputFloat = new ArrayImgFactory<>(new FloatType()).create(7, 7);
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 		prediction.setInput("input", inputFloat, "XY");
