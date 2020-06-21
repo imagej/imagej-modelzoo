@@ -101,7 +101,8 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	@Parameter
 	private OpService opService;
 
-	private static Color leftBgColor = new Color(0x414144);
+	private static Color leftBgColor = new Color(0x454549);
+	private static Color leftIconBgColor = new Color(0x313134);
 	private static final Font font = new JLabel().getFont();
 	private static final Font plainMonospaceFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 	private static final Font plainFont = font.deriveFont(Font.PLAIN);
@@ -124,6 +125,8 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		leftPanel.setBackground(leftBgColor);
 		leftPanel.setForeground(Color.white);
 		JLabel titleIcon = new JLabel(new ImageIcon(getClass().getResource("/icon-modelzoo.png")));
+		titleIcon.setBackground(leftIconBgColor);
+		titleIcon.setOpaque(true);
 		leftPanel.add(titleIcon, "span, growx");
 		CardLayout cardLayout = new CardLayout();
 		JPanel rightPanel = new JPanel(cardLayout);
