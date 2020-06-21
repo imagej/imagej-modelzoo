@@ -226,7 +226,6 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 			String absolutePath = new File(model.getSource().getURI()).getAbsolutePath();
 			System.out.println(absolutePath);
 			modelZooService.save(model, absolutePath);
-			model.clearCache();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

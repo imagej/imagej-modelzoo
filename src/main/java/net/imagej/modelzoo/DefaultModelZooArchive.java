@@ -3,7 +3,6 @@ package net.imagej.modelzoo;
 import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imagej.tensorflow.TensorFlowService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
@@ -24,9 +23,6 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 
 	@Parameter
 	private PluginService pluginService;
-
-	@Parameter
-	private TensorFlowService tensorFlowService;
 
 	@Parameter
 	private Context context;
@@ -90,12 +86,6 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 			//e.printStackTrace();
 		}
 		return specification.getName() + timeString;
-	}
-
-	@Override
-	public void clearCache() {
-		//TODO implement this
-		// tensorFlowService.clearCache(specification.getName());
 	}
 
 	public void setSource(Location source) {
