@@ -82,6 +82,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		try (ZipFile zf = new ZipFile(source)) {
 			InputStream inSpec = zf.getInputStream(zf.getEntry(specification.getModelFileName()));
 			specification.read(inSpec);
+			inSpec.close();
 			archive.setSpecification(specification);
 			String testInputPath = specification.getTestInput();
 			String testOutputPath = specification.getTestOutput();

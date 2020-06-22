@@ -52,7 +52,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idTrainingKwargs = "kwargs";
 
 	final static String dependenciesFileName = "dependencies.yaml";
-	final static String modelZooSpecificationVersion = "0.1.0";
+	final static String modelZooSpecificationVersion = "0.2.0";
 
 	private String modelFileName = "model.yaml";
 	private String formatVersion = modelZooSpecificationVersion;

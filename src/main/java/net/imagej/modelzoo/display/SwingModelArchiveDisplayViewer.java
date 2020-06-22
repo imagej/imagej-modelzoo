@@ -101,7 +101,8 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	@Parameter
 	private OpService opService;
 
-	private static Color leftBgColor = new Color(0x414144);
+	private static Color leftBgColor = new Color(0x454549);
+	private static Color leftIconBgColor = new Color(0x313134);
 	private static final Font font = new JLabel().getFont();
 	private static final Font plainMonospaceFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 	private static final Font plainFont = font.deriveFont(Font.PLAIN);
@@ -123,8 +124,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		JPanel leftPanel = new JPanel(new MigLayout("ins 0"));
 		leftPanel.setBackground(leftBgColor);
 		leftPanel.setForeground(Color.white);
-		JLabel titleIcon = new JLabel(new ImageIcon(getClass().getResource("/icon-modelzoo.png")));
-		leftPanel.add(titleIcon, "span, growx");
+		leftPanel.add(createLeftTitleIcon(), "span, growx");
 		CardLayout cardLayout = new CardLayout();
 		JPanel rightPanel = new JPanel(cardLayout);
 		ButtonGroup group = new ButtonGroup();
@@ -138,6 +138,13 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
 		panel.add(rightPanel, "width 450:450:null, height 100%");
 		return panel;
+	}
+
+	private JLabel createLeftTitleIcon() {
+		JLabel titleIcon = new JLabel(new ImageIcon(getClass().getResource("/icon-modelzoo.png")));
+		titleIcon.setBackground(leftIconBgColor);
+		titleIcon.setOpaque(true);
+		return titleIcon;
 	}
 
 	private static Component createTrainingPanel(ModelZooArchive model) {
@@ -226,7 +233,6 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 			String absolutePath = new File(model.getSource().getURI()).getAbsolutePath();
 			System.out.println(absolutePath);
 			modelZooService.save(model, absolutePath);
-			model.clearCache();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -399,6 +405,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		str.append("axes       : ").append(input.getAxes()).append("\n");
 		str.append("data type  : ").append(input.getDataType()).append("\n");
 		str.append("data range : ").append(input.getDataRange()).append("\n");
+		str.append("halo       : ").append(input.getHalo()).append("\n");
 		str.append("min        : ").append(input.getShapeMin()).append("\n");
 		str.append("step       : ").append(input.getShapeStep()).append("\n");
 		return str.toString();

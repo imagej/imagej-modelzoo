@@ -13,8 +13,8 @@
 	<artifactId>imagej-modelzoo</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>ImageJ model zoo consumer</name>
-	<description>This is an ImageJ consumer for models from the bioimage model zoo.</description>
+	<name>ImageJ bioimage.io modelzoo library</name>
+	<description>This is the bioimage.io modelzoo library for ImageJ.</description>
 	<url>https://bioimage.io/</url>
 	<inceptionYear>2019</inceptionYear>
 	<organization>
@@ -42,28 +42,6 @@
 				<role>reviewer</role>
 				<role>support</role>
 				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>HedgehogCode</id>
-			<name>Benjamin Wilhelm</name>
-			<url>https://github.com/HedgehogCode</url>
-			<roles>
-				<role>lead</role>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>fjug</id>
-			<name>Florian Jug</name>
-			<url>https://github.com/fjug</url>
-			<roles>
-				<role>lead</role>
-				<role>developer</role>
 			</roles>
 		</developer>
 	</developers>
@@ -97,13 +75,10 @@
 
 	<properties>
 		<package-name>mpicbg.csbd</package-name>
-		<main-class>net.imagej.modelzoo.commands.GenericNetwork</main-class>
+		<main-class>net.imagej.modelzoo.consumer.DefaultSingleImagePrediction</main-class>
 		<!-- LICENSE -->
 		<license.licenseName>bsd_2</license.licenseName>
-		<license.copyrightOwners>
-			Deborah Schmidt, Florian Jug, Benjamin Wilhelm
-		</license.copyrightOwners>
-
+		<license.copyrightOwners>Center for Systems Biology Dresden</license.copyrightOwners>
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 		<tensorflow.version>1.13.1</tensorflow.version>
 		<imagej-tensorflow.version>1.1.4</imagej-tensorflow.version>
@@ -152,13 +127,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-plugins-io-table</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.21</version>
 		</dependency>
 	</dependencies>
 

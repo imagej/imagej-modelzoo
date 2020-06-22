@@ -36,12 +36,6 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	 */
 	ModelZooModel createModelInstance() throws FileNotFoundException, MissingLibraryException;
 
-	/**
-	 * model archives are cached (e.g. unzipped to the cache directory).
-	 * If the model source changed, the cache needs to be cleared.
-	 */
-	void clearCache();
-
 	void setTestInput(RandomAccessibleInterval<TI> testInput);
 
 	void setTestOutput(RandomAccessibleInterval<TO> testOutput);

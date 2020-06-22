@@ -77,6 +77,7 @@ class SpecificationLoader {
 		String axes = data.getAxes();
 		List<Integer> min = data.getShapeMin();
 		List<Integer> step = data.getShapeStep();
+		List<Integer> halo = data.getHalo();
 		node.clearAxes();
 		for (int i = 0; i < axes.length(); i++) {
 			int minVal = min.get(i);
@@ -95,6 +96,7 @@ class SpecificationLoader {
 			axis.setMin(minVal);
 			axis.setStep(stepVal);
 			axis.setTiling(tilingAction);
+			axis.setHalo(halo.get(i));
 			node.addAxis(axis);
 		}
 	}
@@ -104,7 +106,6 @@ class SpecificationLoader {
 		String reference = data.getReferenceInputName();
 		List<? extends Number> scale = data.getShapeScale();
 		List<Integer> offset = data.getShapeOffset();
-		List<Integer> halo = data.getHalo();
 		node.setReference((InputImageNode<TI>) getInput(inputNodes, reference));
 		node.clearAxes();
 		for (int i = 0; i < axes.length(); i++) {
@@ -112,7 +113,6 @@ class SpecificationLoader {
 			ModelZooAxis axis = new ModelZooAxis(axisType);
 			axis.setScale(scale.get(i).doubleValue());
 			axis.setOffset(offset.get(i));
-			axis.setHalo(halo.get(i));
 			node.addAxis(axis);
 		}
 	}
