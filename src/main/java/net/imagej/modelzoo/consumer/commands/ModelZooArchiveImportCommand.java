@@ -31,10 +31,10 @@ package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,14 +48,13 @@ public class ModelZooArchiveImportCommand implements Command {
 	@Parameter
 	private ModelZooService modelZooService;
 
-	@Parameter
-	private UIService uiService;
+	@Parameter(type = ItemIO.OUTPUT)
+	private ModelZooArchive model;
 
 	public void run() {
 
 		try {
-			ModelZooArchive model = modelZooService.open(modelFile);
-			uiService.show(model);
+			model = modelZooService.open(modelFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
