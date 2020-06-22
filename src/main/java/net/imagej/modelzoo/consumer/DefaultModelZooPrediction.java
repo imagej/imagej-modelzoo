@@ -94,7 +94,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		}
 	}
 
-	private ModelZooModel loadModel(ModelZooArchive modelArchive) throws FileNotFoundException, MissingLibraryException {
+	protected ModelZooModel loadModel(ModelZooArchive modelArchive) throws FileNotFoundException, MissingLibraryException {
 		return modelArchive.createModelInstance();
 	}
 
@@ -103,13 +103,13 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		inputHandling.addInput(name, value, axes);
 	}
 
-	private void preprocessing(ModelZooModel model) {
+	protected void preprocessing(ModelZooModel model) {
 		PredictionPreprocessing preprocessing = new PredictionPreprocessing(context);
 		preprocessing.setModel(model);
 		preprocessing.run();
 	}
 
-	private void postprocessing(ModelZooModel model) {
+	protected void postprocessing(ModelZooModel model) {
 		PredictionPostprocessing postprocessing = new PredictionPostprocessing(context);
 		postprocessing.setModel(model);
 		postprocessing.run();
@@ -150,7 +150,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		setTrainedModel(modelZooService.open(trainedModel));
 	}
 
-	private void executePrediction(ModelZooModel model) throws OutOfMemoryError {
+	protected void executePrediction(ModelZooModel model) throws OutOfMemoryError {
 		TiledPredictionExecutor executor = new TiledPredictionExecutor(model, context);
 		executor.setTilingEnabled(tilingEnabled);
 		executor.setNumberOfTiles(nTiles);
@@ -171,7 +171,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		}
 	}
 
-	private boolean inputValidationAndMapping(ModelZooModel model) {
+	protected boolean inputValidationAndMapping(ModelZooModel model) {
 		context.inject(inputHandling);
 		inputHandling.setModel(model);
 		return inputHandling.getSuccess();
