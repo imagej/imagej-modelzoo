@@ -44,7 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
-@Plugin(type = SingleImagePredictionCommand.class, menuPath = "Plugins>ModelZoo>ModelZoo Prediction")
+//@Plugin(type = SingleImagePredictionCommand.class, menuPath = "Plugins>ModelZoo>ModelZoo Prediction")
 public class DefaultModelZooPredictionCommand implements SingleImagePredictionCommand {
 
 	@Parameter(label = "Import model (.zip) from file")
