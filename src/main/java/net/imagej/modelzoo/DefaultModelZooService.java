@@ -22,6 +22,8 @@ import org.scijava.plugin.PluginService;
 import org.scijava.plugin.SciJavaPlugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
+import org.scijava.ui.DialogPrompt;
+import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,6 +41,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Parameter
 	private CommandService commandService;
+
+	@Parameter
+	private UIService uiService;
 
 	@Override
 	public ModelZooArchive open(String location) throws IOException {
@@ -102,16 +107,21 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		if(archivePrediction != null) {
 			for (PluginInfo<SingleImagePredictionCommand> command : predictionCommands) {
 				if(command.getAnnotation().name().equals(archivePrediction)) {
-					CommandInfo commandInfo = commandService.getCommand(command.getPluginClass());
+					CommandInfo commandInfo = commandService.getCommand(command.getClassName());
 					mycommand = commandInfo.createModule();
 				}
 			}
 		}
 		if(mycommand == null) {
-			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
+//			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
+			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
+			return;
 		}
 		String modelFileParameter = "modelFile";
-		commandService.moduleService().run(mycommand, true, modelFileParameter, new File(trainedModel.getSource().getURI()).getAbsolutePath());
+		File value = new File(trainedModel.getSource().getURI());
+		mycommand.setInput(modelFileParameter, value);
+		mycommand.resolveInput(modelFileParameter);
+		commandService.moduleService().run(mycommand, true);
 	}
 
 	private ModelZooIOPlugin createIOPlugin() {
