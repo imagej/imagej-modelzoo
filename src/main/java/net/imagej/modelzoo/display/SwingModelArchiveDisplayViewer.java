@@ -170,7 +170,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		sourceTextField.setEditable(false);
 		panel.add(sourceTextField, "growx, height 25:25:null");
 		panel.add(createCopySourceBtn(model), "grow 0");
-		panel.add(createActionsBar(model, inputIcon, outputIcon), "newline, span, gapbefore push");
+		panel.add(createActionsBar(model, inputIcon, outputIcon), "newline, span, pushx, growx");
 		return panel;
 	}
 
@@ -212,11 +212,13 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private Component createActionsBar(ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
-		JPanel panel = new JPanel(new MigLayout("ins 0"));
+		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[][]push[]", ""));
 		//TODO enable once the features are all ready
 //		panel.add(createActionButton("Set test image", () -> updateTestImage(model, inputIcon, outputIcon)));
 //		panel.add(createActionButton("Save..", () -> saveChanges(model)));
-		panel.add(createActionButton("Predict", () -> predict(model)));
+		panel.add(new JLabel("<html><div style='font-weight: normal;'>Source:</div> " + model.getSpecification().getSource()), "");
+		panel.add(new JLabel("<html><div style='font-weight: normal;'>Input axes:</div> " + model.getSpecification().getInputs().get(0).getAxes()));
+		panel.add(createActionButton("Predict", () -> predict(model)), "");
 		return panel;
 	}
 
