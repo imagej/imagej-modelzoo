@@ -150,7 +150,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private static Component createTrainingPanel(ModelZooArchive model) {
 		JPanel panel = new JPanel(new MigLayout("", "[][push]", ""));
 		model.getSpecification().getTrainingKwargs().forEach((s, o) -> {
-			addToPanel(panel, s, o.toString());
+			addToPanel(panel, s, o == null ? "null" : o.toString());
 		});
 		return scroll(panel);
 	}
@@ -168,7 +168,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		panel.add(new JLabel("Saved to "), "newline, grow 0");
 		JTextField sourceTextField = new JTextField(model.getSource().getURI().getPath());
 		sourceTextField.setEditable(false);
-		panel.add(sourceTextField, "growx");
+		panel.add(sourceTextField, "growx, height 25:25:null");
 		panel.add(createCopySourceBtn(model), "grow 0");
 		panel.add(createActionsBar(model, inputIcon, outputIcon), "newline, span, gapbefore push");
 		return panel;
