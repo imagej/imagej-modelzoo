@@ -52,6 +52,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -79,7 +80,19 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		archive.setSource(location);
 		DefaultModelSpecification specification = new DefaultModelSpecification();
 		try (ZipFile zf = new ZipFile(source)) {
-			InputStream inSpec = zf.getInputStream(zf.getEntry(specification.getModelFileName()));
+			final Enumeration<? extends ZipEntry> entries = zf.entries();
+			ZipEntry modelFile = null;
+			while ( entries.hasMoreElements() ) {
+				final ZipEntry entry = entries.nextElement();
+				if(entry.getName().endsWith("model.yaml")) {
+					modelFile = entry;
+					break;
+				}
+			}
+			if(modelFile == null) {
+				throw new IOException("Can't open " + source + " as bioimage.io model archive: No *model.yaml file found.");
+			}
+			InputStream inSpec = zf.getInputStream(modelFile);
 			specification.read(inSpec);
 			inSpec.close();
 			archive.setSpecification(specification);
