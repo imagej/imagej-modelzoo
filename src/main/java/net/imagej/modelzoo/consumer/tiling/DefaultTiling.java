@@ -224,11 +224,11 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 	private long[] getPadding(long[] tiling) {
 		long[] padding = new long[tiling.length];
 		for (int i = 0; i < padding.length; i++) {
-			if (tiling[i] > 1) {
+//			if (tiling[i] > 1) {
 				Integer halo = inputNode.getDataAxis(i).getHalo();
 				if (halo == null) halo = defaultHalo;
 				padding[i] = halo;
-			}
+//			}
 		}
 		return padding;
 	}
