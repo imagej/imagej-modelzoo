@@ -34,11 +34,12 @@ import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
+import org.scijava.log.LogService;
 
 public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
 
 	//TODO this is ugly
-	public boolean makeDataFit() {
+	public boolean makeDataFit(LogService log) {
 		RandomAccessibleInterval<T> img = getData();
 		int[] mappingIndices = getMappingIndices();
 		try {
@@ -60,7 +61,7 @@ public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
 					}
 					if ((int) step == 0) {
 						if (size != min) {
-							System.out.println("Input " + getName() + " dimension " + i + " should have size " + min + " but is " + size);
+							log.error("Input \"" + getName() + "\" dimension " + i + " should have size " + min + " but is " + size);
 							return false;
 						} else {
 							continue;

@@ -79,12 +79,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	public void run() throws OutOfMemoryError, FileNotFoundException, MissingLibraryException {
 
 		ModelZooModel model = loadModel(modelArchive);
-
-		if (model == null || !model.isInitialized() || !inputValidationAndMapping(model)) {
-			log.error("Model does not exist or cannot be loaded. Exiting.");
-			if(model != null) model.dispose();
-			return;
-		}
+		if (!validateModel(model)) return;
 		try {
 			preprocessing(model);
 			executePrediction(model);
@@ -92,6 +87,20 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		} finally {
 			model.dispose();
 		}
+	}
+
+	protected boolean validateModel(ModelZooModel model) {
+		if (model == null || !model.isInitialized()) {
+			log.error("Model does not exist or cannot be loaded. Exiting.");
+			if(model != null) model.dispose();
+			return false;
+		}
+		if(!inputValidationAndMapping(model)) {
+			log.error("Model and input data do not match. Exiting.");
+			model.dispose();
+			return false;
+		}
+		return true;
 	}
 
 	protected ModelZooModel loadModel(ModelZooArchive modelArchive) throws FileNotFoundException, MissingLibraryException {

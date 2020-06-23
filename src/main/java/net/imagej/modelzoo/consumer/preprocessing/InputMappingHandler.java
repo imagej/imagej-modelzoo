@@ -93,7 +93,7 @@ public class InputMappingHandler {
 	private boolean validateAndFitInputs(final ModelZooModel model) {
 		boolean failed = false;
 		for (InputImageNode inputNode : model.getInputNodes()) {
-			boolean validInput = inputNode.makeDataFit();
+			boolean validInput = inputNode.makeDataFit(log);
 			if (!validInput) {
 				failed = true;
 			}
