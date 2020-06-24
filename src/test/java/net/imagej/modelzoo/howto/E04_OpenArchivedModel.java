@@ -49,7 +49,7 @@ public class E04_OpenArchivedModel {
 		ij.launch();
 
 		// resource paths
-		String modelPath = "/home/random/Development/imagej/project/CSBDeep/training/DenoiSeg/mouse/latest.bioimage.io.zip";
+		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
 
 		Object model = ij.io().open(modelPath);
 		ij.ui().show(model);

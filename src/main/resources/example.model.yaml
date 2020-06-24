@@ -6,10 +6,12 @@ authors: [author1, author2]
 documentation: DOCUMENTATION_LINK
 tags: [tag1, tag2]
 license: bsd
-format_version: 0.1.0
+format_version: 0.2.0-csbdeep
 language: java
 framework: tensorflow
 source: source
+test_input: input.png
+test_output: output.png
 inputs:
   - name: input
     axes: XYZC

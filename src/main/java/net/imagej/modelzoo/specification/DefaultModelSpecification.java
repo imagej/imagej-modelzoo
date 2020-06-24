@@ -105,6 +105,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
+
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -145,11 +146,15 @@ public class DefaultModelSpecification implements ModelSpecification {
 		Map<String, Object> obj = yaml.load(stream);
 		System.out.println(obj);
 		if (obj == null) return false;
+		readFromMap(obj);
+		return true;
+	}
+
+	private void readFromMap(Map<String, Object> obj) {
 		readMeta(obj);
 		readInputsOutputs(obj);
 		readTraining(obj);
 		readPrediction(obj);
-		return true;
 	}
 
 	@Override
@@ -374,8 +379,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private void readMeta(Map<String, Object> obj) {
 		setName((String) obj.get(idName));
 		setDescription((String) obj.get(idDescription));
-		List<Map> citations = (List<Map>) obj.get(idCite);
-		if (citations != null) {
+		if(obj.get(idCite) != null && List.class.isAssignableFrom(obj.get(idCite).getClass())) {
+			List<Map> citations = (List<Map>) obj.get(idCite);
 			for (Map citation : citations) {
 				addCitation(new DefaultCitationSpecification().fromMap(citation));
 			}
@@ -421,16 +426,30 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private void readPrediction(Map<String, Object> obj) {
 		Map<String, Object> prediction = (Map<String, Object>) obj.get(idPrediction);
 		if (prediction != null) {
-			List<Map<String, Object>> preprocess = (List<Map<String, Object>>) prediction.get(idPredictionPreprocess);
-			if (preprocess != null) {
-				for (Map<String, Object> transformation : preprocess) {
-					addPredictionPreprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+			Object oPreprocess = prediction.get(idPredictionPreprocess);
+			if(oPreprocess != null) {
+				if(Map.class.isAssignableFrom(oPreprocess.getClass())) {
+					addPredictionPreprocessing(new DefaultTransformationSpecification().fromMap((Map<String, Object>) oPreprocess));
+				} else {
+					if(List.class.isAssignableFrom(oPreprocess.getClass())) {
+						List<Map<String, Object>> preprocess = (List<Map<String, Object>>) oPreprocess;
+						for (Map<String, Object> transformation : preprocess) {
+							addPredictionPreprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+						}
+					}
 				}
 			}
-			List<Map<String, Object>> postprocess = (List<Map<String, Object>>) prediction.get(idPredictionPostprocess);
-			if (postprocess != null) {
-				for (Map<String, Object> transformation : postprocess) {
-					addPredictionPostprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+			Object oPostprocess = prediction.get(idPredictionPostprocess);
+			if(oPostprocess != null) {
+				if(Map.class.isAssignableFrom(oPostprocess.getClass())) {
+					addPredictionPostprocessing(new DefaultTransformationSpecification().fromMap((Map<String, Object>) oPostprocess));
+				} else {
+					if(List.class.isAssignableFrom(oPostprocess.getClass())) {
+						List<Map<String, Object>> postprocess = (List<Map<String, Object>>) oPostprocess;
+						for (Map<String, Object> transformation : postprocess) {
+							addPredictionPostprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+						}
+					}
 				}
 			}
 			setPredictionWeightsSource((String) prediction.get(idPredictionWeightsSource));
@@ -546,7 +565,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		this.predictionDependencies = predictionDependencies;
 	}
 
-	private void setModelFileName(String modelFileName) {
+	public void setModelFileName(String modelFileName) {
 		this.modelFileName = modelFileName;
 	}
 
