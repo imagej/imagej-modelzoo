@@ -225,9 +225,14 @@ public class DefaultTiling<TO extends RealType<TO>, TI extends RealType<TI>> imp
 		long[] padding = new long[tiling.length];
 		for (int i = 0; i < padding.length; i++) {
 //			if (tiling[i] > 1) {
-				Integer halo = inputNode.getDataAxis(i).getHalo();
-				if (halo == null) halo = defaultHalo;
-				padding[i] = halo;
+			ModelZooAxis axis = inputNode.getDataAxis(i);
+			Integer halo = axis.getHalo();
+			Integer step = axis.getStep();
+			if (halo == null) halo = defaultHalo;
+			if(step != null) {
+				halo = (int)Math.ceil((float)halo / (float)step)*step;
+			}
+			padding[i] = halo;
 //			}
 		}
 		return padding;
