@@ -115,7 +115,10 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 		} catch (IOException e) {
 			//e.printStackTrace();
 		}
-		return specification.getName() + timeString;
+		String res = specification.getName() + timeString;
+		res = res.replace(":", "-");
+		res = res.replace(" ", "_");
+		return res;
 	}
 
 	public void setSource(Location source) {
