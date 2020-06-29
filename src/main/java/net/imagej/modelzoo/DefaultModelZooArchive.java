@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
@@ -109,7 +110,8 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 		String timeString = "";
 		try {
 			Instant lastChanged = Files.getLastModifiedTime(new File(getSource().getURI()).toPath()).toInstant();
-			timeString = " " + lastChanged.toString();
+			Timestamp timestamp = Timestamp.from(lastChanged);
+			timeString = "_" + timestamp.getTime();
 		} catch (IOException e) {
 			//e.printStackTrace();
 		}
