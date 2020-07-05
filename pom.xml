@@ -11,7 +11,7 @@
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-modelzoo</artifactId>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.2.1</version>
 
 	<name>ImageJ bioimage.io modelzoo library</name>
 	<description>This is the bioimage.io modelzoo library for ImageJ.</description>
@@ -61,7 +61,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/imagej/imagej-modelzoo</connection>
 		<developerConnection>scm:git:git@github.com:imagej/imagej-modelzoo</developerConnection>
-		<tag>HEAD</tag>
+		<tag>imagej-modelzoo-0.2.1</tag>
 		<url>https://github.com/imagej/imagej-modelzoo</url>
 	</scm>
 	<issueManagement>
