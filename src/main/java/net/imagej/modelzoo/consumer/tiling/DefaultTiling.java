@@ -195,7 +195,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 		}
 		System.out.println("Output tiling: " + Arrays.toString(intTileSize));
 		System.out.println("Output dimensions: " + Arrays.toString(dims));
-		if(outputData != null) outputData.shutdown();
+//		if(outputData != null) outputData.shutdown();
 		outputData = new DiskCachedCellImgFactory<>( dataType,
 				DiskCachedCellImgOptions.options()
 						.cacheType( DiskCachedCellImgOptions.CacheType.BOUNDED )
@@ -365,7 +365,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 
 	@Override
 	public void dispose() {
-		if(outputData != null) outputData.shutdown();
+//		if(outputData != null) outputData.shutdown();
 	}
 
 	private static <T> RandomAccessibleInterval<T> expandDimToSize(
