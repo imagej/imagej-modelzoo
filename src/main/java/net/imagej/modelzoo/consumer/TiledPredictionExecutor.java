@@ -33,15 +33,13 @@ import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
-import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Cancelable;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -57,7 +55,6 @@ public class TiledPredictionExecutor implements Cancelable {
 	private int oldBatchesSize;
 	private boolean processedTiles = false;
 	private boolean canceled = false;
-	private final List<RandomAccessibleInterval> results = new ArrayList<>();
 	private int batchSize = 10;
 	private boolean tilingEnabled = true;
 
@@ -77,7 +74,7 @@ public class TiledPredictionExecutor implements Cancelable {
 					model.predict();
 					setTileResult(model.getOutputNodes().get(0));
 				}
-				concatenateTiles(model.getOutputNodes().get(0));
+				model.getOutputNodes().get(0).setData(tiling.getResult());
 			}
 		} catch (final CancellationException | RejectedExecutionException e) {
 			//canceled
@@ -144,7 +141,7 @@ public class TiledPredictionExecutor implements Cancelable {
 		return true;
 	}
 
-	private <TO extends RealType<TO>, TI extends RealType<TI>> void initTiling() {
+	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void initTiling() {
 		//TODO reset tiling
 		// start with first tile
 		processedTiles = false;
@@ -152,17 +149,11 @@ public class TiledPredictionExecutor implements Cancelable {
 		tiling.setNumberOfTiles(nTiles);
 		tiling.setBatchSize(batchSize);
 		tiling.init();
-		results.clear();
 	}
 
-	private <TO extends RealType<TO>, TI extends RealType<TI>> void setTileResult(OutputImageNode<TO, TI> outputNode) {
-		results.add(outputNode.getData());
-	}
-
-	private void concatenateTiles(OutputImageNode outputImageNode) {
-		tiling.setResults(results);
-		RandomAccessibleInterval result = tiling.getResult();
-		outputImageNode.setData(result);
+	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setTileResult(OutputImageNode<TO, TI> outputNode) {
+		tiling.resolveCurrentTile(outputNode.getData());
+		outputNode.setData(null);
 	}
 
 	@Override
@@ -190,5 +181,9 @@ public class TiledPredictionExecutor implements Cancelable {
 
 	public int getBatchSize() {
 		return batchSize;
+	}
+
+	public void dispose() {
+		tiling.dispose();
 	}
 }

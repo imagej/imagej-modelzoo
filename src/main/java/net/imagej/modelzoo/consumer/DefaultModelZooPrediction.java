@@ -39,6 +39,7 @@ import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
 import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -108,7 +109,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	@Override
-	public void setInput(String name, RandomAccessibleInterval<?> value, String axes) {
+	public <T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes) {
 		inputHandling.addInput(name, value, axes);
 	}
 
@@ -172,10 +173,13 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 				executor.run();
 				isOutOfMemory = false;
 			} catch (final OutOfMemoryError e) {
+//				e.printStackTrace();
 				canHandleOutOfMemory = executor.increaseTiling();
 				setNumberOfTiles(executor.getNumberOfTiles());
 				setBatchSize(executor.getBatchSize());
 				if(!canHandleOutOfMemory) throw new OutOfMemoryError();
+			} finally {
+				executor.dispose();
 			}
 		}
 	}

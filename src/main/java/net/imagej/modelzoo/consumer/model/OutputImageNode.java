@@ -31,10 +31,11 @@ package net.imagej.modelzoo.consumer.model;
 
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class OutputImageNode<T extends RealType<T>, U extends RealType<U>> extends ImageNode<T> {
+public class OutputImageNode<T extends RealType<T> & NativeType<T>, U extends RealType<U> & NativeType<U>> extends ImageNode<T> {
 	private InputImageNode<U> reference;
 
 	public void makeDataFit() {

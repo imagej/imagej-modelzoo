@@ -32,11 +32,12 @@ package net.imagej.modelzoo.consumer.model;
 import net.imagej.axis.AxisType;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 import org.scijava.log.LogService;
 
-public class InputImageNode<T extends RealType<T>> extends ImageNode<T> {
+public class InputImageNode<T extends RealType<T> & NativeType<T>> extends ImageNode<T> {
 
 	//TODO this is ugly
 	public boolean makeDataFit(LogService log) {

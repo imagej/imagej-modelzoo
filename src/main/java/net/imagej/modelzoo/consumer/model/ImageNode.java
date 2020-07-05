@@ -31,13 +31,14 @@ package net.imagej.modelzoo.consumer.model;
 import net.imagej.axis.AxisType;
 import net.imglib2.EuclideanSpace;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageNode<T extends RealType<T>> extends DefaultModelZooNode<RandomAccessibleInterval<T>> implements EuclideanSpace {
+public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultModelZooNode<RandomAccessibleInterval<T>> implements EuclideanSpace {
 
 	private RandomAccessibleInterval<T> data;
 	private T dataType;

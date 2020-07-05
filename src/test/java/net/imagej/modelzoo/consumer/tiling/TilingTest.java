@@ -74,17 +74,17 @@ public class TilingTest extends AbstractModelZooTest {
 		nodeOut.setReference(nodeIn);
 		nodeOut.setDataMapping(Arrays.asList(axesTypes));
 		nodeOut.getAxes().addAll(axes);
+		nodeOut.setDataType(new FloatType());
 		nodeOut.setData(input);
 
 		final DefaultTiling<FloatType, FloatType> tiling = new DefaultTiling<>(nodeOut);
 		tiling.setNumberOfTiles(8);
 		tiling.init();
-		TiledView<FloatType> tiledView = tiling.tiledView;
-		tiling.getProcessedTiles().clear();
+		TiledView<FloatType> tiledView = tiling.tiledInputView;
 		final Cursor<RandomAccessibleInterval<FloatType>> cursor = Views.iterable(
 				tiledView).cursor();
 		while (cursor.hasNext()) {
-			tiling.getProcessedTiles().add(cursor.next());
+			tiling.resolveCurrentTile(cursor.next());
 		}
 		assertNotNull(tiledView);
 		RandomAccessibleInterval<FloatType> output = tiling.getResult();

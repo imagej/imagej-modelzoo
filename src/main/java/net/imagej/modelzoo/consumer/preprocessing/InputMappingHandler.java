@@ -41,6 +41,7 @@ import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
 import net.imglib2.converter.RealDoubleConverter;
 import net.imglib2.converter.RealFloatConverter;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -111,7 +112,7 @@ public class InputMappingHandler {
 		}
 	}
 
-	private <T extends RealType<T>, U extends RealType<U>> void assignData(InputImageNode<U> inputNode, RandomAccessibleInterval<T> data) {
+	private <T extends RealType<T>, U extends RealType<U> & NativeType<U>> void assignData(InputImageNode<U> inputNode, RandomAccessibleInterval<T> data) {
 		if (data == null) return;
 		if(inputNode.getDataType().getClass().isAssignableFrom(data.randomAccess().get().getClass())) {
 			inputNode.setData((RandomAccessibleInterval<U>) data);
@@ -186,7 +187,7 @@ public class InputMappingHandler {
 //		MutableModuleItem<String> item = command.addInput(text, String.class);
 	}
 
-	private <T extends RealType<T>> void addMappingChoice(DynamicCommand command, ImageNode<T> node, RandomAccessibleInterval<T> rai) {
+	private <T extends RealType<T> & NativeType<T>> void addMappingChoice(DynamicCommand command, ImageNode<T> node, RandomAccessibleInterval<T> rai) {
 		String name = node.getName();
 		MutableModuleItem<String> moduleItem = command.addInput(name, String.class);
 		final List<String> choices = InputMappingCommand.getMappingOptions(rai.numDimensions());

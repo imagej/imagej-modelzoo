@@ -160,7 +160,7 @@ public class TiledView<T> extends AbstractInterval implements
 			// translation)
 			// - ínterval: maintain an unsafe interval view whose bounds are
 			// updated each time this.get() is called?
-			return Views.zeroMin(Views.interval(source, tempMin, tempMax));
+			return Views.interval(source, tempMin, tempMax);
 		}
 
 		@Override

@@ -32,6 +32,7 @@ package net.imagej.modelzoo.consumer;
 import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
 
 import java.io.FileNotFoundException;
@@ -39,7 +40,7 @@ import java.util.Map;
 
 public interface ModelZooPrediction extends SciJavaPlugin {
 
-	void setInput(String name, RandomAccessibleInterval<?> value, String axes);
+	<T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes);
 
 	void run() throws OutOfMemoryError, FileNotFoundException, MissingLibraryException;
 

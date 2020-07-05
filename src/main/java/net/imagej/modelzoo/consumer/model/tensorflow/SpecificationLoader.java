@@ -39,6 +39,7 @@ import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.log.LogService;
@@ -129,7 +130,7 @@ class SpecificationLoader {
 		}
 	}
 
-	private <TO extends RealType<TO>, TI extends RealType<TI>> void setOutputNodeShape(OutputNodeSpecification data, OutputImageNode<TO, TI> node, List<InputImageNode<?>> inputNodes) {
+	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setOutputNodeShape(OutputNodeSpecification data, OutputImageNode<TO, TI> node, List<InputImageNode<?>> inputNodes) {
 		String axes = data.getAxes();
 		String reference = data.getReferenceInputName();
 		List<? extends Number> scale = data.getShapeScale();

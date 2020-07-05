@@ -32,23 +32,23 @@ package net.imagej.modelzoo.consumer.model.tensorflow;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
+import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.command.CommandService;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.tensorflow.Output;
 import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlowException;
 import org.tensorflow.framework.MetaGraphDef;
@@ -128,8 +128,8 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		try {
 			sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
 					DEFAULT_SERVING_SIGNATURE_DEF_KEY);
-			System.out.println("Model inputs: " + sig.getInputsMap());
-			System.out.println("Model outputs: " + sig.getOutputsMap());
+			System.out.println("Model inputs: " + sig.getInputsMap().toString().replace("\n", " ").replace("\t", " "));
+			System.out.println("Model outputs: " + sig.getOutputsMap().toString().replace("\n", " ").replace("\t", " "));
 		} catch (final InvalidProtocolBufferException e) {
 			e.printStackTrace();
 			return false;
@@ -212,7 +212,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		return getOutputNodes().stream().map(OutputImageNode::getName).collect(Collectors.toList());
 	}
 
-	private <TO extends RealType<TO>, TI extends RealType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {
+	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {
 		for (int i = 0; i < tensors.size(); i++) {
 			Tensor tensor = tensors.get(i);
 			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
