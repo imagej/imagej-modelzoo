@@ -34,6 +34,9 @@ import org.scijava.Context;
 
 public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends RealType<TO>> extends DefaultModelZooPrediction implements SingleImagePrediction<TI, TO> {
 
+	public DefaultSingleImagePrediction() {
+	}
+
 	public DefaultSingleImagePrediction(Context context) {
 		super(context);
 	}

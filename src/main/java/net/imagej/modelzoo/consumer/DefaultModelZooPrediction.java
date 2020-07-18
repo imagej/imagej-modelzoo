@@ -71,8 +71,12 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	boolean tilingEnabled = true;
 	private Map<String, RandomAccessibleInterval<?>> outputs;
 
-	public DefaultModelZooPrediction(Context context) {
+	public DefaultModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
+	}
+
+	public DefaultModelZooPrediction(Context context) {
+		this();
 		context.inject(this);
 	}
 
@@ -173,7 +177,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 				executor.run();
 				isOutOfMemory = false;
 			} catch (final OutOfMemoryError e) {
-//				e.printStackTrace();
+				log.debug(e);
 				canHandleOutOfMemory = executor.increaseTiling();
 				setNumberOfTiles(executor.getNumberOfTiles());
 				setBatchSize(executor.getBatchSize());
