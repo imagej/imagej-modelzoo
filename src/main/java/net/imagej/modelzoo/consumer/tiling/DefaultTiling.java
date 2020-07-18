@@ -199,7 +199,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 		outputData = new DiskCachedCellImgFactory<>( dataType,
 				DiskCachedCellImgOptions.options()
 						.cacheType( DiskCachedCellImgOptions.CacheType.BOUNDED )
-						.maxCacheSize( multiply(grid) )
+						.maxCacheSize( 1 )
 						.deleteCacheDirectoryOnExit(true)
 						.cellDimensions( intTileSize ) ).create( dims );
 //		outputData = new CellImgFactory<>(dataType).create(dims);
