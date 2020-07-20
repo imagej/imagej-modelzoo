@@ -83,6 +83,11 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 	}
 
 	@Override
+	public long getTilesTotalCount() {
+		return arrayProduct(Intervals.dimensionsAsLongArray(tiledInputView));
+	}
+
+	@Override
 	public boolean hasTilesLeft() {
 //		return arrayProduct(Intervals.dimensionsAsLongArray(tiledInputView)) > doneTileCount;
 		return tiledOutputViewCursor.hasNext();

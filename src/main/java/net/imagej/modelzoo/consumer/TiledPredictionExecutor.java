@@ -37,6 +37,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Cancelable;
 import org.scijava.Context;
+import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
@@ -48,6 +49,9 @@ public class TiledPredictionExecutor implements Cancelable {
 
 	@Parameter
 	private LogService log;
+
+	@Parameter
+	private StatusService statusService;
 
 	private final ModelZooModel model;
 	private Tiling tiling;
@@ -140,6 +144,7 @@ public class TiledPredictionExecutor implements Cancelable {
 		}
 		tiling.assignCurrentTile();
 		tiling.upTileCount();
+		statusService.showStatus(tiling.getDoneTileCount(), (int) tiling.getTilesTotalCount(), "Predicting tile " + (tiling.getDoneTileCount()) + " of " + tiling.getTilesTotalCount() + "..");
 		log.info("Processing tile " + (tiling.getDoneTileCount()) + "..");
 		return true;
 	}

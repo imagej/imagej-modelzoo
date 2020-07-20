@@ -35,6 +35,8 @@ import net.imglib2.type.numeric.RealType;
 public interface Tiling<T extends RealType<T>> {
 
 
+	long getTilesTotalCount();
+
 	boolean hasTilesLeft();
 
 	void resolveCurrentTile(RandomAccessibleInterval<T> data);
