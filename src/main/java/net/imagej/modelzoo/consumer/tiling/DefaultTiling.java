@@ -43,11 +43,11 @@ import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.operators.SetZero;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 
@@ -205,26 +205,27 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 		}
 		System.out.println("Output tiling: " + Arrays.toString(intTileSize));
 		System.out.println("Output dimensions: " + Arrays.toString(dims));
+		clearCacheDir();
 //		if(outputData != null) outputData.shutdown();
 		outputData = new DiskCachedCellImgFactory<>( dataType,
 				DiskCachedCellImgOptions.options()
-						.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED)
-						.maxCacheSize(3)
+						.cacheType(DiskCachedCellImgOptions.CacheType.SOFTREF)
 						.cacheDirectory(cacheDir)
-						.deleteCacheDirectoryOnExit(cacheDir == null)
-						.cellDimensions(intTileSize)).create(dims);
-//		outputData = new CellImgFactory<>(dataType).create(dims);
-//		TODO this is just a test to see if the memory is sufficient to access the whole output data, maybe this can be done smarter
-//		outputData.forEach(SetZero::setZero);
+						.deleteCacheDirectoryOnExit(cacheDir == null)).create(dims);
 		tiledOutputView = new TiledView<>(outputData, tileSize, padding);
 	}
 
-	private long multiply(long[] grid) {
-		long res = 1;
-		for (long l : grid) {
-			res *= l;
+	private void clearCacheDir() {
+		if(cacheDir == null) return;
+		if(!cacheDir.toFile().exists()) {
+			System.err.println("Cache directory " + cacheDir + " does not exist");
+			return;
 		}
-		return res;
+		File[] files = cacheDir.toFile().listFiles();
+		if(files == null) return;
+		for (File file : files) {
+			if(!file.isDirectory()) file.delete();
+		}
 	}
 
 	private void computeBatching(long[] tiling) {
