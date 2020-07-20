@@ -68,9 +68,11 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	private final InputMappingHandler inputHandling;
 	private int nTiles = 8;
 	private int batchSize = 10;
-	boolean tilingEnabled = true;
-	private Map<String, RandomAccessibleInterval<?>> outputs;
+	private boolean tilingEnabled = true;
 
+	private Path cacheDir = null;
+
+	private Map<String, RandomAccessibleInterval<?>> outputs;
 	public DefaultModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
 	}
@@ -89,6 +91,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 			preprocessing(model);
 			executePrediction(model);
 			postprocessing(model);
+			log.info("Prediction done.");
 		} finally {
 			model.dispose();
 		}
@@ -164,11 +167,17 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		setTrainedModel(modelZooService.open(trainedModel));
 	}
 
+	@Override
+	public void setCacheDir(Path cacheDir) {
+		this.cacheDir = cacheDir;
+	}
+
 	protected void executePrediction(ModelZooModel model) throws OutOfMemoryError {
 		TiledPredictionExecutor executor = new TiledPredictionExecutor(model, context);
 		executor.setTilingEnabled(tilingEnabled);
 		executor.setNumberOfTiles(nTiles);
 		executor.setBatchSize(batchSize);
+		executor.setCacheDir(cacheDir);
 		boolean isOutOfMemory = true;
 		boolean canHandleOutOfMemory = true;
 

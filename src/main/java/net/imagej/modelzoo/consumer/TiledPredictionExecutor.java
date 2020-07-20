@@ -40,6 +40,7 @@ import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
+import java.nio.file.Path;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -57,6 +58,8 @@ public class TiledPredictionExecutor implements Cancelable {
 	private boolean canceled = false;
 	private int batchSize = 10;
 	private boolean tilingEnabled = true;
+
+	private Path cacheDir = null;
 
 	public TiledPredictionExecutor(ModelZooModel model, Context context) {
 		this.model = model;
@@ -145,7 +148,7 @@ public class TiledPredictionExecutor implements Cancelable {
 		//TODO reset tiling
 		// start with first tile
 		processedTiles = false;
-		tiling = new DefaultTiling<>((OutputImageNode<TO, TI>) model.getOutputNodes().get(0));
+		tiling = new DefaultTiling<>((OutputImageNode<TO, TI>) model.getOutputNodes().get(0), cacheDir);
 		tiling.setNumberOfTiles(nTiles);
 		tiling.setBatchSize(batchSize);
 		tiling.init();
@@ -181,6 +184,10 @@ public class TiledPredictionExecutor implements Cancelable {
 
 	public int getBatchSize() {
 		return batchSize;
+	}
+
+	public void setCacheDir(Path cacheDir) {
+		this.cacheDir = cacheDir;
 	}
 
 	public void dispose() {

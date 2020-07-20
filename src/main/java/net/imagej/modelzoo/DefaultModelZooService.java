@@ -31,6 +31,7 @@ package net.imagej.modelzoo;
 import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
@@ -105,6 +106,11 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Override
 	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive <TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws FileNotFoundException, MissingLibraryException {
+		return predict(trainedModel, input, axes, ModelZooPredictionOptions.options());
+	}
+
+	@Override
+	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws FileNotFoundException, MissingLibraryException {
 		String archivePrediction = trainedModel.getSpecification().getSource();
 		SingleImagePrediction prediction = null;
 		if(archivePrediction == null) {
@@ -123,6 +129,10 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		}
 		prediction.setTrainedModel(trainedModel);
 		prediction.setInput(input, axes);
+		prediction.setBatchSize(options.values.batchSize());
+		prediction.setCacheDir(options.values.cacheDirectory());
+		prediction.setNumberOfTiles(options.values.numberOfTiles());
+		prediction.setTilingEnabled(options.values.tilingEnabled());
 		prediction.run();
 		return prediction.getOutput();
 	}

@@ -48,6 +48,7 @@ import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> implements Tiling<TO> {
@@ -57,6 +58,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 	private final int defaultHalo = 32;
 	private int tilesNum = 1;
 	private int batchSize = 10;
+	private final Path cacheDir;
 
 	private RandomAccessibleInterval<TI> originalData;
 	TiledView<TI> tiledInputView;
@@ -70,6 +72,14 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 		this.inputNode = outputNode.getReference();
 		this.outputNode = outputNode;
 		this.originalData = inputNode.getData();
+		this.cacheDir = null;
+	}
+
+	public DefaultTiling(OutputImageNode<TO, TI> outputNode, Path cacheDir) {
+		this.inputNode = outputNode.getReference();
+		this.outputNode = outputNode;
+		this.originalData = inputNode.getData();
+		this.cacheDir = cacheDir;
 	}
 
 	@Override
@@ -198,13 +208,14 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 //		if(outputData != null) outputData.shutdown();
 		outputData = new DiskCachedCellImgFactory<>( dataType,
 				DiskCachedCellImgOptions.options()
-						.cacheType( DiskCachedCellImgOptions.CacheType.BOUNDED )
-						.maxCacheSize( 1 )
-						.deleteCacheDirectoryOnExit(true)
-						.cellDimensions( intTileSize ) ).create( dims );
+						.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED)
+						.maxCacheSize(3)
+						.cacheDirectory(cacheDir)
+						.deleteCacheDirectoryOnExit(cacheDir == null)
+						.cellDimensions(intTileSize)).create(dims);
 //		outputData = new CellImgFactory<>(dataType).create(dims);
 //		TODO this is just a test to see if the memory is sufficient to access the whole output data, maybe this can be done smarter
-		outputData.forEach(SetZero::setZero);
+//		outputData.forEach(SetZero::setZero);
 		tiledOutputView = new TiledView<>(outputData, tileSize, padding);
 	}
 

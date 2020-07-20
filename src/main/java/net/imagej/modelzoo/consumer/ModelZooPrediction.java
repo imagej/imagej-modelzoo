@@ -36,6 +36,7 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
 import java.util.Map;
 
 public interface ModelZooPrediction extends SciJavaPlugin {
@@ -55,4 +56,6 @@ public interface ModelZooPrediction extends SciJavaPlugin {
 	ModelZooArchive getTrainedModel();
 
 	void setTrainedModel(ModelZooArchive trainedModel);
+
+	void setCacheDir(Path cacheDir);
 }

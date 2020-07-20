@@ -105,6 +105,11 @@
 			<artifactId>scijava-ui-swing</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-optional</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.tensorflow</groupId>
 			<artifactId>proto</artifactId>
 		</dependency>
