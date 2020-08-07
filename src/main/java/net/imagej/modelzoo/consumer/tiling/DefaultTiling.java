@@ -101,7 +101,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 			padding[i] = -padding[i];
 		}
 		IntervalView<TO> dataWithoutPadding = Views.expandBorder(data, padding);
-		LoopBuilder.setImages(dataWithoutPadding, currentTile).forEachPixel((in, out) -> {
+		LoopBuilder.setImages(dataWithoutPadding, currentTile).multiThreaded().forEachPixel((in, out) -> {
 			out.set(in);
 		});
 	}
