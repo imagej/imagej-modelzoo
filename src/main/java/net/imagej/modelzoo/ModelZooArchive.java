@@ -35,7 +35,9 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.io.location.Location;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO>> {
 	/**
@@ -67,4 +69,10 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	void setTestInput(RandomAccessibleInterval<TI> testInput);
 
 	void setTestOutput(RandomAccessibleInterval<TO> testOutput);
+
+	/**
+	 * @param path the relative path to the file in the archive
+	 * @return a temporary file extracted from the archive and the given path
+	 */
+	File extract(String path) throws IOException;
 }

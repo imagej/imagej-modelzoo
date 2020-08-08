@@ -33,6 +33,7 @@ import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
+import org.apache.commons.compress.utils.FileNameUtils;
 import org.scijava.Context;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
@@ -43,7 +44,11 @@ import org.scijava.plugin.PluginService;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -137,5 +142,17 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	@Override
 	public void setTestOutput(RandomAccessibleInterval<TO> testOutput) {
 		this.testOutput = testOutput;
+	}
+
+	@Override
+	public File extract(String path) throws IOException {
+		try (FileSystem fileSystem = FileSystems.newFileSystem(new File(getSource().getURI()).toPath(), null)) {
+			Path fileToExtract = fileSystem.getPath(path);
+			String base = FileNameUtils.getBaseName(path);
+			String extension = "." + FileNameUtils.getExtension(path);
+			Path res = Files.createTempFile(base, extension);
+			Files.copy(fileToExtract, res, StandardCopyOption.REPLACE_EXISTING);
+			return res.toFile();
+		}
 	}
 }
