@@ -52,7 +52,7 @@ public class E01_Prediction {
 		ij = new ImageJ();
 
 		// resource paths
-		String imgPath = "/home/random/Development/imagej/project/CSBDeep/data/N2V/pred_validation.tif";
+		String imgPath = getClass().getResource("/blobs.png").getPath();
 		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
 
 		// load image
