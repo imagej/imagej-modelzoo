@@ -28,7 +28,6 @@
  */
 package net.imagej.modelzoo;
 
-import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
@@ -105,12 +104,12 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive <TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws FileNotFoundException, MissingLibraryException {
+	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive <TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception {
 		return predict(trainedModel, input, axes, ModelZooPredictionOptions.options());
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws FileNotFoundException, MissingLibraryException {
+	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception {
 		String archivePrediction = trainedModel.getSpecification().getSource();
 		SingleImagePrediction prediction = null;
 		if(archivePrediction == null) {

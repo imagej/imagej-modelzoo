@@ -64,7 +64,7 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	 * @return an instance of the model specified by {@link #getSpecification()} and loaded from {@link #getSource()}
 	 * @throws FileNotFoundException in case the model source is not found
 	 */
-	ModelZooModel createModelInstance() throws FileNotFoundException, MissingLibraryException;
+	ModelZooModel createModelInstance() throws Exception;
 
 	void setTestInput(RandomAccessibleInterval<TI> testInput);
 

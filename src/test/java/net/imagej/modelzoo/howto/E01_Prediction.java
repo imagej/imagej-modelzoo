@@ -28,7 +28,6 @@
  */
 package net.imagej.modelzoo.howto;
 
-import io.scif.MissingLibraryException;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
@@ -37,8 +36,6 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class E01_Prediction {
 
@@ -50,7 +47,7 @@ public class E01_Prediction {
 	}
 
 	@Test
-	public void useService() throws IOException, MissingLibraryException {
+	public void useService() throws Exception {
 
 		ij = new ImageJ();
 
@@ -75,7 +72,7 @@ public class E01_Prediction {
 	}
 
 	@Test
-	public void usePredictionAPI() throws IOException, MissingLibraryException {
+	public void usePredictionAPI() throws Exception {
 
 		ij = new ImageJ();
 
@@ -103,7 +100,7 @@ public class E01_Prediction {
 
 	}
 
-	public static void main(String... args) throws IOException, MissingLibraryException {
+	public static void main(String... args) throws Exception {
 //		new E01_Prediction().useService();
 		new E01_Prediction().usePredictionAPI();
 	}

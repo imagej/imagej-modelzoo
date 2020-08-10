@@ -83,7 +83,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	@Override
-	public void run() throws OutOfMemoryError, FileNotFoundException, MissingLibraryException {
+	public void run() throws OutOfMemoryError, Exception {
 
 		ModelZooModel model = loadModel(modelArchive);
 		if (!validateModel(model)) return;
@@ -111,7 +111,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 		return true;
 	}
 
-	protected ModelZooModel loadModel(ModelZooArchive modelArchive) throws FileNotFoundException, MissingLibraryException {
+	protected ModelZooModel loadModel(ModelZooArchive modelArchive) throws Exception {
 		return modelArchive.createModelInstance();
 	}
 

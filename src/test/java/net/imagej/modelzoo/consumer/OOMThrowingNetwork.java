@@ -55,8 +55,7 @@ public class OOMThrowingNetwork implements ModelZooModel
 	List batchSizeHistory = new ArrayList();
 
 	@Override
-	public boolean loadModel(Location location, String modelName) throws FileNotFoundException {
-		return true;
+	public void loadModel(Location location, String modelName) {
 	}
 
 	@Override

@@ -51,7 +51,7 @@ import static org.junit.Assert.assertNotNull;
 public class DefaultModelZooPredictionTest {
 
 	@Test
-	public void testPrediction() throws URISyntaxException, IOException, MissingLibraryException {
+	public void testPrediction() throws Exception {
 		ImageJ ij = new ImageJ();
 
 		Path img = Paths.get(getClass().getResource("denoise2D/input.tif").toURI());
@@ -72,7 +72,7 @@ public class DefaultModelZooPredictionTest {
 	}
 
 	@Test
-	public void testNoTiling() throws URISyntaxException, IOException, MissingLibraryException {
+	public void testNoTiling() throws Exception {
 		ImageJ ij = new ImageJ();
 		File archiveFile = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
 		Img inputFloat = new ArrayImgFactory<>(new FloatType()).create(7, 7);

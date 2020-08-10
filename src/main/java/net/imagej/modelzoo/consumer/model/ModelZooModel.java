@@ -34,13 +34,11 @@ import org.scijava.Disposable;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.SciJavaPlugin;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
 public interface ModelZooModel extends Disposable, SciJavaPlugin {
 
-	boolean loadModel(Location location, String modelName)
-			throws FileNotFoundException;
+	void loadModel(Location location, String modelName) throws Exception;
 
 	List<InputImageNode<?>> getInputNodes();
 

@@ -47,7 +47,7 @@ import static org.junit.Assert.assertNotNull;
 public class DefaultSingleInputPredictionTest {
 
 	@Test
-	public void testPrediction() throws URISyntaxException, IOException, MissingLibraryException {
+	public void testPrediction() throws Exception {
 		// create ImageJ
 		ImageJ ij = new ImageJ();
 

@@ -104,15 +104,15 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	@Override
-	public boolean loadModel(final Location source, final String modelName) {
-		if (!tensorFlowLoaded) return false;
+	public void loadModel(final Location source, final String modelName) throws IOException, MissingLibraryException {
+		if (!tensorFlowLoaded) throw new MissingLibraryException("TensorFlow not loaded");
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
-		if (!loadModelFile(source, modelName)) return false;
+		loadModelFile(source, modelName);
 		// Extract names from the model signature.
 		// The strings "input", "probabilities" and "patches" are meant to be
 		// in sync with the model exporter (export_saved_model()) in Python.
-		if (!loadSignature()) return false;
-		return loadModelSettings(source, modelName);
+		loadSignature();
+		loadModelSettings(source, modelName);
 	}
 
 	private boolean loadModelSettings(Location source, String modelName) {
@@ -124,25 +124,18 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		}
 	}
 
-	private boolean loadSignature() {
-		try {
-			sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
-					DEFAULT_SERVING_SIGNATURE_DEF_KEY);
-			System.out.println("Model inputs: " + sig.getInputsMap().toString().replace("\n", " ").replace("\t", " "));
-			System.out.println("Model outputs: " + sig.getOutputsMap().toString().replace("\n", " ").replace("\t", " "));
-		} catch (final InvalidProtocolBufferException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return sig != null;
+	private void loadSignature() throws InvalidProtocolBufferException {
+		sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
+				DEFAULT_SERVING_SIGNATURE_DEF_KEY);
+		System.out.println("Model inputs: " + sig.getInputsMap().toString().replace("\n", " ").replace("\t", " "));
+		System.out.println("Model outputs: " + sig.getOutputsMap().toString().replace("\n", " ").replace("\t", " "));
 	}
 
-	private boolean loadModelFile(Location source, String modelName) {
-		try {
-			if (model != null) {
-				model.close();
-			}
-			model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
+	private void loadModelFile(Location source, String modelName) throws IOException {
+		if (model != null) {
+			model.close();
+		}
+		model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
 //			model.model().graph().operations().forEachRemaining(op -> {
 //				for (int i = 0; i < op.numOutputs(); i++) {
 //					Output<Object> opOutput = op.output(i);
@@ -150,11 +143,6 @@ public class TensorFlowModel extends DefaultModelZooModel {
 //					System.out.println(name);
 //				}
 //			});
-		} catch (TensorFlowException | IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
 	}
 
 	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {

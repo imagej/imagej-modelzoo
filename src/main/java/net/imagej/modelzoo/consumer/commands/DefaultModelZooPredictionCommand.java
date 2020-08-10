@@ -90,7 +90,7 @@ public class DefaultModelZooPredictionCommand implements SingleImagePredictionCo
 
 		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
-		} catch (OutOfMemoryError | IOException | MissingLibraryException e) {
+		} catch (OutOfMemoryError | Exception e) {
 			e.printStackTrace();
 		}
 		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");

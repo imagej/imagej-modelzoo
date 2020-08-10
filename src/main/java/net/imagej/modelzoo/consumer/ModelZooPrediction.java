@@ -43,7 +43,7 @@ public interface ModelZooPrediction extends SciJavaPlugin {
 
 	<T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes);
 
-	void run() throws OutOfMemoryError, FileNotFoundException, MissingLibraryException;
+	void run() throws OutOfMemoryError, Exception;
 
 	Map<String, RandomAccessibleInterval<?>> getOutputs();
 

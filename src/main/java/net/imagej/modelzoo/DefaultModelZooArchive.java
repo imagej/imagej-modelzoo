@@ -91,7 +91,7 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	}
 
 	@Override
-	public ModelZooModel createModelInstance() throws FileNotFoundException, MissingLibraryException {
+	public ModelZooModel createModelInstance() throws Exception {
 		if(specification == null || source == null) {
 			System.out.println("Cannot load model without source and specification");
 		}

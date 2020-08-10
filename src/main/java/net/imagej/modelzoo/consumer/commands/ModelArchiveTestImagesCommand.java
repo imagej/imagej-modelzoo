@@ -69,7 +69,7 @@ public class ModelArchiveTestImagesCommand implements Command {
 			archive.setTestOutput(output);
 			archive.setTestInput(inputImage);
 
-		} catch (FileNotFoundException | MissingLibraryException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

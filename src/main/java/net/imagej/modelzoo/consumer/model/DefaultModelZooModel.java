@@ -43,7 +43,7 @@ public abstract class DefaultModelZooModel implements ModelZooModel {
 	}
 
 	@Override
-	public abstract boolean loadModel(Location source, String modelName);
+	public abstract void loadModel(Location source, String modelName) throws Exception;
 
 	@Override
 	public List<InputImageNode<?>> getInputNodes() {
