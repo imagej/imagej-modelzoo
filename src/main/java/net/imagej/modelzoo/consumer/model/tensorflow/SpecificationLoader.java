@@ -154,11 +154,11 @@ class SpecificationLoader {
 	}
 
 	private AxisType getAxisType(String axis) {
-		if (axis.equals("x")) return Axes.X;
-		if (axis.equals("y")) return Axes.Y;
-		if (axis.equals("z")) return Axes.Z;
-		if (axis.equals("c")) return Axes.CHANNEL;
-		if (axis.equals("b")) return Axes.TIME;
+		if (axis.toLowerCase().equals("x")) return Axes.X;
+		if (axis.toLowerCase().equals("y")) return Axes.Y;
+		if (axis.toLowerCase().equals("z")) return Axes.Z;
+		if (axis.toLowerCase().equals("c")) return Axes.CHANNEL;
+		if (axis.toLowerCase().equals("b")) return Axes.TIME;
 		return Axes.unknown();
 	}
 
