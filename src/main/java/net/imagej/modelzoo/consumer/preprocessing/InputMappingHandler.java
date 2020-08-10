@@ -114,7 +114,10 @@ public class InputMappingHandler {
 
 	private <T extends RealType<T>, U extends RealType<U> & NativeType<U>> void assignData(InputImageNode<U> inputNode, RandomAccessibleInterval<T> data) {
 		if (data == null) return;
-		if(inputNode.getDataType().getClass().isAssignableFrom(data.randomAccess().get().getClass())) {
+		if(inputNode.getDataType() == null) {
+			inputNode.setData((RandomAccessibleInterval<U>) data);
+		}
+		else if(inputNode.getDataType().getClass().isAssignableFrom(data.randomAccess().get().getClass())) {
 			inputNode.setData((RandomAccessibleInterval<U>) data);
 		} else {
 			Converter<? super T, ? super U> converter = null;

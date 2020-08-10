@@ -203,6 +203,7 @@ public class DefaultTiling<TO extends RealType<TO> & NativeType<TO>, TI extends 
 
 		TO dataType = outputNode.getDataType();
 		if(dataType == null) dataType = (TO) inputNode.getDataType();
+		if(dataType == null) dataType = (TO) tiledInputView.randomAccess().get().randomAccess().get();
 		long[] tileSize = calculateTileSize(dims, grid);
 		int[] intTileSize = new int[tileSize.length];
 		for (int i = 0; i < tileSize.length; i++) {
