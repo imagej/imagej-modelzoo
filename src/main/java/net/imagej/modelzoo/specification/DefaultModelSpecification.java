@@ -61,7 +61,9 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idTags = "tags";
 	private final static String idLicense = "license";
 	private final static String idFormatVersion = "format_version";
+
 	private final static String idLanguage = "language";
+
 	private final static String idFramework = "framework";
 	private final static String idSource = "source";
 	private final static String idTestInput = "test_input";
@@ -78,18 +80,18 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idTraining = "training";
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";
-
 	final static String dependenciesFileName = "dependencies.yaml";
-	final static String modelZooSpecificationVersion = "0.2.0-csbdeep";
 
+	final static String modelZooSpecificationVersion = "0.2.0-csbdeep";
 	private String modelFileName = "model.yaml";
+
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
 	private String framework = "tensorflow";
 	private String testInput = "testinput.tif";
 	private String testOutput = "testoutput.tif";
-
 	private String predictionWeightsSource = "./variables/variables";
+
 	private String predictionDependencies = "./" + dependenciesFileName;
 	private Map<String, Object> trainingKwargs;
 	private String name;
@@ -105,7 +107,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
-
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -581,5 +582,10 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private static InputStream extractFile(File zipFile, String fileName) throws IOException {
 		ZipFile zf = new ZipFile(zipFile);
 		return zf.getInputStream(zf.getEntry(fileName));
+	}
+
+	@Override
+	public String toString() {
+		return toMap().toString();
 	}
 }
