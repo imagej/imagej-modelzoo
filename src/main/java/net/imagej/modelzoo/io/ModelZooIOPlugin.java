@@ -35,8 +35,10 @@ import net.imagej.DatasetService;
 import net.imagej.modelzoo.DefaultModelZooArchive;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
+import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
+import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.io.location.LocationService;
 import org.scijava.plugin.Plugin;
@@ -163,5 +165,12 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		inputStream.close();
 		DatasetIOService datasetIOService = getContext().service(DatasetIOService.class);
 		return datasetIOService.open(tmpTestInput.getAbsolutePath());
+	}
+
+	public void save(String archivePath, ModelSpecification specification, String location) throws IOException {
+		DefaultModelZooArchive archive = new DefaultModelZooArchive();
+		archive.setSource(new FileLocation(archivePath));
+		archive.setSpecification(specification);
+		save(archive, location);
 	}
 }

@@ -44,7 +44,9 @@ import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import org.scijava.Context;
 import org.scijava.command.CommandService;
+import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -85,6 +87,28 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	private static final String MODEL_TAG = "serve";
 	private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY =
 			"serving_default";
+
+	public TensorFlowModel() {
+	}
+
+	public TensorFlowModel(Context context) {
+		context.inject(this);
+	}
+
+	public ModelSpecification guessSpecification(final String source, final String modelName) throws IOException {
+		return guessSpecification(new FileLocation(source), modelName);
+	}
+
+	public ModelSpecification guessSpecification(final Location source, final String modelName) throws IOException {
+		loadModelFile(source, modelName);
+		// Extract names from the model signature.
+		// The strings "input", "probabilities" and "patches" are meant to be
+		// in sync with the model exporter (export_saved_model()) in Python.
+		loadSignature();
+		ModelSpecification specification = SpecificationLoader.guessSpecification(log, sig);
+		specification.setName(modelName);
+		return specification;
+	}
 
 	@Override
 	public void loadLibrary() throws MissingLibraryException {

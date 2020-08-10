@@ -35,6 +35,9 @@ import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooAxis;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
+import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
+import net.imagej.modelzoo.specification.DefaultOutputNodeSpecification;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
@@ -46,6 +49,7 @@ import org.scijava.log.LogService;
 import org.tensorflow.framework.SignatureDef;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class SpecificationLoader {
@@ -58,6 +62,54 @@ class SpecificationLoader {
 		this.log = log;
 		this.sig = sig;
 		this.spec = spec;
+	}
+
+	public static ModelSpecification guessSpecification(LogService log, SignatureDef sig) {
+		ModelSpecification specification = new DefaultModelSpecification();
+		sig.getInputsMap().forEach((name, tensorInfo) -> {
+			InputNodeSpecification inputSpec = new DefaultInputNodeSpecification();
+			inputSpec.setName(tensorInfo.getName().substring(0, tensorInfo.getName().lastIndexOf(":")));
+			List<Integer> shapeMin  = new ArrayList<>();
+			List<Integer> shapeStep = new ArrayList<>();
+			List<Integer> halo = new ArrayList<>();
+			inputSpec.setAxes(guessAxes(tensorInfo.getTensorShape().getDimCount()));
+			for (int i = 0; i < tensorInfo.getTensorShape().getDimCount(); i++) {
+				long size = tensorInfo.getTensorShape().getDim(i).getSize();
+				if(size < 0) {
+					// variable size
+					shapeMin.add(0);
+					shapeStep.add(1);
+				} else {
+					// fixed size
+					shapeMin.add((int) size);
+					shapeStep.add(0);
+				}
+				halo.add(0);
+			}
+			inputSpec.setShapeMin(shapeMin);
+			inputSpec.setShapeStep(shapeStep);
+			inputSpec.setHalo(halo);
+			specification.addInputNode(inputSpec);
+		});
+		sig.getOutputsMap().forEach((name, tensorInfo) -> {
+			OutputNodeSpecification outputSpec = new DefaultOutputNodeSpecification();
+			outputSpec.setName(tensorInfo.getName().substring(0, tensorInfo.getName().lastIndexOf(":")));
+			outputSpec.setAxes(guessAxes(tensorInfo.getTensorShape().getDimCount()));
+			int dimCount = tensorInfo.getTensorShape().getDimCount();
+			outputSpec.setShapeOffset(Collections.nCopies(dimCount, 0));
+			outputSpec.setShapeScale(Collections.nCopies(dimCount, 1));
+			if(sig.getInputsMap().size() == 1 && sig.getOutputsMap().size() == 1) {
+				outputSpec.setShapeReferenceInput(specification.getInputs().get(0).getName());
+			}
+			specification.addOutputNode(outputSpec);
+		});
+		return specification;
+	}
+
+	private static String guessAxes(int dimCount) {
+		if(dimCount == 4) return "BXYC";
+		if(dimCount == 5) return "BXYZC";
+		return "BXYZC".substring(0, dimCount);
 	}
 
 	List<InputImageNode<?>> processInputs() {
@@ -97,7 +149,7 @@ class SpecificationLoader {
 
 	private void setNodeDataType(NodeSpecification input, ImageNode node) {
 		String dataType = input.getDataType();
-		if (dataType.equals("float32")) {
+		if (dataType != null && dataType.equals("float32")) {
 			node.setDataType(new FloatType());
 		}
 	}

@@ -26,29 +26,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo;
+package net.imagej.modelzoo.howto;
 
-import net.imagej.ImageJService;
-import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
-import org.scijava.io.location.Location;
-import org.scijava.module.ModuleException;
+import org.junit.Test;
+import org.scijava.Context;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public interface ModelZooService extends ImageJService {
-	ModelZooArchive open(String location) throws IOException;
-	ModelZooArchive open(File location) throws IOException;
-	ModelZooArchive open(Location location) throws IOException;
-	void save(ModelZooArchive trainedModel, String location) throws IOException;
-	void save(ModelZooArchive trainedModel, File location);
-	void save(ModelZooArchive trainedModel, Location location);
-	void save(String archivePath, ModelSpecification specification, String location) throws IOException;
-	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception;
-	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;
+public class E04_GuessSpecification {
+
+	@Test
+	public void run() throws IOException {
+
+		// create context
+		Context context = new Context();
+
+		// resource path
+		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+
+		// create specification
+		ModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");
+
+		// set the shape step of the input data, in this case, X and Y need to be multiple of 32
+		// since this can't be guessed by the TensorFlow model but is important for models with variable input size, this needs to be set manually
+		specification.getInputs().get(0).getShapeStep().set(1, 32);
+		specification.getInputs().get(0).getShapeStep().set(2, 32);
+
+		// access specification
+		System.out.println(specification);
+
+		// save archive with specification
+//		context.service(ModelZooService.class).save(archivePath, specification, "/home/random/tmp/test.bioimage.io.zip");
+
+		// dispose context
+		context.dispose();
+
+	}
+
+	public static void main(String... args) throws IOException {
+		new E04_GuessSpecification().run();
+	}
 }

@@ -28,13 +28,12 @@
  */
 package net.imagej.modelzoo;
 
-import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.SingleImagePrediction;
-import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
+import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
@@ -47,7 +46,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.plugin.PluginInfo;
 import org.scijava.plugin.PluginService;
-import org.scijava.plugin.SciJavaPlugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.ui.DialogPrompt;
@@ -101,6 +99,11 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	@Override
 	public void save(ModelZooArchive trainedModel, Location location) {
 		save(trainedModel, new File(location.getURI()));
+	}
+
+	@Override
+	public void save(String archivePath, ModelSpecification specification, String location) throws IOException {
+		createIOPlugin().save(archivePath, specification, location);
 	}
 
 	@Override

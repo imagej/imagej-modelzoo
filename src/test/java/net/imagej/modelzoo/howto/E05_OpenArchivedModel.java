@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class E04_OpenArchivedModel {
+public class E05_OpenArchivedModel {
 	private ImageJ ij;
 
 	@After
@@ -57,6 +57,6 @@ public class E04_OpenArchivedModel {
 	}
 
 	public static void main(String... args) throws IOException {
-		new E04_OpenArchivedModel().run();
+		new E05_OpenArchivedModel().run();
 	}
 }
