@@ -116,7 +116,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception {
 		String archivePrediction = trainedModel.getSpecification().getSource();
 		SingleImagePrediction prediction = null;
-		if(archivePrediction == null) {
+		if(archivePrediction == null || archivePrediction.equals("imagej-modelzoo")) {
 			prediction = new DefaultSingleImagePrediction(getContext());
 		} else {
 			List<PluginInfo<SingleImagePrediction>> predictionCommands = pluginService.getPluginsOfType(SingleImagePrediction.class);
