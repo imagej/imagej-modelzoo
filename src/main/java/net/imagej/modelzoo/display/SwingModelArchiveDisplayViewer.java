@@ -32,7 +32,8 @@ import net.imagej.display.ColorTables;
 import net.imagej.display.SourceOptimizedCompositeXYProjector;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.commands.ModelArchiveTestImagesCommand;
+import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromFileCommand;
+import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromImageCommand;
 import net.imagej.modelzoo.specification.CitationSpecification;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
@@ -49,9 +50,12 @@ import net.imglib2.view.Views;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
+import org.scijava.log.LogService;
 import org.scijava.module.ModuleException;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.DialogPrompt;
+import org.scijava.ui.UIService;
 import org.scijava.ui.viewer.DisplayViewer;
 
 import javax.swing.AbstractAction;
@@ -59,19 +63,21 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -100,6 +106,10 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private ModelZooService modelZooService;
 	@Parameter
 	private OpService opService;
+	@Parameter
+	private LogService logService;
+	@Parameter
+	private UIService uiService;
 
 	private static Color leftBgColor = new Color(0x454549);
 	private static Color leftIconBgColor = new Color(0x313134);
@@ -107,7 +117,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private static final Font plainMonospaceFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 	private static final Font plainFont = font.deriveFont(Font.PLAIN);
 	private static final Font headerFont = font.deriveFont(Font.BOLD);
-	private int previewDim = 200;
+	private int previewDim = 220;
 
 	public SwingModelArchiveDisplayViewer() {
 		super(ModelZooArchive.class);
@@ -121,19 +131,23 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	@Override
 	protected JPanel createDisplayPanel(ModelZooArchive model) {
 		JPanel panel = new JPanel(new MigLayout("fill, ins 0, gap 0"));
-		JPanel leftPanel = new JPanel(new MigLayout("ins 0"));
+		JPanel leftPanel = new JPanel(new MigLayout("flowy, ins 0, filly", "", "[][][][][]push[][]"));
 		leftPanel.setBackground(leftBgColor);
 		leftPanel.setForeground(Color.white);
-		leftPanel.add(createLeftTitleIcon(), "span, growx");
+		leftPanel.add(createLeftTitleIcon(), "growx");
 		CardLayout cardLayout = new CardLayout();
 		JPanel rightPanel = new JPanel(cardLayout);
 		ButtonGroup group = new ButtonGroup();
-		addCard(leftPanel, rightPanel, group, createOverviewPanel(model), "Overview");
+		ImageIcon inputIcon = new ImageIcon();
+		ImageIcon outputIcon = new ImageIcon();
+		JPanel previewPanel = createPreviewPanel(model, inputIcon, outputIcon);
+		addCard(leftPanel, rightPanel, group, createOverviewPanel(model, previewPanel), "Overview");
 		addCard(leftPanel, rightPanel, group, createMetaPanel(model), "Metadata");
 		addCard(leftPanel, rightPanel, group, createInputsOutputsPanel(model), "Inputs & Outputs");
-		if(model.getSpecification().getTrainingKwargs() != null) {
-			addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
-		}
+		addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
+		JButton saveChangesBtn = createSaveChangesBtn(model);
+		leftPanel.add(saveChangesBtn, "gap 6px 11px 6px 0px, growx");
+		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, previewPanel), "gap 6px 11px 0px 6px, growx");
 		cardLayout.first(rightPanel);
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
 		panel.add(rightPanel, "width 450:450:null, height 100%");
@@ -148,6 +162,9 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private static Component createTrainingPanel(ModelZooArchive model) {
+		if(model.getSpecification().getTrainingKwargs() == null) {
+			return null;
+		}
 		JPanel panel = new JPanel(new MigLayout("", "[][push]", ""));
 		model.getSpecification().getTrainingKwargs().forEach((s, o) -> {
 			addToPanel(panel, s, o == null ? "null" : o.toString());
@@ -155,23 +172,81 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return scroll(panel);
 	}
 
-	private Component createOverviewPanel(ModelZooArchive model) {
+	private Component createOverviewPanel(ModelZooArchive model, Component previewPanel) {
 		JPanel panel = new JPanel(new MigLayout("fill"));
 		JTextArea title = createReadTextArea(model.getSpecification().getName());
 		title.setFont(headerFont);
 		panel.add(title, "width 20:350:null, span");
 		JTextArea descriptionText = createReadTextArea(model.getSpecification().getDescription());
 		panel.add(descriptionText, "newline, span,growx,wmin 20");
-		ImageIcon inputIcon = new ImageIcon();
-		ImageIcon outputIcon = new ImageIcon();
-		panel.add(createPreviewPanel(model, inputIcon, outputIcon), "newline, push, grow, span");
-		panel.add(new JLabel("Saved to "), "newline, grow 0");
-		JTextField sourceTextField = new JTextField(model.getSource().getURI().getPath());
-		sourceTextField.setEditable(false);
-		panel.add(sourceTextField, "growx, height 25:25:null");
-		panel.add(createCopySourceBtn(model), "grow 0");
-		panel.add(createActionsBar(model, inputIcon, outputIcon), "newline, span, pushx, growx");
+		panel.add(previewPanel, "newline, push, grow, span");
+		panel.add(createActionsBar(model), "newline, span, pushx, growx");
 		return panel;
+	}
+
+	private Component createFileActionsBtn(ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon, JButton saveChangesBtn, JPanel previewPanel) {
+		JPopupMenu menu = new JPopupMenu();
+		menu.add(new AbstractAction("Save to..") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> {
+					saveModelTo(model);
+					saveChangesBtn.setVisible(false);
+				}).start();
+			}
+		});
+		menu.add(new AbstractAction("Copy location to clipboard") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> {
+					StringSelection stringSelection = new StringSelection(model.getLocation().getURI().getPath());
+					Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+					clpbrd.setContents(stringSelection, null);
+				}).start();
+			}
+		});
+		menu.add(new AbstractAction("Update demo image (from file)") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> {
+					updateTestImageFromFile(model, inputIcon, outputIcon);
+					previewPanel.repaint();
+					saveChangesBtn.setVisible(true);
+				}).start();
+			}
+		});
+		menu.add(new AbstractAction("Update demo image (from open images)") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> {
+					updateTestImageFromOpenImages(model, inputIcon, outputIcon);
+					previewPanel.repaint();
+					saveChangesBtn.setVisible(true);
+				}).start();
+			}
+		});
+		JButton button = new JButton();
+		button.setAction(new AbstractAction("File actions") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				menu.show(button, button.getWidth() / 2, button.getHeight() / 2);
+			}
+		});
+		return button;
+	}
+
+	private JButton createSaveChangesBtn(ModelZooArchive model) {
+		JButton button = new JButton();
+		button.setAction(new AbstractAction("Save changes") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				saveChanges(model);
+				button.setVisible(false);
+			}
+		});
+		button.setForeground(new Color(200, 0, 0));
+		button.setVisible(false);
+		return button;
 	}
 
 	private static JTextArea createReadTextArea(String text) {
@@ -184,42 +259,89 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return res;
 	}
 
-	private JButton createCopySourceBtn(ModelZooArchive model) {
-		JButton copySourceBtn = new JButton(new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent actionEvent) {
-				StringSelection stringSelection = new StringSelection(model.getSource().getURI().getPath());
-				Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-				clpbrd.setContents(stringSelection, null);
-			}
-		});
-		copySourceBtn.setMargin(new Insets(0, 0, 0, 0));
-		copySourceBtn.setIcon(new ImageIcon(getClass().getResource("/icon-clipboard.png")));
-		copySourceBtn.setToolTipText("Copy to clipboard");
-		return copySourceBtn;
+	private JPanel createPreviewPanel(ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
+		JPanel panel = new JPanel(new MigLayout("ins 0, gap 2 2"));
+		reloadTestImages(model, inputIcon, outputIcon);
+		int h = previewDim-2;
+		int w = previewDim-2;
+		panel.add(new JLabel(inputIcon), "height " + h + ":" + h + ":" + h + ", width " + w + ":" + w + ":" + w);
+		panel.add(new JLabel(outputIcon), "height " + h + ":" + h + ":" + h + ", width " + w + ":" + w + ":" + w);
+		return panel;
 	}
 
-	private Component createPreviewPanel(ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
-		JPanel panel = new JPanel(new MigLayout());
+	private Component createActionsBar(ModelZooArchive model) {
+		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[]push[][]", "align bottom"));
+		//TODO enable once the features are all ready
+		panel.add(new JLabel("<html><span style='font-weight: normal;'>Source:</span> " + model.getSpecification().getSource()
+				+ " | <span style='font-weight: normal;'>Input axes:</span> " + model.getSpecification().getInputs().get(0).getAxes()), "spanx");
+//		panel.add(createActionButton("Train", () -> train(model)), "newline");
+		panel.add(createSanityCheckActionsBtn(model), "");
+		panel.add(createPredictActionsBtn(model), "");
+		return panel;
+	}
+
+	private void sanityCheckFromFiles(ModelZooArchive model) {
 		try {
-			reloadTestImages(model, inputIcon, outputIcon);
-		} catch (IOException e) {
+			modelZooService.sanityCheckFromFilesInteractive(model);
+		} catch (ModuleException e) {
 			e.printStackTrace();
 		}
-		panel.add(new JLabel(inputIcon), "height 200:200:200, width 200:200:200");
-		panel.add(new JLabel(outputIcon), "height 200:200:200, width 200:200:200");
-		return panel;
 	}
 
-	private Component createActionsBar(ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
-		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[][]push[]", ""));
-		//TODO enable once the features are all ready
-//		panel.add(createActionButton("Set test image", () -> updateTestImage(model, inputIcon, outputIcon)));
-//		panel.add(createActionButton("Save..", () -> saveChanges(model)));
-		panel.add(new JLabel("<html><div style='font-weight: normal;'>Source:</div> " + model.getSpecification().getSource()), "");
-		panel.add(new JLabel("<html><div style='font-weight: normal;'>Input axes:</div> " + model.getSpecification().getInputs().get(0).getAxes()));
-		panel.add(createActionButton("Predict", () -> predict(model)), "");
-		return panel;
+	private void sanityCheckFromImages(ModelZooArchive model) {
+		try {
+			modelZooService.sanityCheckFromImagesInteractive(model);
+		} catch (ModuleException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private Component createSanityCheckActionsBtn(ModelZooArchive model) {
+		JPopupMenu menu = new JPopupMenu();
+		menu.add(new AbstractAction(".. from open images") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> sanityCheckFromImages(model)).start();
+			}
+		});
+		menu.add(new AbstractAction(".. from images on disk") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> sanityCheckFromFiles(model)).start();
+			}
+		});
+		JButton button = new JButton();
+		button.setAction(new AbstractAction("Sanity check..") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				menu.show(button, button.getWidth() / 2, button.getHeight() / 2);
+			}
+		});
+		return button;
+	}
+
+	private Component createPredictActionsBtn(ModelZooArchive model) {
+		JPopupMenu menu = new JPopupMenu();
+		menu.add(new AbstractAction("Single image or stack") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> predict(model)).start();
+			}
+		});
+		menu.add(new AbstractAction("Folder of images or stacks") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> batchPredict(model)).start();
+			}
+		});
+		JButton button = new JButton();
+		button.setAction(new AbstractAction("Predict..") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				menu.show(button, button.getWidth() / 2, button.getHeight() / 2);
+			}
+		});
+		return button;
 	}
 
 	private void predict(ModelZooArchive<?, ?> model) {
@@ -230,9 +352,51 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		}
 	}
 
+	private void batchPredict(ModelZooArchive<?, ?> model) {
+		try {
+			modelZooService.batchPredictInteractive(model);
+		} catch (FileNotFoundException | ModuleException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void saveModelTo(ModelZooArchive model) {
+		JFrame parentFrame = new JFrame();
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setDialogTitle("Specify where to save model");
+		fileChooser.setSelectedFile(new File(model.getLocation().getURI()));
+		FileFilter filter = new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".bioimage.io.zip");
+			}
+			@Override
+			public String getDescription() {
+				return "bioimage.io archive";
+			}
+		};
+		fileChooser.setFileFilter(filter);
+		int userSelection = fileChooser.showSaveDialog(parentFrame);
+		if (userSelection == JFileChooser.APPROVE_OPTION) {
+			File selectedFile = fileChooser.getSelectedFile();
+			if(selectedFile.exists()) {
+				DialogPrompt.Result result = uiService.showDialog("File already exists. Override?", DialogPrompt.MessageType.QUESTION_MESSAGE, DialogPrompt.OptionType.YES_NO_OPTION);
+				if(result.equals(DialogPrompt.Result.YES_OPTION)) {
+					String absolutePath = selectedFile.getAbsolutePath();
+					logService.info("Saving model to " + absolutePath);
+					try {
+						modelZooService.save(model, absolutePath);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+
 	private void saveChanges(ModelZooArchive model) {
 		try {
-			String absolutePath = new File(model.getSource().getURI()).getAbsolutePath();
+			String absolutePath = new File(model.getLocation().getURI()).getAbsolutePath();
 			System.out.println(absolutePath);
 			modelZooService.save(model, absolutePath);
 		} catch (IOException e) {
@@ -240,12 +404,22 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		}
 	}
 
-	private void updateTestImage(
+	private void updateTestImageFromFile(
 			ModelZooArchive<?, ?> model, ImageIcon inputIcon, ImageIcon outputIcon) {
 		try {
-			commandService.run(ModelArchiveTestImagesCommand.class, true, "archive", model).get();
+			commandService.run(ModelArchiveUpdateDemoFromFileCommand.class, true, "archive", model).get();
 			reloadTestImages(model, inputIcon, outputIcon);
-		} catch (InterruptedException | ExecutionException | IOException e) {
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void updateTestImageFromOpenImages(
+			ModelZooArchive<?, ?> model, ImageIcon inputIcon, ImageIcon outputIcon) {
+		try {
+			commandService.run(ModelArchiveUpdateDemoFromImageCommand.class, true, "archive", model).get();
+			reloadTestImages(model, inputIcon, outputIcon);
+		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
 	}
@@ -260,7 +434,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return btn;
 	}
 
-	private <TI extends RealType<TI>, TO extends RealType<TO>> void reloadTestImages(ModelZooArchive<TI, TO> model, ImageIcon testInputIcon, ImageIcon testOutputIcon) throws IOException {
+	private <TI extends RealType<TI>, TO extends RealType<TO>> void reloadTestImages(ModelZooArchive<TI, TO> model, ImageIcon testInputIcon, ImageIcon testOutputIcon) {
 		if(model.getTestInput() == null || model.getTestOutput() == null) return;
 		testInputIcon.setImage(toBufferedImage(model.getTestInput()));
 		testOutputIcon.setImage(toBufferedImage(model.getTestOutput()));
@@ -276,7 +450,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		T max = img.randomAccess().get().copy();
 		ComputeMinMax<T> minMax = new ComputeMinMax<>(Views.iterable(img), min, max);
 		minMax.process();
-		RealLUTConverter<? extends RealType<?>> converter = new RealLUTConverter(min.getRealDouble(),
+		RealLUTConverter<? extends RealType<?>> converter = new RealLUTConverter<>(min.getRealDouble(),
 				max.getRealDouble(), ColorTables.GRAYS);
 		ArrayList<RealLUTConverter<? extends RealType<?>>> converters = new ArrayList<>();
 		converters.add(converter);
@@ -297,7 +471,6 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private static void addCard(JPanel leftPanel, JPanel rightPanel, ButtonGroup group, Component card, String id_card) {
-		rightPanel.add(card, id_card);
 		JToggleButton btn = new JToggleButton(new AbstractAction(id_card) {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -305,41 +478,49 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 				cl.show(rightPanel, id_card);
 			}
 		});
-		styleButton(btn);
-		leftPanel.add(btn, "newline, span, growx");
+		styleButton(btn, card != null);
+		if(card != null) {
+			rightPanel.add(card, id_card);
+		} else {
+			btn.setEnabled(false);
+		}
+
+		leftPanel.add(btn, "spanx, growx");
 		if(group.getButtonCount() == 0) btn.setSelected(true);
 		group.add(btn);
 	}
 
-	private static void styleButton(JToggleButton btn) {
+	private static void styleButton(JToggleButton btn, boolean enabled) {
 		btn.setBackground(leftBgColor);
 		btn.setForeground(Color.white);
 		btn.setFocusPainted(false);
 		btn.setBorderPainted(false);
-		btn.addMouseListener(new java.awt.event.MouseAdapter() {
-			public void mouseEntered(java.awt.event.MouseEvent evt) {
-				btn.setBackground(Color.black);
-			}
+		if(enabled) {
+			btn.addMouseListener(new java.awt.event.MouseAdapter() {
+				public void mouseEntered(java.awt.event.MouseEvent evt) {
+					btn.setBackground(Color.black);
+				}
 
-			public void mouseExited(java.awt.event.MouseEvent evt) {
-				btn.setBackground(leftBgColor);
-			}
-		});
-		btn.getModel().addChangeListener(e -> {
-			ButtonModel model = (ButtonModel) e.getSource();
-			if (model.isRollover()) {
-				btn.setBackground(Color.black);
-				btn.setForeground(Color.white);
-			}
-			else if(model.isSelected() || model.isPressed()) {
-				btn.setBackground(UIManager.getColor("control"));
-				btn.setForeground(Color.black);
-			}
-			else {
-				btn.setBackground(leftBgColor);
-				btn.setForeground(Color.white);
-			}
-		});
+				public void mouseExited(java.awt.event.MouseEvent evt) {
+					btn.setBackground(leftBgColor);
+				}
+			});
+			btn.getModel().addChangeListener(e -> {
+				ButtonModel model = (ButtonModel) e.getSource();
+				if (model.isRollover()) {
+					btn.setBackground(Color.black);
+					btn.setForeground(Color.white);
+				}
+				else if(model.isSelected() || model.isPressed()) {
+					btn.setBackground(UIManager.getColor("control"));
+					btn.setForeground(Color.black);
+				}
+				else {
+					btn.setBackground(leftBgColor);
+					btn.setForeground(Color.white);
+				}
+			});
+		}
 	}
 
 	private static Component createInputsOutputsPanel(ModelZooArchive model) {
