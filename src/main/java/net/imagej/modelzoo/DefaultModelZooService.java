@@ -197,14 +197,31 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
 		String archivePrediction = specification.getSource();
 		Module mycommand = null;
-		if(archivePrediction == null || archivePrediction.equals("imagej-modelzoo")) {
-			CommandInfo commandInfo = commandService.getCommand(DefaultModelZooBatchPredictionCommand.class);
-			mycommand = commandInfo.createModule();
-		} else {
+		if(archivePrediction != null) {
 			for (PluginInfo<P> command : predictionCommands) {
 				if (command.getAnnotation().name().equals(archivePrediction)) {
 					CommandInfo commandInfo = commandService.getCommand(command.getClassName());
 					mycommand = commandInfo.createModule();
+				}
+			}
+		}
+		if (mycommand == null) {
+//			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
+			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
+			return null;
+		}
+		context.inject(mycommand);
+		return mycommand;
+	}
+
+	private <P extends SciJavaPlugin, T extends Class<P>> CommandInfo getCommandInfo(ModelSpecification specification, T predictionClass) throws ModuleException {
+		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
+		String archivePrediction = specification.getSource();
+		CommandInfo mycommand = null;
+		if(archivePrediction != null) {
+			for (PluginInfo<P> command : predictionCommands) {
+				if (command.getAnnotation().name().equals(archivePrediction)) {
+					mycommand = commandService.getCommand(command.getClassName());
 				}
 			}
 		}
@@ -245,15 +262,37 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Override
 	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromImagesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException {
-		Module predictionCommand = getModule(model.getSpecification(), SingleImagePredictionCommand.class);
+		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
 		if (predictionCommand == null) return;
 		String modelFileParameter = "modelFile";
-		String predictionCommandParameter = "predictionCommand";
+		String predictionCommandParameter = "prediction";
 		File value = new File(model.getLocation().getURI());
-		predictionCommand.setInput(modelFileParameter, value);
-		predictionCommand.resolveInput(modelFileParameter);
-		predictionCommand.resolveOutput("output");
-		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true, modelFileParameter, value, predictionCommandParameter, predictionCommand);
+		Module module = commandService.moduleService().createModule(predictionCommand);
+		module.setInput(modelFileParameter, value);
+		module.resolveInput(modelFileParameter);
+		module.resolveOutput("output");
+		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true,
+				modelFileParameter, value, predictionCommandParameter, module);
+	}
+
+	@Override
+	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckInteractive(ModelZooArchive<TI, TO> model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException {
+		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
+		if (predictionCommand == null) return;
+		String modelFileParameter = "modelFile";
+		String predictionCommandParameter = "prediction";
+		String inputParameter = "input";
+		String groundTruthParameter = "inputGroundTruth";
+		File value = new File(model.getLocation().getURI());
+		Module module = commandService.moduleService().createModule(predictionCommand);
+		module.setInput(modelFileParameter, value);
+		module.resolveInput(modelFileParameter);
+		module.resolveOutput("output");
+		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true,
+				modelFileParameter, value,
+				inputParameter, input,
+				groundTruthParameter, groundTruth,
+				predictionCommandParameter, module);
 	}
 
 	private ModelZooIOPlugin createIOPlugin() {

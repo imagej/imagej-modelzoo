@@ -28,21 +28,15 @@
  */
 package net.imagej.modelzoo.howto;
 
-import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.DefaultSanityCheck;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
-import net.imagej.modelzoo.consumer.SanityCheck;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
-import org.scijava.module.Module;
-import org.scijava.module.ModuleService;
-
-import java.io.IOException;
-import java.util.Map;
 
 public class E06_RunSanityCheck {
 	private ImageJ ij;
@@ -67,24 +61,19 @@ public class E06_RunSanityCheck {
 
 		// create noisy image from input image
 		Img noisy = ij.op().create().img(input);
-		ij.op().filter().addPoissonNoise(noisy, input);
-
-		// setup and run prediction
-		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
-		prediction.setInput("input", input, "XY");
-		prediction.setTrainedModel(modelPath);
-		prediction.setNumberOfTiles(1);
-		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
+		ij.op().filter().gauss(noisy, input, 5);
 
 		// display results
-		ij.ui().show("expected (input)", input);
-		ij.ui().show("noisy input", noisy);
-		ij.ui().show("result after prediction", output);
+		ij.ui().show("Expected (GT)", input);
+		ij.ui().show("Sanity Check input", noisy);
 
-		// run sanity check
-		SanityCheck.compare(input, noisy, output, prediction.getTrainedModel().getTestInput(), prediction.getTrainedModel().getTestOutput(), ij.op());
 
+		ModelZooService modelZooService = ij.get(ModelZooService.class);
+		ModelZooArchive model = modelZooService.open(modelPath);
+		modelZooService.sanityCheckInteractive(model, noisy, input);
+
+		// run sanity check from static method
+//		DefaultSanityCheck.compare(input, noisy, output, prediction.getTrainedModel().getTestInput(), prediction.getTrainedModel().getTestOutput(), ij.op());
 	}
 
 	public static void main(String... args) throws Exception {

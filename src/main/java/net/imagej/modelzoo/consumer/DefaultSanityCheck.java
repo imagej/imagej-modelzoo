@@ -22,6 +22,7 @@ import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
+import org.scijava.Context;
 import org.scijava.plugin.Parameter;
 
 import javax.swing.BorderFactory;
@@ -53,20 +54,24 @@ public class DefaultSanityCheck implements SanityCheck {
 	private static final String expected = "Expected (GT)";
 	private static int numBins = 40;
 
+	public DefaultSanityCheck(Context context) {
+		context.inject(this);
+	}
+
 	public static <T extends RealType<T>, U extends RealType<U>> void compare(Dataset input, Dataset output, Dataset gt, RandomAccessibleInterval<T> modelDemoInput, RandomAccessibleInterval<U> modelDemoOutput, OpService opService) {
 		compare(
-				(RandomAccessibleInterval)gt,
 				(RandomAccessibleInterval)input,
 				(RandomAccessibleInterval)output,
+				(RandomAccessibleInterval)gt,
 				modelDemoInput,
 				modelDemoOutput,
 				opService);
 	}
 
 	public static <T extends RealType<T>, U extends RealType<U>, V extends RealType<V>, W extends RealType<W>, X extends RealType<X>> void compare(
-			RandomAccessibleInterval<T> gt,
 			RandomAccessibleInterval<U> input,
 			RandomAccessibleInterval<V> output,
+			RandomAccessibleInterval<T> gt,
 			RandomAccessibleInterval<W> modelDemoInput,
 			RandomAccessibleInterval<X> modelDemoOutput,
 			OpService opService) {
@@ -74,8 +79,6 @@ public class DefaultSanityCheck implements SanityCheck {
 		Pair<T, T> minMaxGT = opService.stats().minMax(Views.iterable(gt));
 		Pair<U, U> minMaxInput = opService.stats().minMax(Views.iterable(input));
 		Pair<V, V> minMaxOutput = opService.stats().minMax(Views.iterable(output));
-		Pair<W, W> minMaxModelDemoInput = opService.stats().minMax(Views.iterable(modelDemoInput));
-		Pair<X, X> minMaxModelDemoOutput = opService.stats().minMax(Views.iterable(modelDemoOutput));
 		double mseOut = calculateMSE(gt, output);
 		double psnrOut = calculatePSNR(mseOut, minMaxOutput);
 		double mseIn = calculateMSE(gt, input);
@@ -86,8 +89,12 @@ public class DefaultSanityCheck implements SanityCheck {
 		addData(table1Data[1], input, sanity_check_input, minMaxInput, opService);
 		addData(table1Data[2], output, model_prediction, minMaxOutput, opService);
 		addData(table1Data[3], gt, expected, minMaxGT, opService);
-		addData(table1Data[4], modelDemoInput, "Model Demo Input", minMaxModelDemoInput, opService);
-		addData(table1Data[5], modelDemoOutput, "Model Demo Output", minMaxModelDemoOutput, opService);
+		if(modelDemoInput != null && modelDemoOutput != null) {
+			Pair<W, W> minMaxModelDemoInput = opService.stats().minMax(Views.iterable(modelDemoInput));
+			Pair<X, X> minMaxModelDemoOutput = opService.stats().minMax(Views.iterable(modelDemoOutput));
+			addData(table1Data[4], modelDemoInput, "Model Demo Input", minMaxModelDemoInput, opService);
+			addData(table1Data[5], modelDemoOutput, "Model Demo Output", minMaxModelDemoOutput, opService);
+		}
 		JTable table1 = getJTable(table1Data);
 
 		JPanel histogramPanel = new JPanel(new MigLayout("fill, ins 0, gapx 0"));
@@ -102,9 +109,9 @@ public class DefaultSanityCheck implements SanityCheck {
 
 		HistogramDataset histogram = new HistogramDataset();
 		histogram.setType(HistogramType.RELATIVE_FREQUENCY);
-		addSeries(histogram, input, sanity_check_input);
+		addSeries(histogram, gt, expected);
 		addSeries(histogram, output, model_prediction);
-		addSeries(histogram, gt, "Expected (GT)");
+		addSeries(histogram, input, sanity_check_input);
 
 		JPanel psnrTablePanel = new JPanel(new MigLayout("alignx center"));
 		psnrTablePanel.setBackground(Color.white);
@@ -318,7 +325,6 @@ public class DefaultSanityCheck implements SanityCheck {
 		}
 		return sumSquareDif / (double) numPix;
 	}
-
 
 	private static <T extends RealType<T>> double calculatePSNR(double mse, Pair<T, T> minMax) {
 		T dif = minMax.getB().copy();

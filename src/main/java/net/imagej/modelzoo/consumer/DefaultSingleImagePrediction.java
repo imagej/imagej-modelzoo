@@ -39,8 +39,7 @@ public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends Re
 
 	public DefaultSingleImagePrediction(Context context) {
 		super(context);
-		sanityCheck = new DefaultSanityCheck();
-		context.inject(this);
+		sanityCheck = new DefaultSanityCheck(context);
 	}
 
 

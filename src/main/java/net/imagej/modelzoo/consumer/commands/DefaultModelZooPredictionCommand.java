@@ -39,15 +39,14 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.ItemIO;
 import org.scijava.ItemVisibility;
-import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
-import org.scijava.module.MethodCallException;
 import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.CancellationException;
 
+@Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo")
 public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements SingleImagePredictionCommand {
 
 	@Parameter(label = "Trained model file (.zip)")

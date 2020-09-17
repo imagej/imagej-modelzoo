@@ -29,8 +29,6 @@
 
 package net.imagej.modelzoo.consumer;
 
-import io.scif.MissingLibraryException;
-import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
@@ -38,23 +36,18 @@ import net.imagej.modelzoo.consumer.postprocessing.PredictionPostprocessing;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
 import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 public class DefaultModelZooPrediction implements ModelZooPrediction {
 
-	private ModelZooArchive modelArchive;
+	private ModelZooArchive<? extends RealType<?>, ? extends RealType<?>> modelArchive;
 
 	@Parameter
 	private LogService log;
@@ -151,7 +144,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	@Override
-	public ModelZooArchive getTrainedModel() {
+	public ModelZooArchive<? extends RealType<?>, ? extends RealType<?>> getTrainedModel() {
 		return modelArchive;
 	}
 

@@ -32,9 +32,11 @@ package net.imagej.modelzoo.consumer.commands;
 import net.imagej.Dataset;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.SanityCheck;
+import net.imagej.modelzoo.consumer.DefaultSanityCheck;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
+import net.imglib2.img.Img;
+import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
@@ -58,16 +60,19 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	private File modelFile;
 
 	@Parameter
-	private SingleImagePredictionCommand predictionCommand;
+	private Module prediction;
 
 	@Parameter(label="<html><h1>Sanity check</h1>", description = descriptionText, required = false, style = InfoWidget.STYLE)
 	private String description = "";
 
 	@Parameter(label = "Prediction input image", persist = false)
-	private Dataset input;
+	private Img input;
 
 	@Parameter(label = "Expected result image", persist = false)
-	private Dataset inputGroundTruth;
+	private Img inputGroundTruth;
+
+	@Parameter(label = "Model prediction", type = ItemIO.OUTPUT)
+	private Dataset output;
 
 	@Parameter
 	private LogService log;
@@ -91,20 +96,16 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 		final long startTime = System.currentTimeMillis();
 		log("ModelZoo sanity check start");
 
-		Module predictionModule = (Module) predictionCommand;
-		getInputs().forEach(predictionModule::setInput);
-			try {
-				predictionModule.setInput("input", input);
-				predictionModule.getInputs().forEach(this::setInput);
-				context().service(ModuleService.class).run((Module)predictionCommand, true).get();
-				predictionModule.getInputs().forEach(this::setInput);
-				Dataset output = (Dataset) predictionModule.getOutput("output");
-				uiService.show("result after prediction", output);
-				ModelZooArchive model = modelZooService.open(modelFile);
-				SanityCheck.compare(inputGroundTruth, input, output, model.getTestInput(), model.getTestOutput(), opService);
-			} catch (ExecutionException | InterruptedException | IOException e) {
-				e.printStackTrace();
-			}
+		try {
+			prediction.setInput("input", input);
+			prediction.resolveInput("input");
+			context().service(ModuleService.class).run(prediction, true).get();
+			output = (Dataset) prediction.getOutput("output");
+			ModelZooArchive model = modelZooService.open(modelFile);
+			DefaultSanityCheck.compare(input, (Img)output, inputGroundTruth, model.getTestInput(), model.getTestOutput(), opService);
+		} catch (ExecutionException | InterruptedException | IOException e) {
+			e.printStackTrace();
+		}
 
 		log("ModelZoo sanity check exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
