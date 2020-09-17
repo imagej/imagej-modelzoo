@@ -29,31 +29,12 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
-import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.SanityCheck;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Intervals;
-import net.imglib2.util.Pair;
-import net.imglib2.view.Views;
-import net.miginfocom.swing.MigLayout;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.StandardXYBarPainter;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
-import org.jfree.data.statistics.HistogramDataset;
-import org.jfree.data.statistics.HistogramType;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
@@ -64,19 +45,8 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import java.awt.Color;
-import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand.descriptionText;
