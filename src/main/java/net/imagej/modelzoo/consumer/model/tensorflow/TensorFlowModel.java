@@ -151,8 +151,8 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	private void loadSignature() throws InvalidProtocolBufferException {
 		sig = MetaGraphDef.parseFrom(model.model().metaGraphDef()).getSignatureDefOrThrow(
 				DEFAULT_SERVING_SIGNATURE_DEF_KEY);
-		System.out.println("Model inputs: " + sig.getInputsMap().toString().replace("\n", " ").replace("\t", " "));
-		System.out.println("Model outputs: " + sig.getOutputsMap().toString().replace("\n", " ").replace("\t", " "));
+		log.info("Model inputs: " + sig.getInputsMap().toString().replace("\n", " ").replace("\t", " "));
+		log.info("Model outputs: " + sig.getOutputsMap().toString().replace("\n", " ").replace("\t", " "));
 	}
 
 	private void loadModelFile(Location source, String modelName) throws IOException {
@@ -170,7 +170,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		System.out.println("load settings from yaml file " + yamlFile);
+		log.info("load settings from yaml file " + yamlFile);
 		if (!yamlFile.exists()) {
 			log.warn("Could not load settings from YAML " + yamlFile + ": file does not exist.");
 			return false;
@@ -209,7 +209,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		for (InputImageNode node : getInputNodes()) {
 			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData(), node.getMappingIndices());
 			if (tensor == null) {
-				System.out.println("[ERROR] Cannot convert to tensor: " + node.getData());
+				log.error("Cannot convert to tensor: " + node.getData());
 			}
 			res.add(tensor);
 		}

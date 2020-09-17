@@ -36,11 +36,13 @@ import net.imagej.modelzoo.DefaultModelZooArchive;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
+import org.scijava.app.StatusService;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
 import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.io.location.LocationService;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
@@ -68,8 +70,12 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @Plugin(type = IOPlugin.class, priority = 100.0)
 public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 
+	@Parameter
+	private StatusService statusService;
+
 	@Override
 	public ModelZooArchive open(String source) throws IOException {
+		statusService.showStatus("Opening " + source + "..");
 		Location location = null;
 		try {
 			LocationService locationService = getContext().service(LocationService.class);
@@ -104,11 +110,13 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 			if(testInputPath != null) archive.setTestInput(extractImage(zf, testInputPath));
 			if(testOutputPath != null) archive.setTestOutput(extractImage(zf, testOutputPath));
 		}
+		statusService.showStatus("Done opening " + source + ".");
 		return archive;
 	}
 
 	@Override
 	public void save(ModelZooArchive archive, String destination) throws IOException {
+		statusService.showStatus("Saving " + destination + "..");
 		Path destinationPath = Paths.get(destination);
 		Path sourcePath = new File(archive.getLocation().getURI()).toPath();
 		Files.copy(sourcePath, destinationPath, REPLACE_EXISTING);
@@ -134,6 +142,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 			}
 		}
 		archive.setLocation(new FileLocation(destination));
+		statusService.showStatus("Done saving " + destination + ".");
 	}
 
 	@Override

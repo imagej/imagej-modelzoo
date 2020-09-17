@@ -145,7 +145,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	public boolean read(InputStream stream) {
 		Yaml yaml = new Yaml();
 		Map<String, Object> obj = yaml.load(stream);
-		System.out.println(obj);
+//		System.out.println(obj);
 		if (obj == null) return false;
 		readFromMap(obj);
 		return true;
