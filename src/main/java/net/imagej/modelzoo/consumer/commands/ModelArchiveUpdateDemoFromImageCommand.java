@@ -40,20 +40,14 @@ import org.scijava.plugin.Plugin;
 
 import java.io.FileNotFoundException;
 
-@Plugin(type = Command.class, name = "Set modelzoo archive test image")
-public class ModelArchiveTestImagesCommand implements Command {
+@Plugin(type = Command.class, name = "Update modelzoo archive demo image")
+public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 
-	@Parameter
+	@Parameter(persist = false)
 	private RandomAccessibleInterval inputImage;
 
 	@Parameter
 	private ModelZooArchive archive;
-
-	@Parameter
-	private LogService logService;
-
-	@Parameter
-	private Context context;
 
 	@Parameter
 	private ModelZooService modelZooService;
@@ -65,7 +59,7 @@ public class ModelArchiveTestImagesCommand implements Command {
 //			return;
 //		}
 		try {
-			RandomAccessibleInterval output = modelZooService.predict(archive, inputImage, "ZY");
+			RandomAccessibleInterval output = modelZooService.predict(archive, inputImage, "XY");
 			archive.setTestOutput(output);
 			archive.setTestInput(inputImage);
 

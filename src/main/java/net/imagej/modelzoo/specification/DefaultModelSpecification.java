@@ -80,6 +80,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idTraining = "training";
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";
+	private final static String defaultTestInput = "testinput.tif";
+	private final static String defaultTestOutput = "testoutput.tif";
 	final static String dependenciesFileName = "dependencies.yaml";
 
 	final static String modelZooSpecificationVersion = "0.2.0-csbdeep";
@@ -88,8 +90,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
 	private String framework = "tensorflow";
-	private String testInput = "testinput.tif";
-	private String testOutput = "testoutput.tif";
+	private String testInput = defaultTestInput;
+	private String testOutput = defaultTestOutput;
 	private String predictionWeightsSource = "./variables/variables";
 
 	private String predictionDependencies = "./" + dependenciesFileName;
@@ -107,6 +109,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
+
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -177,6 +180,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	public void write(Path modelSpecificationPath) throws IOException {
 		Map<String, Object> data = toMap();
 		Yaml yaml = new Yaml();
+		Files.delete(modelSpecificationPath);
 		try (Writer writer = Files.newBufferedWriter(modelSpecificationPath)) {
 			yaml.dump(data, writer);
 		}
@@ -354,6 +358,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 
 	@Override
 	public String getTestInput() {
+		if(testInput == null) testInput = defaultTestInput;
 		return testInput;
 	}
 
@@ -364,6 +369,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 
 	@Override
 	public String getTestOutput() {
+		if(testOutput == null) testOutput = defaultTestOutput;
 		return testOutput;
 	}
 
