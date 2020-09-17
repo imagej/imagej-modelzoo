@@ -29,6 +29,7 @@
 package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
@@ -110,12 +111,37 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
+	public boolean canRunPrediction(ModelZooArchive trainedModel) {
+		SingleImagePrediction prediction = getSingleImagePrediction(trainedModel);
+		return prediction != null;
+	}
+
+	@Override
+	public boolean canRunSanityCheck(ModelZooArchive trainedModel) {
+		SingleImagePrediction prediction = getSingleImagePrediction(trainedModel);
+		return prediction != null && prediction.getSanityCheck() != null;
+	}
+
+	@Override
 	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive <TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception {
 		return predict(trainedModel, input, axes, ModelZooPredictionOptions.options());
 	}
 
 	@Override
 	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception {
+		SingleImagePrediction prediction = getSingleImagePrediction(trainedModel);
+		if (prediction == null) return null;
+		prediction.setTrainedModel(trainedModel);
+		prediction.setInput(input, axes);
+		prediction.setBatchSize(options.values.batchSize());
+		prediction.setCacheDir(options.values.cacheDirectory());
+		prediction.setNumberOfTiles(options.values.numberOfTiles());
+		prediction.setTilingEnabled(options.values.tilingEnabled());
+		prediction.run();
+		return prediction.getOutput();
+	}
+
+	private <TI extends RealType<TI>, TO extends RealType<TO>> SingleImagePrediction getSingleImagePrediction(ModelZooArchive<TI, TO> trainedModel) {
 		String archivePrediction = trainedModel.getSpecification().getSource();
 		SingleImagePrediction prediction = null;
 		if(archivePrediction == null || archivePrediction.equals("imagej-modelzoo")) {
@@ -132,14 +158,28 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 				return null;
 			}
 		}
-		prediction.setTrainedModel(trainedModel);
-		prediction.setInput(input, axes);
-		prediction.setBatchSize(options.values.batchSize());
-		prediction.setCacheDir(options.values.cacheDirectory());
-		prediction.setNumberOfTiles(options.values.numberOfTiles());
-		prediction.setTilingEnabled(options.values.tilingEnabled());
-		prediction.run();
-		return prediction.getOutput();
+		return prediction;
+	}
+
+	@Override
+	public ModelZooPrediction getPrediction(ModelZooArchive trainedModel) {
+		String archivePrediction = trainedModel.getSpecification().getSource();
+		ModelZooPrediction prediction = null;
+		if(archivePrediction == null || archivePrediction.equals("imagej-modelzoo")) {
+			prediction = new DefaultSingleImagePrediction(getContext());
+		} else {
+			List<PluginInfo<ModelZooPrediction>> predictionCommands = pluginService.getPluginsOfType(ModelZooPrediction.class);
+			for (PluginInfo<ModelZooPrediction> command : predictionCommands) {
+				if(command.getAnnotation().name().equals(archivePrediction)) {
+					prediction = pluginService.createInstance(command);
+				}
+			}
+			if(prediction == null) {
+				log().error("Could not find prediction plugin for model source " + archivePrediction + ".");
+				return null;
+			}
+		}
+		return prediction;
 	}
 
 	@Override
@@ -157,7 +197,10 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
 		String archivePrediction = specification.getSource();
 		Module mycommand = null;
-		if (archivePrediction != null) {
+		if(archivePrediction == null || archivePrediction.equals("imagej-modelzoo")) {
+			CommandInfo commandInfo = commandService.getCommand(DefaultModelZooBatchPredictionCommand.class);
+			mycommand = commandInfo.createModule();
+		} else {
 			for (PluginInfo<P> command : predictionCommands) {
 				if (command.getAnnotation().name().equals(archivePrediction)) {
 					CommandInfo commandInfo = commandService.getCommand(command.getClassName());

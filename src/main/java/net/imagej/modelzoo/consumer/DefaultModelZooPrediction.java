@@ -73,12 +73,9 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	private Path cacheDir = null;
 
 	private Map<String, RandomAccessibleInterval<?>> outputs;
-	public DefaultModelZooPrediction() {
-		inputHandling = new InputMappingHandler();
-	}
 
 	public DefaultModelZooPrediction(Context context) {
-		this();
+		inputHandling = new InputMappingHandler();
 		context.inject(this);
 	}
 

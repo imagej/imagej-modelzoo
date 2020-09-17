@@ -35,11 +35,12 @@ import org.scijava.Context;
 
 public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends RealType<TO>> extends DefaultModelZooPrediction implements SingleImagePrediction<TI, TO> {
 
-	public DefaultSingleImagePrediction() {
-	}
+	private SanityCheck sanityCheck;
 
 	public DefaultSingleImagePrediction(Context context) {
 		super(context);
+		sanityCheck = new DefaultSanityCheck();
+		context.inject(this);
 	}
 
 
@@ -49,4 +50,8 @@ public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends Re
 		return getOutput();
 	}
 
+	@Override
+	public SanityCheck getSanityCheck() {
+		return sanityCheck;
+	}
 }

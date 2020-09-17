@@ -112,7 +112,8 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 			uiService.show("expected", gt);
 			uiService.show("result after prediction", output);
 			ModelZooArchive model = modelZooService.open(modelFile);
-			SanityCheck.compare(gt, input, output, model.getTestInput(), model.getTestOutput(), opService);
+			SanityCheck sanityCheck = modelZooService.getPrediction(model).getSanityCheck();
+			sanityCheck.checkInteractive(input, output, gt, model);
 		} catch (IOException | ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}

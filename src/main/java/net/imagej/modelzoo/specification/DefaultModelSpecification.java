@@ -180,7 +180,9 @@ public class DefaultModelSpecification implements ModelSpecification {
 	public void write(Path modelSpecificationPath) throws IOException {
 		Map<String, Object> data = toMap();
 		Yaml yaml = new Yaml();
-		Files.delete(modelSpecificationPath);
+		try {
+			Files.delete(modelSpecificationPath);
+		} catch(IOException ignored) {}
 		try (Writer writer = Files.newBufferedWriter(modelSpecificationPath)) {
 			yaml.dump(data, writer);
 		}
