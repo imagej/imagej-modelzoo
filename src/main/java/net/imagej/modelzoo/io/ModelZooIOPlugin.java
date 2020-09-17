@@ -79,7 +79,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		}
 		DefaultModelZooArchive archive = new DefaultModelZooArchive();
 		getContext().inject(archive);
-		archive.setSource(location);
+		archive.setLocation(location);
 		DefaultModelSpecification specification = new DefaultModelSpecification();
 		try (ZipFile zf = new ZipFile(source)) {
 			final Enumeration<? extends ZipEntry> entries = zf.entries();
@@ -110,7 +110,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 	@Override
 	public void save(ModelZooArchive archive, String destination) throws IOException {
 		Path destinationPath = Paths.get(destination);
-		Path sourcePath = new File(archive.getSource().getURI()).toPath();
+		Path sourcePath = new File(archive.getLocation().getURI()).toPath();
 		Files.copy(sourcePath, destinationPath, REPLACE_EXISTING);
 		Path tmpTestInput = null;
 		Path tmpTestOutput = null;
@@ -133,6 +133,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 				Files.copy(tmpTestOutput, testOutputPath, REPLACE_EXISTING);
 			}
 		}
+		archive.setLocation(new FileLocation(destination));
 	}
 
 	@Override
@@ -169,7 +170,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 
 	public void save(String archivePath, ModelSpecification specification, String location) throws IOException {
 		DefaultModelZooArchive archive = new DefaultModelZooArchive();
-		archive.setSource(new FileLocation(archivePath));
+		archive.setLocation(new FileLocation(archivePath));
 		archive.setSpecification(specification);
 		save(archive, location);
 	}

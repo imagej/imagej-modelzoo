@@ -29,64 +29,76 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
-import io.scif.MissingLibraryException;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.ItemIO;
+import org.scijava.ItemVisibility;
+import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
+import org.scijava.module.MethodCallException;
 import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 
-//@Plugin(type = SingleImagePredictionCommand.class, menuPath = "Plugins>ModelZoo>ModelZoo Prediction")
-public class DefaultModelZooPredictionCommand implements SingleImagePredictionCommand {
+public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements SingleImagePredictionCommand {
 
-	@Parameter(label = "Import model (.zip) from file")
+	@Parameter(label = "Trained model file (.zip)")
 	private File modelFile;
 
-	@Parameter
-	private Img input;
+	@Parameter(persist = false)
+	private RandomAccessibleInterval<T> input;
 
-	@Parameter(label = "Axes (subset of XYZCT)")
+	@Parameter(label = "Axes of prediction input (subset of XYB, B = batch)", description = "<html>You can predict one dimension independently per position.<br>Use B ( = batch) for this dimension.")
 	private String axes = "XY";
 
-	@Parameter(label = "Number of tiles (1 = no tiling)", min = "1")
-	private int nTiles = 8;
-
-	@Parameter(label = "Batch size")
+	@Parameter(label = "Batch size", required = false, description = "<html>The batch size will only be used if a batch axis exists.<br>It can improve performance to process multiple batches at once (batch size > 1)")
 	private int batchSize = 10;
 
+	@Parameter(label = "Number of tiles (1 = no tiling)", required = false, description = "<html>Increasing the tiling can help if the memory is insufficient to deal with the whole image at once.<br>Too many tiles decrease performance because an overlap has to be computed.")
+	private int numTiles = 1;
+
+	@Parameter(required = false, visibility = ItemVisibility.INVISIBLE)
+	private boolean showProgressDialog = true;
+
 	@Parameter(type = ItemIO.OUTPUT)
-	private RandomAccessibleInterval output;
+	private Dataset output;
 
 	@Parameter
 	private LogService log;
 
 	@Parameter
-	private Context context;
-
-	@Parameter
 	private ModelZooService modelZooService;
 
+	@Parameter
+	private DatasetService datasetService;
+
+	@Parameter
+	private Context context;
+
+	private SingleImagePrediction prediction;
+
+	@Override
 	public void run() {
 
 		final long startTime = System.currentTimeMillis();
 
 		try {
 
-			DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(context);
-			prediction.setInput("input", input, axes);
+			SingleImagePrediction prediction = getPrediction();
 			prediction.setTrainedModel(modelZooService.open(modelFile));
-			prediction.setNumberOfTiles(nTiles);
+			prediction.setInput("input", input, axes);
+			prediction.setNumberOfTiles(numTiles);
 			prediction.setBatchSize(batchSize);
 			prediction.run();
-			output = prediction.getOutput();
+			output = datasetService.create(prediction.getOutput());
 
 		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
@@ -97,4 +109,42 @@ public class DefaultModelZooPredictionCommand implements SingleImagePredictionCo
 
 	}
 
+	public SingleImagePrediction getPrediction() {
+		if(prediction == null) {
+			setPrediction(new DefaultSingleImagePrediction(getContext()));
+		}
+		return prediction;
+	}
+
+	protected Context getContext() {
+		return context;
+	}
+
+	public void setPrediction(SingleImagePrediction prediction) {
+		this.prediction = prediction;
+	}
+
+	public Dataset getOutput() {
+		return output;
+	}
+
+	protected RandomAccessibleInterval<T> getInput() {
+		return input;
+	}
+
+	protected String getAxes() {
+		return axes;
+	}
+
+	protected File getModelFile() {
+		return modelFile;
+	}
+
+	protected ModelZooService modelZooService() {
+		return modelZooService;
+	}
+
+	protected LogService log() {
+		return log;
+	}
 }

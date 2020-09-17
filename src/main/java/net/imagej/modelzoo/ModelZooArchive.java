@@ -28,7 +28,6 @@
  */
 package net.imagej.modelzoo;
 
-import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
@@ -43,7 +42,7 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	/**
 	 * @return the source of the archive
 	 */
-	Location getSource();
+	Location getLocation();
 
 	/**
 	 * @return the specification of the model
@@ -61,7 +60,7 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	RandomAccessibleInterval<TO> getTestOutput();
 
 	/**
-	 * @return an instance of the model specified by {@link #getSpecification()} and loaded from {@link #getSource()}
+	 * @return an instance of the model specified by {@link #getSpecification()} and loaded from {@link #getLocation()}
 	 * @throws FileNotFoundException in case the model source is not found
 	 */
 	ModelZooModel createModelInstance() throws Exception;
@@ -75,4 +74,6 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	 * @return a temporary file extracted from the archive and the given path
 	 */
 	File extract(String path) throws IOException;
+
+	void setLocation(Location location);
 }

@@ -29,6 +29,7 @@
 
 package net.imagej.modelzoo.consumer;
 
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 
@@ -39,6 +40,13 @@ public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends Re
 
 	public DefaultSingleImagePrediction(Context context) {
 		super(context);
+	}
+
+
+	public RandomAccessibleInterval<TO> predict(RandomAccessibleInterval<TI> input, String axes) throws Exception {
+		setInput(input, axes);
+		run();
+		return getOutput();
 	}
 
 }

@@ -31,6 +31,7 @@ package net.imagej.modelzoo;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.SingleImagePrediction;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
 import net.imagej.modelzoo.specification.ModelSpecification;
@@ -46,13 +47,13 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.plugin.PluginInfo;
 import org.scijava.plugin.PluginService;
+import org.scijava.plugin.SciJavaPlugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -140,28 +141,49 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive <TI, TO> trainedModel) throws FileNotFoundException, ModuleException {
-		List<PluginInfo<SingleImagePredictionCommand>> predictionCommands = pluginService.getPluginsOfType(SingleImagePredictionCommand.class);
-		String archivePrediction = trainedModel.getSpecification().getSource();
+	public <TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive <TI, TO> trainedModel) throws ModuleException {
+		Module mycommand = getModule(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
+		if (mycommand == null) return;
+		String modelFileParameter = "modelFile";
+		File value = new File(trainedModel.getLocation().getURI());
+		mycommand.setInput(modelFileParameter, value);
+		mycommand.resolveInput(modelFileParameter);
+		commandService.moduleService().run(mycommand, true);
+	}
+
+	private <P extends SciJavaPlugin, T extends Class<P>> Module getModule(ModelSpecification specification, T predictionClass) throws ModuleException {
+		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
+		String archivePrediction = specification.getSource();
 		Module mycommand = null;
-		if(archivePrediction != null) {
-			for (PluginInfo<SingleImagePredictionCommand> command : predictionCommands) {
-				if(command.getAnnotation().name().equals(archivePrediction)) {
+		if (archivePrediction != null) {
+			for (PluginInfo<P> command : predictionCommands) {
+				if (command.getAnnotation().name().equals(archivePrediction)) {
 					CommandInfo commandInfo = commandService.getCommand(command.getClassName());
 					mycommand = commandInfo.createModule();
 				}
 			}
 		}
-		if(mycommand == null) {
+		if (mycommand == null) {
 //			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
 			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
-			return;
+			return null;
 		}
+		context.inject(mycommand);
+		return mycommand;
+	}
+
+	@Override
+	public <TI extends RealType<TI>, TO extends RealType<TO>> void batchPredictInteractive(ModelZooArchive<TI, TO> trainedModel) throws ModuleException {
+		Module predictionCommand = getModule(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
+		if (predictionCommand == null) return;
 		String modelFileParameter = "modelFile";
-		File value = new File(trainedModel.getSource().getURI());
-		mycommand.setInput(modelFileParameter, value);
-		mycommand.resolveInput(modelFileParameter);
-		commandService.moduleService().run(mycommand, true);
+		String predictionCommandParameter = "predictionCommand";
+		File value = new File(trainedModel.getLocation().getURI());
+		predictionCommand.setInput(modelFileParameter, value);
+		predictionCommand.resolveInput(modelFileParameter);
+		predictionCommand.resolveOutput("output");
+		commandService.run(DefaultModelZooBatchPredictionCommand.class, true, modelFileParameter, value, predictionCommandParameter, predictionCommand);
+	}
 	}
 
 	private ModelZooIOPlugin createIOPlugin() {

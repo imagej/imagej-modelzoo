@@ -28,7 +28,6 @@
  */
 package net.imagej.modelzoo;
 
-import io.scif.MissingLibraryException;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
@@ -42,7 +41,6 @@ import org.scijava.plugin.PluginInfo;
 import org.scijava.plugin.PluginService;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -71,7 +69,7 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	private RandomAccessibleInterval<TO> testOutput;
 
 	@Override
-	public Location getSource() {
+	public Location getLocation() {
 		return source;
 	}
 
@@ -114,7 +112,7 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	private String getNameWithTimeStamp() {
 		String timeString = "";
 		try {
-			Instant lastChanged = Files.getLastModifiedTime(new File(getSource().getURI()).toPath()).toInstant();
+			Instant lastChanged = Files.getLastModifiedTime(new File(getLocation().getURI()).toPath()).toInstant();
 			Timestamp timestamp = Timestamp.from(lastChanged);
 			timeString = "_" + timestamp.getTime();
 		} catch (IOException e) {
@@ -126,7 +124,8 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 		return res;
 	}
 
-	public void setSource(Location source) {
+	@Override
+	public void setLocation(Location source) {
 		this.source = source;
 	}
 
@@ -146,7 +145,7 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 
 	@Override
 	public File extract(String path) throws IOException {
-		try (FileSystem fileSystem = FileSystems.newFileSystem(new File(getSource().getURI()).toPath(), null)) {
+		try (FileSystem fileSystem = FileSystems.newFileSystem(new File(getLocation().getURI()).toPath(), null)) {
 			Path fileToExtract = fileSystem.getPath(path);
 			String base = FileNameUtils.getBaseName(path);
 			String extension = "." + FileNameUtils.getExtension(path);
