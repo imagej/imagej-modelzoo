@@ -32,6 +32,8 @@ import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromImageCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
 import net.imagej.modelzoo.specification.ModelSpecification;
@@ -184,6 +186,31 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		predictionCommand.resolveOutput("output");
 		commandService.run(DefaultModelZooBatchPredictionCommand.class, true, modelFileParameter, value, predictionCommandParameter, predictionCommand);
 	}
+
+	@Override
+	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromFilesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException {
+		Module predictionCommand = getModule(model.getSpecification(), SingleImagePredictionCommand.class);
+		if (predictionCommand == null) return;
+		String modelFileParameter = "modelFile";
+		String predictionCommandParameter = "predictionCommand";
+		File value = new File(model.getLocation().getURI());
+		predictionCommand.setInput(modelFileParameter, value);
+		predictionCommand.resolveInput(modelFileParameter);
+		predictionCommand.resolveOutput("output");
+		commandService.run(DefaultModelZooSanityCheckFromFileCommand.class, true, modelFileParameter, value, predictionCommandParameter, predictionCommand);
+	}
+
+	@Override
+	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromImagesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException {
+		Module predictionCommand = getModule(model.getSpecification(), SingleImagePredictionCommand.class);
+		if (predictionCommand == null) return;
+		String modelFileParameter = "modelFile";
+		String predictionCommandParameter = "predictionCommand";
+		File value = new File(model.getLocation().getURI());
+		predictionCommand.setInput(modelFileParameter, value);
+		predictionCommand.resolveInput(modelFileParameter);
+		predictionCommand.resolveOutput("output");
+		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true, modelFileParameter, value, predictionCommandParameter, predictionCommand);
 	}
 
 	private ModelZooIOPlugin createIOPlugin() {

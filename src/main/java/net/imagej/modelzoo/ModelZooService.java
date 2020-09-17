@@ -52,4 +52,6 @@ public interface ModelZooService extends ImageJService {
 	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception;
 	<TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;
 	<TI extends RealType<TI>, TO extends RealType<TO>> void batchPredictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;
+	<TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromFilesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException;
+	<TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromImagesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException;
 }
