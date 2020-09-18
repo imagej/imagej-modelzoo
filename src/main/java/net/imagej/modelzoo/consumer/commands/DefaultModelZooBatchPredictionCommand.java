@@ -62,7 +62,7 @@ public class DefaultModelZooBatchPredictionCommand extends DynamicCommand {
 	private File modelFile;
 
 	@Parameter
-	private SingleImagePredictionCommand predictionCommand;
+	private Module prediction;
 
 	@Parameter(style = FileWidget.DIRECTORY_STYLE)
 	private File inputDirectory;
@@ -91,29 +91,28 @@ public class DefaultModelZooBatchPredictionCommand extends DynamicCommand {
 		}
 
 		final long startTime = System.currentTimeMillis();
-		log.info("ModelZoo batch prediction start");
+		log.info("ModelZoo batch prediction start: " + inputDirectory);
 
 		List<File>  inputFiles = Arrays.asList(files);
 		Collections.sort(inputFiles);
 		boolean firstRun = true;
-		Module predictionModule = (Module) predictionCommand;
-		getInputs().forEach(predictionModule::setInput);
 		for (File inputFile : inputFiles) {
 			try {
 				Dataset input = datasetIOService.open(inputFile.getAbsolutePath());
-				predictionModule.setInput("input", input);
+				prediction.setInput("input", input);
+				prediction.resolveInput("input");
 				if(firstRun) {
 					// for the first run, execute the command interactively
 					// to harvest missing inputs. for consecutive runs,
 					// we assume the same input parameters will be used
 					firstRun = false;
-					Map<String, Object> chosenParameters = predictionModule.getInputs();
+					Map<String, Object> chosenParameters = prediction.getInputs();
 					chosenParameters.forEach(this::setInput);
-					context().service(ModuleService.class).run(predictionModule, true).get();
+					context().service(ModuleService.class).run(prediction, true).get();
 				} else {
-					predictionCommand.run();
+					context().service(ModuleService.class).run(prediction, false).get();
 				}
-				Dataset output = (Dataset) predictionModule.getOutput("output");
+				Dataset output = (Dataset) prediction.getOutput("output");
 				File outputFile = new File(outputDirectory, inputFile.getName());
 				if(outputFile.exists()) outputFile.delete();
 				datasetIOService.save(output, new FileLocation(outputFile));

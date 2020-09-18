@@ -62,7 +62,9 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 			RandomAccessibleInterval output = modelZooService.predict(archive, input, "XY");
 			archive.setTestOutput(output);
 			archive.setTestInput(input);
-
+			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
+				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

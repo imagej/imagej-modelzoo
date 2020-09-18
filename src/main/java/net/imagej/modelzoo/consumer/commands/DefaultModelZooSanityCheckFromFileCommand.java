@@ -57,7 +57,7 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 	private File modelFile;
 
 	@Parameter
-	private SingleImagePredictionCommand predictionCommand;
+	private Module prediction;
 
 	final static String descriptionText =
 			"<html>This is what's going to happen:" +
@@ -106,9 +106,10 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 		try {
 			Dataset input = datasetIOService.open(inputFile.getAbsolutePath());
 			Dataset gt = datasetIOService.open(inputGroundTruthFile.getAbsolutePath());
-			Module res = context().service(ModuleService.class).run((Module) predictionCommand, true,
-					"input", input).get();
-			Dataset output = (Dataset) res.getOutput("output");
+			prediction.setInput("input", input);
+			prediction.resolveInput("input");
+			context().service(ModuleService.class).run(prediction, true).get();
+			Dataset output = (Dataset) prediction.getOutput("output");
 			uiService.show("expected", gt);
 			uiService.show("result after prediction", output);
 			ModelZooArchive model = modelZooService.open(modelFile);

@@ -136,4 +136,6 @@ public interface ModelSpecification {
 	String getModelFileName();
 
 	void setFramework(String framework);
+
+	void setFormatVersion(String formatVersion);
 }

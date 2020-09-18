@@ -54,13 +54,15 @@ public class DefaultSanityCheck implements SanityCheck {
 	private static final String expected = "Expected (GT)";
 	private static int numBins = 40;
 
+	public DefaultSanityCheck() {
+	}
+
 	public DefaultSanityCheck(Context context) {
 		context.inject(this);
 	}
 
 	public static <T extends RealType<T>, U extends RealType<U>> void compare(Dataset input, Dataset output, Dataset gt, RandomAccessibleInterval<T> modelDemoInput, RandomAccessibleInterval<U> modelDemoOutput, OpService opService) {
-		compare(
-				(RandomAccessibleInterval)input,
+		compare((RandomAccessibleInterval)input,
 				(RandomAccessibleInterval)output,
 				(RandomAccessibleInterval)gt,
 				modelDemoInput,
@@ -80,9 +82,9 @@ public class DefaultSanityCheck implements SanityCheck {
 		Pair<U, U> minMaxInput = opService.stats().minMax(Views.iterable(input));
 		Pair<V, V> minMaxOutput = opService.stats().minMax(Views.iterable(output));
 		double mseOut = calculateMSE(gt, output);
-		double psnrOut = calculatePSNR(mseOut, minMaxOutput);
+		double psnrOut = calculatePSNR(mseOut, minMaxGT);
 		double mseIn = calculateMSE(gt, input);
-		double psnrIn = calculatePSNR(mseOut, minMaxInput);
+		double psnrIn = calculatePSNR(mseIn, minMaxGT);
 
 		Object[][] table1Data = new Object[6][7];
 		addHeader(table1Data[0]);
@@ -335,6 +337,10 @@ public class DefaultSanityCheck implements SanityCheck {
 
 	@Override
 	public void checkInteractive(Dataset input, Dataset output, Dataset gt, ModelZooArchive model) {
-		compare(input, output, gt, model.getTestInput(), model.getTestOutput(), opService);
+		if(model.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
+			compare(input, output, gt, null, null, opService);
+		} else {
+			compare(input, output, gt, model.getTestInput(), model.getTestOutput(), opService);
+		}
 	}
 }

@@ -49,8 +49,8 @@ public interface ModelZooService extends ImageJService {
 	void save(ModelZooArchive trainedModel, File location);
 	void save(ModelZooArchive trainedModel, Location location);
 	void save(String archivePath, ModelSpecification specification, String location) throws IOException;
-	boolean canRunPrediction(ModelZooArchive trainedModel);
-	boolean canRunSanityCheck(ModelZooArchive trainedModel);
+	boolean canRunPredictionInteractive(ModelZooArchive trainedModel);
+	boolean canRunSanityCheckInteractive(ModelZooArchive trainedModel);
 	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception;
 	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception;
 	<TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;

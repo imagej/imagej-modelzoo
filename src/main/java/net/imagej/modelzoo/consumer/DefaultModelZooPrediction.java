@@ -67,8 +67,14 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 
 	private Map<String, RandomAccessibleInterval<?>> outputs;
 
-	public DefaultModelZooPrediction(Context context) {
+	private boolean contextInjected = false;
+
+	public DefaultModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
+	}
+
+	public DefaultModelZooPrediction(Context context) {
+		this();
 		context.inject(this);
 	}
 
@@ -188,8 +194,15 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	protected boolean inputValidationAndMapping(ModelZooModel model) {
-		context.inject(inputHandling);
+		if(!contextInjected) {
+			contextInjected = true;
+			context.inject(inputHandling);
+		}
 		inputHandling.setModel(model);
 		return inputHandling.getSuccess();
+	}
+
+	Context context() {
+		return context;
 	}
 }

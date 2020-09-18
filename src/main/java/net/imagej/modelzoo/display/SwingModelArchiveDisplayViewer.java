@@ -117,7 +117,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private static final Font plainMonospaceFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 	private static final Font plainFont = font.deriveFont(Font.PLAIN);
 	private static final Font headerFont = font.deriveFont(Font.BOLD);
-	private int previewDim = 220;
+	private int previewDim = 240;
 
 	public SwingModelArchiveDisplayViewer() {
 		super(ModelZooArchive.class);
@@ -150,7 +150,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, previewPanel), "gap 6px 11px 0px 6px, growx");
 		cardLayout.first(rightPanel);
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
-		panel.add(rightPanel, "width 450:450:null, height 100%");
+		panel.add(rightPanel, "width 500:500:null, height 100%");
 		return panel;
 	}
 
@@ -272,8 +272,13 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private Component createActionsBar(ModelZooArchive model) {
 		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[]push[][]", "align bottom"));
 		//TODO enable once the features are all ready
-		panel.add(new JLabel("<html><span style='font-weight: normal;'>Source:</span> " + model.getSpecification().getSource()
-				+ " | <span style='font-weight: normal;'>Input axes:</span> " + model.getSpecification().getInputs().get(0).getAxes()), "spanx");
+		String text = "<html><span style='font-weight: normal;'>Source:</span> "
+				+ model.getSpecification().getSource()
+				+ " | <span style='font-weight: normal;'>Format:</span> "
+				+ model.getSpecification().getFormatVersion()
+				+ " | <span style='font-weight: normal;'>Input axes:</span> "
+				+ model.getSpecification().getInputs().get(0).getAxes();
+		panel.add(new JLabel(text), "spanx");
 //		panel.add(createActionButton("Train", () -> train(model)), "newline");
 		panel.add(createSanityCheckActionsBtn(model), "");
 		panel.add(createPredictActionsBtn(model), "");
@@ -317,6 +322,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 				menu.show(button, button.getWidth() / 2, button.getHeight() / 2);
 			}
 		});
+		button.setEnabled(modelZooService.canRunSanityCheckInteractive(model));
 		return button;
 	}
 
@@ -341,6 +347,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 				menu.show(button, button.getWidth() / 2, button.getHeight() / 2);
 			}
 		});
+		button.setEnabled(modelZooService.canRunPredictionInteractive(model));
 		return button;
 	}
 
@@ -379,17 +386,18 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		int userSelection = fileChooser.showSaveDialog(parentFrame);
 		if (userSelection == JFileChooser.APPROVE_OPTION) {
 			File selectedFile = fileChooser.getSelectedFile();
+			String absolutePath = selectedFile.getAbsolutePath();
 			if(selectedFile.exists()) {
 				DialogPrompt.Result result = uiService.showDialog("File already exists. Override?", DialogPrompt.MessageType.QUESTION_MESSAGE, DialogPrompt.OptionType.YES_NO_OPTION);
-				if(result.equals(DialogPrompt.Result.YES_OPTION)) {
-					String absolutePath = selectedFile.getAbsolutePath();
-					logService.info("Saving model to " + absolutePath);
-					try {
-						modelZooService.save(model, absolutePath);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				if(!result.equals(DialogPrompt.Result.YES_OPTION)) {
+					return;
 				}
+			}
+			logService.info("Saving model to " + absolutePath);
+			try {
+				modelZooService.save(model, absolutePath);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}

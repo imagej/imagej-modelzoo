@@ -32,16 +32,18 @@ package net.imagej.modelzoo.consumer;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
+import org.scijava.Initializable;
+import org.scijava.plugin.Plugin;
 
+@Plugin(type = SingleImagePrediction.class, name = "imagej-modelzoo")
 public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends RealType<TO>> extends DefaultModelZooPrediction implements SingleImagePrediction<TI, TO> {
 
-	private SanityCheck sanityCheck;
+	public DefaultSingleImagePrediction() {
+	}
 
 	public DefaultSingleImagePrediction(Context context) {
 		super(context);
-		sanityCheck = new DefaultSanityCheck(context);
 	}
-
 
 	public RandomAccessibleInterval<TO> predict(RandomAccessibleInterval<TI> input, String axes) throws Exception {
 		setInput(input, axes);
@@ -51,6 +53,8 @@ public class DefaultSingleImagePrediction<TI extends RealType<TI>, TO extends Re
 
 	@Override
 	public SanityCheck getSanityCheck() {
+		DefaultSanityCheck sanityCheck = new DefaultSanityCheck();
+		context().inject(sanityCheck);
 		return sanityCheck;
 	}
 }

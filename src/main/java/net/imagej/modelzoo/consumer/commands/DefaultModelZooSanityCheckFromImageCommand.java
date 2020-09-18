@@ -66,10 +66,10 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	private String description = "";
 
 	@Parameter(label = "Prediction input image", persist = false)
-	private Img input;
+	private Dataset input;
 
 	@Parameter(label = "Expected result image", persist = false)
-	private Img inputGroundTruth;
+	private Dataset inputGroundTruth;
 
 	@Parameter(label = "Model prediction", type = ItemIO.OUTPUT)
 	private Dataset output;
@@ -102,7 +102,7 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 			context().service(ModuleService.class).run(prediction, true).get();
 			output = (Dataset) prediction.getOutput("output");
 			ModelZooArchive model = modelZooService.open(modelFile);
-			DefaultSanityCheck.compare(input, (Img)output, inputGroundTruth, model.getTestInput(), model.getTestOutput(), opService);
+			DefaultSanityCheck.compare((Img)input, (Img)output, (Img)inputGroundTruth, model.getTestInput(), model.getTestOutput(), opService);
 		} catch (ExecutionException | InterruptedException | IOException e) {
 			e.printStackTrace();
 		}

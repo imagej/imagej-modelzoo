@@ -101,7 +101,7 @@ public class E01_Prediction {
 	}
 
 	public static void main(String... args) throws Exception {
-//		new E01_Prediction().useService();
-		new E01_Prediction().usePredictionAPI();
+		new E01_Prediction().useService();
+//		new E01_Prediction().usePredictionAPI();
 	}
 }

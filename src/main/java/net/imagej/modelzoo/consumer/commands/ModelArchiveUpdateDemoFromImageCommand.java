@@ -28,23 +28,20 @@
  */
 package net.imagej.modelzoo.consumer.commands;
 
-import io.scif.MissingLibraryException;
+import net.imagej.Dataset;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imglib2.RandomAccessibleInterval;
-import org.scijava.Context;
+import net.imglib2.img.Img;
 import org.scijava.command.Command;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
-import java.io.FileNotFoundException;
 
 @Plugin(type = Command.class, name = "Update modelzoo archive demo image")
 public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 
 	@Parameter(persist = false)
-	private RandomAccessibleInterval inputImage;
+	private Dataset inputImage;
 
 	@Parameter
 	private ModelZooArchive archive;
@@ -59,10 +56,12 @@ public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 //			return;
 //		}
 		try {
-			RandomAccessibleInterval output = modelZooService.predict(archive, inputImage, "XY");
+			RandomAccessibleInterval output = modelZooService.predict(archive, (Img)inputImage, "XY");
 			archive.setTestOutput(output);
 			archive.setTestInput(inputImage);
-
+			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
+				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

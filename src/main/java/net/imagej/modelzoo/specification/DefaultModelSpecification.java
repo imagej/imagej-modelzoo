@@ -84,7 +84,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String defaultTestOutput = "testoutput.tif";
 	final static String dependenciesFileName = "dependencies.yaml";
 
-	final static String modelZooSpecificationVersion = "0.2.0-csbdeep";
+	final static String modelZooSpecificationVersion = "0.2.1-csbdeep";
 	private String modelFileName = "model.yaml";
 
 	private String formatVersion = modelZooSpecificationVersion;
@@ -170,6 +170,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	public void write(File targetDirectory) throws IOException {
 		writeDependenciesFile(targetDirectory);
 		Map<String, Object> data = toMap();
+		// when (re)writing the specification, use the most recent specification version
+		data.put(idFormatVersion, modelZooSpecificationVersion);
 		Yaml yaml = new Yaml();
 		try (FileWriter writer = new FileWriter(new File(targetDirectory, modelFileName))) {
 			yaml.dump(data, writer);
@@ -385,6 +387,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 		this.framework = framework;
 	}
 
+	@Override
+	public void setFormatVersion(String version) {
+		formatVersion = version;
+	}
+
 	private void readMeta(Map<String, Object> obj) {
 		setName((String) obj.get(idName));
 		setDescription((String) obj.get(idDescription));
@@ -556,10 +563,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 			e.printStackTrace();
 		}
 		yaml.dump(data, writer);
-	}
-
-	private void setFormatVersion(String version) {
-		formatVersion = version;
 	}
 
 	private void setLanguage(String language) {

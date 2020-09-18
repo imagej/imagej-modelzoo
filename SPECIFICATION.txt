@@ -1,0 +1,8 @@
+# Changes to the imagej-modelzoo bioimagej.io model specification
+
+## 0.2.1-csbdeep
+- Models trained with 0.2.0-csbdeep have incorrect demo images - input and output test image are normalized. Therefore only demo images from models starting from 0.2.1-csbdeep will be used for the sanity check
+
+## 0.2.0-csbdeep
+- First version
+- The csbdeep is kept in the version as long as we don't fully validate our format to be compatible with an official version.
