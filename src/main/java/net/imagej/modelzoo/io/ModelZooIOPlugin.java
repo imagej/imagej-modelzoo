@@ -174,7 +174,9 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		outStream.close();
 		inputStream.close();
 		DatasetIOService datasetIOService = getContext().service(DatasetIOService.class);
-		return datasetIOService.open(tmpTestInput.getAbsolutePath());
+		Dataset dataset = datasetIOService.open(tmpTestInput.getAbsolutePath());
+		tmpTestInput.delete();
+		return dataset;
 	}
 
 	public void save(String archivePath, ModelSpecification specification, String location) throws IOException {

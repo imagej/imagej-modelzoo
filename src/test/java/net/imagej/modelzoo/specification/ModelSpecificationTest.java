@@ -29,7 +29,9 @@
 package net.imagej.modelzoo.specification;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +50,8 @@ import static org.junit.Assert.assertTrue;
 
 public class ModelSpecificationTest {
 
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
 
 	// example values
 	private final static Map<String, Object> trainingKwargs = Collections.singletonMap("arg1", 1);
@@ -87,7 +91,7 @@ public class ModelSpecificationTest {
 
 		// write spec
 
-		File dir = Files.createTempDirectory("modelzoo").toFile();
+		File dir = folder.getRoot();
 		specification.write(dir);
 
 		// check if files exist and are not empty
@@ -114,7 +118,7 @@ public class ModelSpecificationTest {
 
 		// create spec
 
-		File dir = Files.createTempDirectory("modelzoo").toFile();
+		File dir = folder.getRoot();
 		ModelSpecification specification = new DefaultModelSpecification();
 		setExampleValues(specification);
 

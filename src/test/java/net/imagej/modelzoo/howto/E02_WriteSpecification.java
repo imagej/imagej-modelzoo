@@ -37,7 +37,9 @@ import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +48,9 @@ import java.nio.file.Files;
 import java.util.Arrays;
 
 public class E02_WriteSpecification {
+
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
 
 	@Test
 	public void run() throws IOException {
@@ -87,7 +92,7 @@ public class E02_WriteSpecification {
 		specification.addOutputNode(output);
 
 		// create temporary directory to save model specification to
-		File destination = Files.createTempDirectory("modelzoo-spec").toFile();
+		File destination = folder.getRoot();
 
 		// save model specification
 		specification.write(destination);
