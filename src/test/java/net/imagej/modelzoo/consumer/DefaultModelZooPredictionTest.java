@@ -28,7 +28,6 @@
  */
 package net.imagej.modelzoo.consumer;
 
-import io.scif.MissingLibraryException;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imglib2.RandomAccessibleInterval;
@@ -39,8 +38,6 @@ import net.imglib2.util.Intervals;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
