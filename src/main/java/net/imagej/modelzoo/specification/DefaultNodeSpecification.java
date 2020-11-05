@@ -110,14 +110,13 @@ public abstract class DefaultNodeSpecification implements NodeSpecification {
 	}
 
 	@Override
-	public DefaultNodeSpecification fromMap(Map data) {
+	public void set(Map data) {
 		setName((String) data.get(idNodeName));
 		setAxes((String) data.get(idNodeAxes));
 		setDataType((String) data.get(idNodeDataType));
 		setDataRange((List<?>) data.get(idNodeDataRange));
 		setShape((Map<String, Object>) data.get(idNodeShape));
 		setHalo((List<Integer>) data.get(idNodeHalo));
-		return this;
 	}
 
 	protected abstract Map<String, Object> getShape();

@@ -39,6 +39,13 @@ public class DefaultTransformationSpecification implements TransformationSpecifi
 	private String specification;
 	private Map<String, Object> kwargs;
 
+
+	public static DefaultTransformationSpecification create(Map<String, Object> data) {
+		DefaultTransformationSpecification res = new DefaultTransformationSpecification();
+		res.set(data);
+		return res;
+	}
+
 	@Override
 	public void setSpec(String specification) {
 		this.specification = specification;
@@ -58,10 +65,9 @@ public class DefaultTransformationSpecification implements TransformationSpecifi
 	}
 
 	@Override
-	public DefaultTransformationSpecification fromMap(Map<String, Object> data) {
+	public void set(Map<String, Object> data) {
 		setSpec((String) data.get(idSpec));
 		setKwargs((Map<String, Object>) data.get(idKwargs));
-		return this;
 	}
 
 	@Override

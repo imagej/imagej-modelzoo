@@ -55,6 +55,6 @@ public interface NodeSpecification {
 
 	Map<String, Object> asMap();
 
-	NodeSpecification fromMap(Map data);
+	void set(Map data);
 
 }

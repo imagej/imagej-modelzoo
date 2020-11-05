@@ -29,12 +29,8 @@
 package net.imagej.modelzoo.specification;
 
 import java.util.List;
-import java.util.Map;
 
 public interface OutputNodeSpecification extends NodeSpecification {
-
-	@Override
-	OutputNodeSpecification fromMap(Map data);
 
 	void setShapeReferenceInput(String referenceInputName);
 

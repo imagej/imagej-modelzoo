@@ -41,6 +41,12 @@ public class DefaultOutputNodeSpecification extends DefaultNodeSpecification imp
 	private List<? extends Number> shapeScale;
 	private List<Integer> shapeOffset;
 
+	public static DefaultOutputNodeSpecification create(Map<String, Object> data) {
+		DefaultOutputNodeSpecification res = new DefaultOutputNodeSpecification();
+		res.set(data);
+		return res;
+	}
+
 	@Override
 	public Map<String, Object> getShape() {
 		Map<String, Object> shape = new LinkedHashMap<>();
@@ -56,12 +62,6 @@ public class DefaultOutputNodeSpecification extends DefaultNodeSpecification imp
 		setShapeReferenceInput((String) data.get(idNodeShapeReferenceInput));
 		setShapeScale((List<Number>) data.get(idNodeShapeScale));
 		setShapeOffset((List<Integer>) data.get(idNodeShapeOffset));
-	}
-
-	@Override
-	public DefaultOutputNodeSpecification fromMap(Map data) {
-		super.fromMap(data);
-		return this;
 	}
 
 	@Override

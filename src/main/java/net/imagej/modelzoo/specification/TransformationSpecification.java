@@ -38,7 +38,7 @@ public interface TransformationSpecification {
 
 	Map<String, Object> asMap();
 
-	TransformationSpecification fromMap(Map<String, Object> data);
+	void set(Map<String, Object> data);
 
 	String getSpecification();
 

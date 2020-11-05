@@ -452,11 +452,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private void readInputsOutputs(Map<String, Object> obj) {
 		List<Map> inputs = (List<Map>) obj.get(idInputs);
 		for (Map input : inputs) {
-			addInputNode(new DefaultInputNodeSpecification().fromMap(input));
+			addInputNode(DefaultInputNodeSpecification.create(input));
 		}
 		List<Map> outputs = (List<Map>) obj.get(idOutputs);
 		for (Map output : outputs) {
-			addOutputNode(new DefaultOutputNodeSpecification().fromMap(output));
+			addOutputNode(DefaultOutputNodeSpecification.create(output));
 		}
 	}
 
@@ -474,12 +474,12 @@ public class DefaultModelSpecification implements ModelSpecification {
 			Object oPreprocess = prediction.get(idPredictionPreprocess);
 			if(oPreprocess != null) {
 				if(Map.class.isAssignableFrom(oPreprocess.getClass())) {
-					addPredictionPreprocessing(new DefaultTransformationSpecification().fromMap((Map<String, Object>) oPreprocess));
+					addPredictionPreprocessing(DefaultTransformationSpecification.create((Map<String, Object>) oPreprocess));
 				} else {
 					if(List.class.isAssignableFrom(oPreprocess.getClass())) {
 						List<Map<String, Object>> preprocess = (List<Map<String, Object>>) oPreprocess;
 						for (Map<String, Object> transformation : preprocess) {
-							addPredictionPreprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+							addPredictionPreprocessing(DefaultTransformationSpecification.create(transformation));
 						}
 					}
 				}
@@ -487,12 +487,12 @@ public class DefaultModelSpecification implements ModelSpecification {
 			Object oPostprocess = prediction.get(idPredictionPostprocess);
 			if(oPostprocess != null) {
 				if(Map.class.isAssignableFrom(oPostprocess.getClass())) {
-					addPredictionPostprocessing(new DefaultTransformationSpecification().fromMap((Map<String, Object>) oPostprocess));
+					addPredictionPostprocessing(DefaultTransformationSpecification.create((Map<String, Object>) oPostprocess));
 				} else {
 					if(List.class.isAssignableFrom(oPostprocess.getClass())) {
 						List<Map<String, Object>> postprocess = (List<Map<String, Object>>) oPostprocess;
 						for (Map<String, Object> transformation : postprocess) {
-							addPredictionPostprocessing(new DefaultTransformationSpecification().fromMap(transformation));
+							addPredictionPostprocessing(DefaultTransformationSpecification.create(transformation));
 						}
 					}
 				}

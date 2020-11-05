@@ -40,6 +40,12 @@ public class DefaultInputNodeSpecification extends DefaultNodeSpecification impl
 	private List<Integer> shapeMin;
 	private List<Integer> shapeStep;
 
+	public static DefaultInputNodeSpecification create(Map<String, Object> data) {
+		DefaultInputNodeSpecification res = new DefaultInputNodeSpecification();
+		res.set(data);
+		return res;
+	}
+
 	@Override
 	public Map<String, Object> getShape() {
 		Map<String, Object> shape = new LinkedHashMap<>();
@@ -53,12 +59,6 @@ public class DefaultInputNodeSpecification extends DefaultNodeSpecification impl
 		if (data == null) return;
 		setShapeMin((List<Integer>) data.get(idNodeShapeMin));
 		setShapeStep((List<Integer>) data.get(idNodeShapeStep));
-	}
-
-	@Override
-	public DefaultInputNodeSpecification fromMap(Map data) {
-		super.fromMap(data);
-		return this;
 	}
 
 	@Override
