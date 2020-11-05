@@ -66,6 +66,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 
 	private final static String idFramework = "framework";
 	private final static String idSource = "source";
+	private final static String idGitRepo = "git_repo";
 	private final static String idTestInput = "test_input";
 	private final static String idTestOutput = "test_output";
 	private final static String idInputs = "inputs";
@@ -109,6 +110,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
+	private String gitRepo;
 
 	@Override
 	public boolean readFromZIP(File zippedModel) {
@@ -261,6 +263,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
+	public void setGitRepo(String repo) {
+		this.gitRepo = repo;
+	}
+
+	@Override
 	public List<InputNodeSpecification> getInputs() {
 		return inputNodes;
 	}
@@ -361,6 +368,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
+	public String getGitRepo() {
+		return gitRepo;
+	}
+
+	@Override
 	public String getTestInput() {
 		if(testInput == null) testInput = defaultTestInput;
 		return testInput;
@@ -416,6 +428,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		setLanguage((String) obj.get(idLanguage));
 		setFramework((String) obj.get(idFramework));
 		setSource((String) obj.get(idSource));
+		setGitRepo((String) obj.get(idGitRepo));
 		setTestInput((String) obj.get(idTestInput));
 		setTestOutput((String) obj.get(idTestOutput));
 	}
@@ -518,6 +531,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		data.put(idLanguage, language);
 		data.put(idFramework, framework);
 		data.put(idSource, source);
+		data.put(idGitRepo, gitRepo);
 		data.put(idTestInput, testInput);
 		data.put(idTestOutput, testOutput);
 	}

@@ -10,6 +10,7 @@ format_version: 0.2.0-csbdeep
 language: java
 framework: tensorflow
 source: source
+git_repo: https://github.com/name/repo
 test_input: input.png
 test_output: output.png
 inputs:

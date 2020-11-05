@@ -66,6 +66,7 @@ public class ModelSpecificationTest {
 	private final static String preprocessingSpec = "MyClass::preprocessing";
 	private final static String postprocessingSpec = "MyClass::postprocessing";
 	private final static String source = "source";
+	private final static String gitRepo = "https://github.com/name/repo";
 	private final static String citationText = "Publication name, authors, yournal";
 	private final static String doi = "DOI";
 	private final static List<String> tags = Arrays.asList("tag1", "tag2");
@@ -149,6 +150,7 @@ public class ModelSpecificationTest {
 		specification.setDocumentation(documentation);
 		specification.setLicense(license);
 		specification.setSource(source);
+		specification.setGitRepo(gitRepo);
 		specification.setTags(tags);
 		CitationSpecification citation = new DefaultCitationSpecification();
 		citation.setCitationText(citationText);
@@ -196,6 +198,7 @@ public class ModelSpecificationTest {
 		assertEquals(documentation, specification.getDocumentation());
 		assertEquals(license, specification.getLicense());
 		assertEquals(source, specification.getSource());
+		assertEquals(gitRepo, specification.getGitRepo());
 		assertArrayEquals(tags.toArray(), specification.getTags().toArray());
 		assertEquals(1, specification.getCitations().size());
 		CitationSpecification citation = new DefaultCitationSpecification();

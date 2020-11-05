@@ -95,6 +95,8 @@ public interface ModelSpecification {
 
 	void setTrainingKwargs(Map<String, Object> trainingKwargs);
 
+	void setGitRepo(String repo);
+
 	List<InputNodeSpecification> getInputs();
 
 	List<OutputNodeSpecification> getOutputs();
@@ -134,6 +136,8 @@ public interface ModelSpecification {
 	List<TransformationSpecification> getPredictionPostprocessing();
 
 	String getModelFileName();
+
+	String getGitRepo();
 
 	void setFramework(String framework);
 
