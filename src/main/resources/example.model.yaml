@@ -1,7 +1,7 @@
 name: model name
 description: description
 cite:
-  - {text: 'Publication name, authors, yournal', doi: DOI}
+  - {text: 'Publication name, authors, journal', doi: DOI}
 authors: [author1, author2]
 documentation: DOCUMENTATION_LINK
 tags: [tag1, tag2]

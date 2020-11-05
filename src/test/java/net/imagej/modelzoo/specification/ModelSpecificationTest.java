@@ -67,7 +67,7 @@ public class ModelSpecificationTest {
 	private final static String postprocessingSpec = "MyClass::postprocessing";
 	private final static String source = "source";
 	private final static String gitRepo = "https://github.com/name/repo";
-	private final static String citationText = "Publication name, authors, yournal";
+	private final static String citationText = "Publication name, authors, journal";
 	private final static String doi = "DOI";
 	private final static List<String> tags = Arrays.asList("tag1", "tag2");
 	private final static String inputName = "input";
