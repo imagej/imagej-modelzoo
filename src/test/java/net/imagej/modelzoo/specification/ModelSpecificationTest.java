@@ -82,6 +82,7 @@ public class ModelSpecificationTest {
 	private final static List<Double> shapeScale = Arrays.asList(2., 2., 2., 1.);
 	private final static String testInput = "input.png";
 	private final static String testOutput = "output.png";
+	private final static Map<String, Object> attachments = Collections.singletonMap("manifest", "./manifest/README.txt");
 
 	@Test
 	public void testEmptySpec() throws IOException {
@@ -158,6 +159,7 @@ public class ModelSpecificationTest {
 		specification.addCitation(citation);
 		specification.setTestInput(testInput);
 		specification.setTestOutput(testOutput);
+		attachments.forEach((s, o) -> specification.getAttachments().put(s, o));
 		// training
 		specification.setTrainingKwargs(trainingKwargs);
 		specification.setTrainingSource(trainingSource);
@@ -199,6 +201,7 @@ public class ModelSpecificationTest {
 		assertEquals(license, specification.getLicense());
 		assertEquals(source, specification.getSource());
 		assertEquals(gitRepo, specification.getGitRepo());
+		assertEquals(attachments, specification.getAttachments());
 		assertArrayEquals(tags.toArray(), specification.getTags().toArray());
 		assertEquals(1, specification.getCitations().size());
 		CitationSpecification citation = new DefaultCitationSpecification();

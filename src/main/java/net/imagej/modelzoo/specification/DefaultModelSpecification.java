@@ -42,6 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idFramework = "framework";
 	private final static String idSource = "source";
 	private final static String idGitRepo = "git_repo";
+	private final static String idAttachments = "attachments";
 	private final static String idTestInput = "test_input";
 	private final static String idTestOutput = "test_output";
 	private final static String idInputs = "inputs";
@@ -111,6 +113,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
 	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
 	private String gitRepo;
+	private final Map<String, Object> attachments = new HashMap<>();
 
 	@Override
 	public boolean readFromZIP(File zippedModel) {
@@ -373,6 +376,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
+	public Map<String, Object> getAttachments() {
+		return attachments;
+	}
+
+	@Override
 	public String getTestInput() {
 		if(testInput == null) testInput = defaultTestInput;
 		return testInput;
@@ -419,6 +427,14 @@ public class DefaultModelSpecification implements ModelSpecification {
 				setAuthors(((List<String>) authors));
 			} else if (String.class.isAssignableFrom(authors.getClass())) {
 				setAuthors(Arrays.asList((String) authors));
+			}
+		}
+		Object attachments = obj.get(idAttachments);
+		if (attachments != null) {
+			if (Map.class.isAssignableFrom(attachments.getClass())) {
+				((Map<?, ?>) attachments).forEach((s, s2) -> {
+					getAttachments().put(s.toString(), s2);
+				});
 			}
 		}
 		setDocumentation((String) obj.get(idDocumentation));
@@ -532,6 +548,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		data.put(idFramework, framework);
 		data.put(idSource, source);
 		data.put(idGitRepo, gitRepo);
+		data.put(idAttachments, attachments);
 		data.put(idTestInput, testInput);
 		data.put(idTestOutput, testOutput);
 	}

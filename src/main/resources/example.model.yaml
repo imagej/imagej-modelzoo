@@ -11,6 +11,7 @@ language: java
 framework: tensorflow
 source: source
 git_repo: https://github.com/name/repo
+attachments: {manifest: ./manifest/README.txt}
 test_input: input.png
 test_output: output.png
 inputs:

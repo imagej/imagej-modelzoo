@@ -139,6 +139,8 @@ public interface ModelSpecification {
 
 	String getGitRepo();
 
+	Map<String, Object> getAttachments();
+
 	void setFramework(String framework);
 
 	void setFormatVersion(String formatVersion);
