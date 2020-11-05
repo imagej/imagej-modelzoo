@@ -88,7 +88,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	final static String dependenciesFileName = "dependencies.yaml";
 
 	final static String modelZooSpecificationVersion = "0.2.1-csbdeep";
-	private String modelFileName = "model.yaml";
+	private String modelFileName = "my.model.yaml";
 
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
