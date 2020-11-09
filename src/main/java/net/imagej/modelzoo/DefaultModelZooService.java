@@ -28,6 +28,8 @@
  */
 package net.imagej.modelzoo;
 
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
@@ -68,6 +70,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Parameter
 	private PluginService pluginService;
+
+	@Parameter
+	private DatasetService datasetService;
 
 	@Parameter
 	private CommandService commandService;
@@ -292,6 +297,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		module.setInput(modelFileParameter, value);
 		module.resolveInput(modelFileParameter);
 		module.resolveOutput(outputParameter);
+		if(!(input instanceof Dataset)) {
+			input = datasetService.create(input);
+		}
 		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true,
 				modelFileParameter, value,
 				inputParameter, input,
