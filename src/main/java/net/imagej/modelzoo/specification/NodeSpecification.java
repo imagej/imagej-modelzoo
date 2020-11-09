@@ -52,9 +52,4 @@ public interface NodeSpecification {
 	void setDataRange(List<?> dataRange);
 
 	void setHalo(List<Integer> halo);
-
-	Map<String, Object> asMap();
-
-	void set(Map data);
-
 }

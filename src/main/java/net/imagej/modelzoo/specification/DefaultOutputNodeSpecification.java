@@ -28,41 +28,14 @@
  */
 package net.imagej.modelzoo.specification;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DefaultOutputNodeSpecification extends DefaultNodeSpecification implements OutputNodeSpecification {
 
-	private final static String idNodeShapeReferenceInput = "reference_input";
-	private final static String idNodeShapeScale = "scale";
-	private final static String idNodeShapeOffset = "offset";
 	private String referenceInputName;
 	private List<? extends Number> shapeScale;
 	private List<Integer> shapeOffset;
-
-	public static DefaultOutputNodeSpecification create(Map<String, Object> data) {
-		DefaultOutputNodeSpecification res = new DefaultOutputNodeSpecification();
-		res.set(data);
-		return res;
-	}
-
-	@Override
-	public Map<String, Object> getShape() {
-		Map<String, Object> shape = new LinkedHashMap<>();
-		shape.put(idNodeShapeReferenceInput, referenceInputName);
-		shape.put(idNodeShapeScale, shapeScale);
-		shape.put(idNodeShapeOffset, shapeOffset);
-		return shape;
-	}
-
-	@Override
-	protected void setShape(Map<String, Object> data) {
-		if (data == null) return;
-		setShapeReferenceInput((String) data.get(idNodeShapeReferenceInput));
-		setShapeScale((List<Number>) data.get(idNodeShapeScale));
-		setShapeOffset((List<Integer>) data.get(idNodeShapeOffset));
-	}
+	private List<TransformationSpecification> postprocessing;
 
 	@Override
 	public void setShapeReferenceInput(String referenceInputName) {
@@ -80,6 +53,11 @@ public class DefaultOutputNodeSpecification extends DefaultNodeSpecification imp
 	}
 
 	@Override
+	public void setPostprocessing(List<TransformationSpecification> postprocessing) {
+		this.postprocessing = postprocessing;
+	}
+
+	@Override
 	public String getReferenceInputName() {
 		return referenceInputName;
 	}
@@ -92,5 +70,10 @@ public class DefaultOutputNodeSpecification extends DefaultNodeSpecification imp
 	@Override
 	public List<Integer> getShapeOffset() {
 		return shapeOffset;
+	}
+
+	@Override
+	public List<TransformationSpecification> getPostprocessing() {
+		return postprocessing;
 	}
 }

@@ -28,19 +28,6 @@
  */
 package net.imagej.modelzoo.specification;
 
-import java.util.Map;
-
 public interface TransformationSpecification {
-
-	void setSpec(String specification);
-
-	void setKwargs(Map<String, Object> kwargs);
-
-	Map<String, Object> asMap();
-
-	void set(Map<String, Object> data);
-
-	String getSpecification();
-
-	Map<String, Object> getKwargs();
+	String getName();
 }

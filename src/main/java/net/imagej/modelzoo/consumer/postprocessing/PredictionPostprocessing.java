@@ -29,7 +29,9 @@
 
 package net.imagej.modelzoo.consumer.postprocessing;
 
+import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.Context;
@@ -49,11 +51,12 @@ public class PredictionPostprocessing implements Runnable {
 
 	@Override
 	public void run() {
-		//TODO
-		// (1) get postprocessing steps from model config
-		// (2) run each postprocessing command with the input according to the config
-		// (3) collect outputs of postprocessing
 		model.getOutputNodes().forEach(OutputImageNode::makeDataFit);
+		for (OutputImageNode<?, ?> outputNode : model.getOutputNodes()) {
+			for (NodeProcessor processor : outputNode.getProcessors()) {
+				processor.process(model, outputNode);
+			}
+		}
 		model.getOutputNodes().forEach(this::addOutput);
 	}
 

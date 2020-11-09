@@ -35,17 +35,17 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class OutputImageNode<T extends RealType<T> & NativeType<T>, U extends RealType<U> & NativeType<U>> extends ImageNode<T> {
-	private InputImageNode<U> reference;
+public class OutputImageNode<O extends RealType<O> & NativeType<O>, I extends RealType<I> & NativeType<I>> extends ImageNode<O> {
+	private InputImageNode<I> reference;
 
 	public void makeDataFit() {
-		RandomAccessibleInterval<T> img = getData();
+		RandomAccessibleInterval<O> img = getData();
 		img = toActualSize(img);
 		img = Views.dropSingletonDimensions(img);
 		setData(img);
 	}
 
-	private RandomAccessibleInterval<T> toActualSize(RandomAccessibleInterval<T> img) {
+	private RandomAccessibleInterval<O> toActualSize(RandomAccessibleInterval<O> img) {
 
 		if (getReference() == null) return img;
 
@@ -86,11 +86,11 @@ public class OutputImageNode<T extends RealType<T> & NativeType<T>, U extends Re
 		return Views.interval(im, new FinalInterval(min, max));
 	}
 
-	public void setReference(InputImageNode<U> input) {
+	public void setReference(InputImageNode<I> input) {
 		this.reference = input;
 	}
 
-	public InputImageNode<U> getReference() {
+	public InputImageNode<I> getReference() {
 		return reference;
 	}
 }

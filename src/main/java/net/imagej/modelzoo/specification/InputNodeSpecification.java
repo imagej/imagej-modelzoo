@@ -36,7 +36,11 @@ public interface InputNodeSpecification extends NodeSpecification {
 
 	void setShapeStep(List<Integer> shapeStep);
 
+	void setPreprocessing(List<TransformationSpecification> preprocessing);
+
 	List<Integer> getShapeMin();
 
 	List<Integer> getShapeStep();
+
+	List<TransformationSpecification> getPreprocessing();
 }

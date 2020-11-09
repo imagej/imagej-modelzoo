@@ -28,6 +28,8 @@
  */
 package net.imagej.modelzoo.specification;
 
+import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
+import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +38,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -61,10 +62,8 @@ public class ModelSpecificationTest {
 	private final static String documentation = "DOCUMENTATION_LINK";
 	private final static String license = "bsd";
 	private final static String modelName = "model name";
-	private final static Map<String, Object> preprocessingKwargs = Collections.singletonMap("mean", 100);
-	private final static Map<String, Object> postprocessingKwargs = Collections.singletonMap("mean", 100);
-	private final static String preprocessingSpec = "MyClass::preprocessing";
-	private final static String postprocessingSpec = "MyClass::postprocessing";
+	private final static Double mean = 100.;
+	private final static Double std = 10.;
 	private final static String source = "source";
 	private final static String gitRepo = "https://github.com/name/repo";
 	private final static String citationText = "Publication name, authors, journal";
@@ -163,15 +162,6 @@ public class ModelSpecificationTest {
 		// training
 		specification.setTrainingKwargs(trainingKwargs);
 		specification.setTrainingSource(trainingSource);
-		// prediction
-		TransformationSpecification preprocessing = new DefaultTransformationSpecification();
-		preprocessing.setKwargs(preprocessingKwargs);
-		preprocessing.setSpec(preprocessingSpec);
-		specification.addPredictionPreprocessing(preprocessing);
-		TransformationSpecification postprocessing = new DefaultTransformationSpecification();
-		postprocessing.setKwargs(postprocessingKwargs);
-		postprocessing.setSpec(postprocessingSpec);
-		specification.addPredictionPostprocessing(postprocessing);
 		// input node
 		InputNodeSpecification inputNode = new DefaultInputNodeSpecification();
 		inputNode.setShapeMin(shapeMin);
@@ -181,6 +171,10 @@ public class ModelSpecificationTest {
 		inputNode.setDataType(dataType);
 		inputNode.setName(inputName);
 		inputNode.setHalo(halo);
+		ZeroMeanUnitVarianceTransformation preprocessing = new ZeroMeanUnitVarianceTransformation();
+		preprocessing.setMean(mean);
+		preprocessing.setStd(std);
+		inputNode.setPreprocessing(Collections.singletonList(preprocessing));
 		specification.addInputNode(inputNode);
 		// output node
 		OutputNodeSpecification outputNode = new DefaultOutputNodeSpecification();
@@ -189,6 +183,10 @@ public class ModelSpecificationTest {
 		outputNode.setShapeOffset(shapeOffset);
 		outputNode.setShapeReferenceInput(inputName);
 		outputNode.setShapeScale(shapeScale);
+		ScaleLinearTransformation postprocessing = new ScaleLinearTransformation();
+		postprocessing.setGain(std);
+		postprocessing.setOffset(mean);
+		outputNode.setPostprocessing(Collections.singletonList(postprocessing));
 		specification.addOutputNode(outputNode);
 	}
 
@@ -213,15 +211,7 @@ public class ModelSpecificationTest {
 		// training
 		assertTrue(trainingKwargs.equals(specification.getTrainingKwargs()));
 		assertEquals(trainingSource, specification.getTrainingSource());
-		/// prediction
-		assertNotNull(specification.getPredictionPreprocessing());
-		assertEquals(1, specification.getPredictionPreprocessing().size());
-		assertTrue(preprocessingKwargs.equals(specification.getPredictionPreprocessing().get(0).getKwargs()));
-		assertEquals(preprocessingSpec, specification.getPredictionPreprocessing().get(0).getSpecification());
-		assertNotNull(specification.getPredictionPostprocessing());
-		assertEquals(1, specification.getPredictionPostprocessing().size());
-		assertTrue(postprocessingKwargs.equals(specification.getPredictionPostprocessing().get(0).getKwargs()));
-		assertEquals(postprocessingSpec, specification.getPredictionPostprocessing().get(0).getSpecification());
+
 		// input
 		assertEquals(1, specification.getInputs().size());
 		InputNodeSpecification _input = specification.getInputs().get(0);
@@ -232,14 +222,26 @@ public class ModelSpecificationTest {
 		assertArrayEquals(shapeStep.toArray(), _input.getShapeStep().toArray());
 		assertArrayEquals(dataRange.toArray(), _input.getDataRange().toArray());
 		assertArrayEquals(halo.toArray(), _input.getHalo().toArray());
-		assertEquals(1, specification.getInputs().size());
+		assertNotNull(_input.getPreprocessing());
+		assertEquals(1, _input.getPreprocessing().size());
+		assertEquals(ZeroMeanUnitVarianceTransformation.name, _input.getPreprocessing().get(0).getName());
+		assertEquals(mean, ((ZeroMeanUnitVarianceTransformation)_input.getPreprocessing().get(0)).getMean());
+		assertEquals(std, ((ZeroMeanUnitVarianceTransformation)_input.getPreprocessing().get(0)).getStd());
+
 		// output
+		assertEquals(1, specification.getOutputs().size());
 		OutputNodeSpecification _output = specification.getOutputs().get(0);
 		assertEquals(output, _output.getName());
 		assertEquals(axes, _output.getAxes());
 		assertEquals(inputName, _output.getReferenceInputName());
 		assertArrayEquals(shapeOffset.toArray(), _output.getShapeOffset().toArray());
 		assertArrayEquals(shapeScale.toArray(), _output.getShapeScale().toArray());
+		assertNotNull(_output.getPostprocessing());
+		assertEquals(1, _output.getPostprocessing().size());
+		assertEquals(ScaleLinearTransformation.name, _output.getPostprocessing().get(0).getName());
+		assertEquals(std, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getGain());
+		assertEquals(mean, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getOffset());
+
 	}
 
 }

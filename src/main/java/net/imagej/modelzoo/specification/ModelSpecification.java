@@ -67,10 +67,6 @@ public interface ModelSpecification {
 
 	void write(Path specPath) throws IOException;
 
-	void addPredictionPreprocessing(TransformationSpecification transformationSpecification);
-
-	void addPredictionPostprocessing(TransformationSpecification transformationSpecification);
-
 	void setDescription(String description);
 
 	void setName(String name);
@@ -109,8 +105,6 @@ public interface ModelSpecification {
 
 	String getPredictionWeightsSource();
 
-	String getPredictionDependencies();
-
 	Map<String, Object> getTrainingKwargs();
 
 	String getName();
@@ -130,10 +124,6 @@ public interface ModelSpecification {
 	String getSource();
 
 	String getTrainingSource();
-
-	List<TransformationSpecification> getPredictionPreprocessing();
-
-	List<TransformationSpecification> getPredictionPostprocessing();
 
 	String getModelFileName();
 

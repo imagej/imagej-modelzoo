@@ -46,6 +46,11 @@ public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultMod
 	private final List<ModelZooAxis> axes = new ArrayList<>();
 	private List<AxisType> mapping;
 
+	private final List<NodeProcessor> processors;
+
+	public ImageNode() {
+		processors = new ArrayList<>();
+	}
 
 	public void clearAxes() {
 		axes.clear();
@@ -128,6 +133,10 @@ public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultMod
 
 	public T getDataType() {
 		return dataType;
+	}
+
+	public List<NodeProcessor> getProcessors() {
+		return processors;
 	}
 
 }

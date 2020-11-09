@@ -28,6 +28,7 @@
  */
 package net.imagej.modelzoo.specification;
 
+import net.imagej.modelzoo.specification.io.SpecificationReaderWriterV1;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -41,7 +42,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,12 +74,9 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String idInputs = "inputs";
 	private final static String idOutputs = "outputs";
 	private final static String idPrediction = "prediction";
-	private final static String idPredictionPreprocess = "preprocess";
 	private final static String idPredictionWeights = "weights";
 	private final static String idPredictionWeightsSource = "source";
 	private final static String idPredictionWeightsHash = "hash";
-	private final static String idPredictionPostprocess = "postprocess";
-	private final static String idPredictionDependencies = "dependencies";
 	private final static String idTraining = "training";
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";
@@ -87,7 +84,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final static String defaultTestOutput = "testoutput.tif";
 	final static String dependenciesFileName = "dependencies.yaml";
 
-	final static String modelZooSpecificationVersion = "0.2.1-csbdeep";
+	final static String modelZooSpecificationVersion = "0.3.0";
 	private String modelFileName = "my.model.yaml";
 
 	private String formatVersion = modelZooSpecificationVersion;
@@ -97,7 +94,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String testOutput = defaultTestOutput;
 	private String predictionWeightsSource = "./variables/variables";
 
-	private String predictionDependencies = "./" + dependenciesFileName;
 	private Map<String, Object> trainingKwargs;
 	private String name;
 	private String description;
@@ -110,8 +106,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private final List<InputNodeSpecification> inputNodes = new ArrayList<>();
 	private final List<OutputNodeSpecification> outputNodes = new ArrayList<>();
 	private String trainingSource;
-	private final List<TransformationSpecification> predictionPreprocessing = new ArrayList<>();
-	private final List<TransformationSpecification> predictionPostprocessing = new ArrayList<>();
 	private String gitRepo;
 	private final Map<String, Object> attachments = new HashMap<>();
 
@@ -155,15 +149,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 		Map<String, Object> obj = yaml.load(stream);
 //		System.out.println(obj);
 		if (obj == null) return false;
-		readFromMap(obj);
+		SpecificationReaderWriterV1.read(this, obj);
 		return true;
-	}
-
-	private void readFromMap(Map<String, Object> obj) {
-		readMeta(obj);
-		readInputsOutputs(obj);
-		readTraining(obj);
-		readPrediction(obj);
 	}
 
 	@Override
@@ -183,6 +170,10 @@ public class DefaultModelSpecification implements ModelSpecification {
 		}
 	}
 
+	public Map<String, Object> toMap() {
+		return SpecificationReaderWriterV1.write(this);
+	}
+
 	@Override
 	public void write(Path modelSpecificationPath) throws IOException {
 		Map<String, Object> data = toMap();
@@ -193,16 +184,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 		try (Writer writer = Files.newBufferedWriter(modelSpecificationPath)) {
 			yaml.dump(data, writer);
 		}
-	}
-
-	@Override
-	public void addPredictionPreprocessing(TransformationSpecification transformationSpecification) {
-		predictionPreprocessing.add(transformationSpecification);
-	}
-
-	@Override
-	public void addPredictionPostprocessing(TransformationSpecification transformationSpecification) {
-		predictionPostprocessing.add(transformationSpecification);
 	}
 
 	@Override
@@ -301,11 +282,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public String getPredictionDependencies() {
-		return predictionDependencies;
-	}
-
-	@Override
 	public Map<String, Object> getTrainingKwargs() {
 		return trainingKwargs;
 	}
@@ -356,16 +332,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public List<TransformationSpecification> getPredictionPreprocessing() {
-		return predictionPreprocessing;
-	}
-
-	@Override
-	public List<TransformationSpecification> getPredictionPostprocessing() {
-		return predictionPostprocessing;
-	}
-
-	@Override
 	public String getModelFileName() {
 		return modelFileName;
 	}
@@ -412,172 +378,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 		formatVersion = version;
 	}
 
-	private void readMeta(Map<String, Object> obj) {
-		setName((String) obj.get(idName));
-		setDescription((String) obj.get(idDescription));
-		if(obj.get(idCite) != null && List.class.isAssignableFrom(obj.get(idCite).getClass())) {
-			List<Map> citations = (List<Map>) obj.get(idCite);
-			for (Map citation : citations) {
-				addCitation(new DefaultCitationSpecification().fromMap(citation));
-			}
-		}
-		Object authors = obj.get(idAuthors);
-		if (authors != null) {
-			if (List.class.isAssignableFrom(authors.getClass())) {
-				setAuthors(((List<String>) authors));
-			} else if (String.class.isAssignableFrom(authors.getClass())) {
-				setAuthors(Arrays.asList((String) authors));
-			}
-		}
-		Object attachments = obj.get(idAttachments);
-		if (attachments != null) {
-			if (Map.class.isAssignableFrom(attachments.getClass())) {
-				((Map<?, ?>) attachments).forEach((s, s2) -> {
-					getAttachments().put(s.toString(), s2);
-				});
-			}
-		}
-		setDocumentation((String) obj.get(idDocumentation));
-		setTags((List<String>) obj.get(idTags));
-		setLicense((String) obj.get(idLicense));
-		setFormatVersion((String) obj.get(idFormatVersion));
-		setLanguage((String) obj.get(idLanguage));
-		setFramework((String) obj.get(idFramework));
-		setSource((String) obj.get(idSource));
-		setGitRepo((String) obj.get(idGitRepo));
-		setTestInput((String) obj.get(idTestInput));
-		setTestOutput((String) obj.get(idTestOutput));
-	}
-
-	private void readInputsOutputs(Map<String, Object> obj) {
-		List<Map> inputs = (List<Map>) obj.get(idInputs);
-		for (Map input : inputs) {
-			addInputNode(DefaultInputNodeSpecification.create(input));
-		}
-		List<Map> outputs = (List<Map>) obj.get(idOutputs);
-		for (Map output : outputs) {
-			addOutputNode(DefaultOutputNodeSpecification.create(output));
-		}
-	}
-
-	private void readTraining(Map<String, Object> obj) {
-		Map<String, Object> training = (Map<String, Object>) obj.get(idTraining);
-		if (training != null) {
-			setTrainingSource((String) training.get(idTrainingSource));
-			setTrainingKwargs((Map<String, Object>) training.get(idTrainingKwargs));
-		}
-	}
-
-	private void readPrediction(Map<String, Object> obj) {
-		Map<String, Object> prediction = (Map<String, Object>) obj.get(idPrediction);
-		if (prediction != null) {
-			Object oPreprocess = prediction.get(idPredictionPreprocess);
-			if(oPreprocess != null) {
-				if(Map.class.isAssignableFrom(oPreprocess.getClass())) {
-					addPredictionPreprocessing(DefaultTransformationSpecification.create((Map<String, Object>) oPreprocess));
-				} else {
-					if(List.class.isAssignableFrom(oPreprocess.getClass())) {
-						List<Map<String, Object>> preprocess = (List<Map<String, Object>>) oPreprocess;
-						for (Map<String, Object> transformation : preprocess) {
-							addPredictionPreprocessing(DefaultTransformationSpecification.create(transformation));
-						}
-					}
-				}
-			}
-			Object oPostprocess = prediction.get(idPredictionPostprocess);
-			if(oPostprocess != null) {
-				if(Map.class.isAssignableFrom(oPostprocess.getClass())) {
-					addPredictionPostprocessing(DefaultTransformationSpecification.create((Map<String, Object>) oPostprocess));
-				} else {
-					if(List.class.isAssignableFrom(oPostprocess.getClass())) {
-						List<Map<String, Object>> postprocess = (List<Map<String, Object>>) oPostprocess;
-						for (Map<String, Object> transformation : postprocess) {
-							addPredictionPostprocessing(DefaultTransformationSpecification.create(transformation));
-						}
-					}
-				}
-			}
-			setPredictionWeightsSource((String) prediction.get(idPredictionWeightsSource));
-			setPredictionDependencies((String) prediction.get(idPredictionDependencies));
-		}
-	}
-
-	private void writePrediction(Map<String, Object> data) {
-		Map<String, Object> prediction = new LinkedHashMap<>();
-		Map<String, Object> weights = new LinkedHashMap<>();
-		weights.put(idPredictionWeightsSource, predictionWeightsSource);
-		prediction.put(idPredictionWeights, weights);
-		if (predictionPreprocessing != null)
-			prediction.put(idPredictionPreprocess, buildTransformationList(predictionPreprocessing));
-		if (predictionPostprocessing != null)
-			prediction.put(idPredictionPostprocess, buildTransformationList(predictionPostprocessing));
-		prediction.put(idPredictionDependencies, predictionDependencies);
-		data.put(idPrediction, prediction);
-	}
-
-	private List<Map<String, Object>> buildTransformationList(List<TransformationSpecification> transformations) {
-		List<Map<String, Object>> res = new ArrayList<>();
-		for (TransformationSpecification transformation : transformations) {
-			res.add(transformation.asMap());
-		}
-		return res;
-	}
-
-	private void writeTraining(Map<String, Object> data) {
-		Map<String, Object> training = new LinkedHashMap<>();
-		training.put(idTrainingSource, trainingSource);
-		if (trainingKwargs != null) training.put(idTrainingKwargs, trainingKwargs);
-		data.put(idTraining, training);
-	}
-
-	private void writeInputsOutputs(Map<String, Object> data) {
-		data.put(idInputs, buildInputList());
-		data.put(idOutputs, buildOutputList());
-	}
-
-	private void writeMeta(Map<String, Object> data) {
-		data.put(idName, name);
-		data.put(idDescription, description);
-		data.put(idCite, buildCitationList());
-		data.put(idAuthors, authors);
-		data.put(idDocumentation, documentation);
-		data.put(idTags, tags);
-		data.put(idLicense, license);
-		data.put(idFormatVersion, formatVersion);
-		data.put(idLanguage, language);
-		data.put(idFramework, framework);
-		data.put(idSource, source);
-		data.put(idGitRepo, gitRepo);
-		data.put(idAttachments, attachments);
-		data.put(idTestInput, testInput);
-		data.put(idTestOutput, testOutput);
-	}
-
-	private List<Map<String, Object>> buildInputList() {
-		List<Map<String, Object>> inputs = new ArrayList<>();
-		for (InputNodeSpecification input : this.inputNodes) {
-			inputs.add(input.asMap());
-		}
-		return inputs;
-	}
-
-	private List<Map<String, Object>> buildOutputList() {
-		List<Map<String, Object>> outputs = new ArrayList<>();
-		for (OutputNodeSpecification output : this.outputNodes) {
-			outputs.add(output.asMap());
-		}
-		return outputs;
-	}
-
-	private List<Map<String, Object>> buildCitationList() {
-		List<Map<String, Object>> cite = new ArrayList<>();
-		for (CitationSpecification citation : citations) {
-			cite.add(citation.asMap());
-
-		}
-		return cite;
-	}
-
 	private static void writeDependenciesFile(File targetDirectory) {
 		Map<String, Object> data = new LinkedHashMap<>();
 		List<String> dependencies = new ArrayList<>();
@@ -596,29 +396,16 @@ public class DefaultModelSpecification implements ModelSpecification {
 		yaml.dump(data, writer);
 	}
 
-	private void setLanguage(String language) {
+	public void setLanguage(String language) {
 		this.language = language;
 	}
 
-	private void setPredictionWeightsSource(String weightsSource) {
+	public void setPredictionWeightsSource(String weightsSource) {
 		this.predictionWeightsSource = weightsSource;
-	}
-
-	private void setPredictionDependencies(String predictionDependencies) {
-		this.predictionDependencies = predictionDependencies;
 	}
 
 	public void setModelFileName(String modelFileName) {
 		this.modelFileName = modelFileName;
-	}
-
-	public Map<String, Object> toMap() {
-		Map<String, Object> data = new LinkedHashMap<>();
-		writeMeta(data);
-		writeInputsOutputs(data);
-		writeTraining(data);
-		writePrediction(data);
-		return data;
 	}
 
 	private static InputStream extractFile(File zipFile, String fileName) throws IOException {
@@ -626,8 +413,4 @@ public class DefaultModelSpecification implements ModelSpecification {
 		return zf.getInputStream(zf.getEntry(fileName));
 	}
 
-	@Override
-	public String toString() {
-		return toMap().toString();
-	}
 }

@@ -26,57 +26,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.specification;
+package net.imagej.modelzoo.consumer.model;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import net.imagej.modelzoo.specification.TransformationSpecification;
+import org.scijava.plugin.SciJavaPlugin;
 
-public class DefaultTransformationSpecification implements TransformationSpecification {
-
-	private final static String idSpec = "spec";
-	private final static String idKwargs = "kwargs";
-
-	private String specification;
-	private Map<String, Object> kwargs;
-
-
-	public static DefaultTransformationSpecification create(Map<String, Object> data) {
-		DefaultTransformationSpecification res = new DefaultTransformationSpecification();
-		res.set(data);
-		return res;
-	}
-
-	@Override
-	public void setSpec(String specification) {
-		this.specification = specification;
-	}
-
-	@Override
-	public void setKwargs(Map<String, Object> kwargs) {
-		this.kwargs = kwargs;
-	}
-
-	@Override
-	public Map<String, Object> asMap() {
-		Map<String, Object> res = new LinkedHashMap<>();
-		res.put(idSpec, specification);
-		res.put(idKwargs, kwargs);
-		return res;
-	}
-
-	@Override
-	public void set(Map<String, Object> data) {
-		setSpec((String) data.get(idSpec));
-		setKwargs((Map<String, Object>) data.get(idKwargs));
-	}
-
-	@Override
-	public String getSpecification() {
-		return specification;
-	}
-
-	@Override
-	public Map<String, Object> getKwargs() {
-		return kwargs;
-	}
+public interface NodeProcessor<T extends TransformationSpecification> extends Runnable, SciJavaPlugin {
+	default void setReference(String reference){}
+	default String getReference() { return null; }
+	void process(ModelZooModel model, ModelZooNode<?> node);
+	void readSpecification(T specification);
 }

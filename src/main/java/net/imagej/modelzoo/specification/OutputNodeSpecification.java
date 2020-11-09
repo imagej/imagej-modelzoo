@@ -38,9 +38,13 @@ public interface OutputNodeSpecification extends NodeSpecification {
 
 	void setShapeOffset(List<Integer> shapeOffset);
 
+	void setPostprocessing(List<TransformationSpecification> postprocessing);
+
 	String getReferenceInputName();
 
 	List<? extends Number> getShapeScale();
 
 	List<Integer> getShapeOffset();
+
+	List<TransformationSpecification> getPostprocessing();
 }

@@ -29,7 +29,9 @@
 
 package net.imagej.modelzoo.consumer.preprocessing;
 
+import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.NodeProcessor;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
@@ -38,25 +40,17 @@ public class PredictionPreprocessing implements Runnable {
 
 	private ModelZooModel model;
 
-	@Parameter
-	CommandService commandService;
-
 	public PredictionPreprocessing(Context context) {
 		context.inject(this);
 	}
 
 	@Override
 	public void run() {
-		//TODO
-		// (1) get preprocessing steps from model config
-		// (2) run each preprocessing command with the input according to the config
-		// (3) set model node data from preprocessed outputs
-//		try {
-
-//			commandService.run(FitInputDataCommand.class, false, "model", model).get();
-//		} catch (InterruptedException | ExecutionException e) {
-//			e.printStackTrace();
-//		}
+		for (InputImageNode<?> inputNode : model.getInputNodes()) {
+			for (NodeProcessor processor : inputNode.getProcessors()) {
+				processor.process(model, inputNode);
+			}
+		}
 	}
 
 	public void setModel(ModelZooModel model) {

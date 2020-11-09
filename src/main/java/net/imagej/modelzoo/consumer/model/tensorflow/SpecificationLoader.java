@@ -33,6 +33,7 @@ import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.model.ImageNode;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.Tiling;
 import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
@@ -42,10 +43,15 @@ import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
+import org.scijava.Context;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.PluginInfo;
+import org.scijava.plugin.PluginService;
 import org.tensorflow.framework.SignatureDef;
 
 import java.util.ArrayList;
@@ -54,12 +60,19 @@ import java.util.List;
 
 class SpecificationLoader {
 
-	private final LogService log;
+	@Parameter
+	private LogService log;
+
+	@Parameter
+	private PluginService pluginService;
+
 	private final SignatureDef sig;
 	private final ModelSpecification spec;
+	private final List<PluginInfo<NodeProcessor>> processors;
 
-	SpecificationLoader(LogService log, SignatureDef sig, ModelSpecification spec) {
-		this.log = log;
+	SpecificationLoader(Context context, SignatureDef sig, ModelSpecification spec) {
+		context.inject(this);
+		processors = pluginService.getPluginsOfType(NodeProcessor.class);
 		this.sig = sig;
 		this.spec = spec;
 	}
@@ -67,7 +80,7 @@ class SpecificationLoader {
 	public static ModelSpecification guessSpecification(LogService log, SignatureDef sig) {
 		ModelSpecification specification = new DefaultModelSpecification();
 		sig.getInputsMap().forEach((name, tensorInfo) -> {
-			InputNodeSpecification inputSpec = new DefaultInputNodeSpecification();
+			DefaultInputNodeSpecification inputSpec = new DefaultInputNodeSpecification();
 			inputSpec.setName(tensorInfo.getName().substring(0, tensorInfo.getName().lastIndexOf(":")));
 			List<Integer> shapeMin  = new ArrayList<>();
 			List<Integer> shapeStep = new ArrayList<>();
@@ -136,6 +149,7 @@ class SpecificationLoader {
 		node.setName(data.getName());
 		setInputNodeShape(data, node);
 		setNodeDataType(data, node);
+		assignProcessors(node, data.getPreprocessing(), this.processors);
 		return node;
 	}
 
@@ -144,6 +158,7 @@ class SpecificationLoader {
 		node.setName(data.getName());
 		setOutputNodeShape(data, node, inputNodes);
 		setNodeDataType(data, node);
+		assignProcessors(node, data.getPostprocessing(), this.processors);
 		return node;
 	}
 
@@ -151,6 +166,20 @@ class SpecificationLoader {
 		String dataType = input.getDataType();
 		if (dataType != null && dataType.equals("float32")) {
 			node.setDataType(new FloatType());
+		}
+	}
+
+	private void assignProcessors(ImageNode<?> node, List<TransformationSpecification> transformations, List<PluginInfo<NodeProcessor>> availableProcessors) {
+		if(transformations == null) return;
+		for (TransformationSpecification transformation : transformations) {
+			String name = transformation.getName();
+			for (PluginInfo<NodeProcessor> info : availableProcessors) {
+				if(info.getName().equals(name)) {
+					NodeProcessor processor = pluginService.createInstance(info);
+					processor.readSpecification(transformation);
+					node.getProcessors().add(processor);
+				}
+			}
 		}
 	}
 
@@ -232,21 +261,6 @@ class SpecificationLoader {
 			e.printStackTrace();
 		}
 		return res;
-	}
-
-	void processPrediction() {
-		//TODO
-		// load prediction (Map)
-		// load prediction > preprocess (ArrayList)
-		// load prediction > preprocess > 0 (Map)
-		// load prediction > preprocess > 0 > spec -> net.imagej.modelzoo.transform.normalize.PercentileNormalizer
-		// load prediction > preprocess > 0 > kwargs (Map)
-		// load prediction > preprocess > 0 > kwargs > data (List with input reference index?)
-		// load prediction > preprocess > 0 > kwargs > min -> {Double@6905} 0.3
-		// load prediction > preprocess > 0 > kwargs > max -> {Double@6907} 0.98
-		// load prediction > weights (Map)
-		// load prediction > weights > source -> ./saved_model.pb
-		// load prediction > weights > hash -> ?
 	}
 
 }

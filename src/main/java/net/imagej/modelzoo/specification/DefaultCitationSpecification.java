@@ -28,14 +28,10 @@
  */
 package net.imagej.modelzoo.specification;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class DefaultCitationSpecification implements CitationSpecification {
 
-	private final static String idCiteText = "text";
-	private final static String idCiteDoi = "doi";
 
 	private String citationText;
 
@@ -52,14 +48,6 @@ public class DefaultCitationSpecification implements CitationSpecification {
 	}
 
 	@Override
-	public Map<String, Object> asMap() {
-		Map<String, Object> res = new LinkedHashMap<>();
-		res.put(idCiteText, citationText);
-		res.put(idCiteDoi, doiText);
-		return res;
-	}
-
-	@Override
 	public String getCitationText() {
 		return citationText;
 	}
@@ -67,13 +55,6 @@ public class DefaultCitationSpecification implements CitationSpecification {
 	@Override
 	public String getDoiText() {
 		return doiText;
-	}
-
-	@Override
-	public DefaultCitationSpecification fromMap(Map data) {
-		setCitationText((String) data.get(idCiteText));
-		setDOIText((String) data.get(idCiteDoi));
-		return this;
 	}
 
 	@Override

@@ -77,6 +77,9 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	@Parameter
 	private LogService log;
 
+	@Parameter
+	private Context context;
+
 	private CachedModelBundle model;
 	private SignatureDef sig;
 	private boolean tensorFlowLoaded = false;
@@ -181,11 +184,10 @@ public class TensorFlowModel extends DefaultModelZooModel {
 			return false;
 		}
 		inputNodes.clear();
-		SpecificationLoader loader = new SpecificationLoader(log, sig, specification);
+		SpecificationLoader loader = new SpecificationLoader(context, sig, specification);
 		inputNodes.addAll(loader.processInputs());
 		outputNodes.clear();
 		outputNodes.addAll(loader.processOutputs(inputNodes));
-		loader.processPrediction();
 		return true;
 	}
 

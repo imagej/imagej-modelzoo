@@ -26,10 +26,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer.model;
 
-import org.scijava.command.Command;
+import net.imagej.modelzoo.specification.TransformationSpecification;
+import net.imglib2.RandomAccessibleInterval;
 
-public interface ModelZooPreprocessorCommand extends Command {
+public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T> {
 
+	void setInput(RandomAccessibleInterval input);
+	RandomAccessibleInterval getOutput();
+
+	void setOutputType(Object outputType);
+	default InputImageNode<?> getImageReference() {
+		return null;
+	}
+	default void setImageReference(InputImageNode<?> reference) {
+	}
+
+	@Override
+	default void process(ModelZooModel model, ModelZooNode<?> node) {
+		if(!ImageNode.class.isAssignableFrom(node.getClass())) return;
+		ImageNode imageNode = (ImageNode) node;
+		setInput(imageNode.getData());
+		setOutputType(imageNode.getDataType());
+		if(getReference() != null) {
+			for (InputImageNode<?> inputNode : model.getInputNodes()) {
+				if(inputNode.getName().equals(getReference())) {
+					setImageReference(inputNode);
+				}
+			}
+		}
+		run();
+		imageNode.setData(getOutput());
+	}
 }
