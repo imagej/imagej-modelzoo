@@ -9,35 +9,35 @@ license: bsd
 format_version: 0.3.0
 language: java
 framework: tensorflow
-source: source
-git_repo: https://github.com/name/repo
-attachments: {manifest: ./manifest/README.txt}
-test_input: input.png
-test_output: output.png
+sample_inputs: [input.tif]
+sample_outputs: [output.tif]
 inputs:
   - name: input
-    axes: XYZC
+    axes: bxyc
     data_type: float
     data_range: [-inf, inf]
-    halo: [16, 16, 16, 1]
+    halo: [0, 16, 16, 0]
     shape:
-      min: [4, 4, 4, 1]
-      step: [16, 16, 16, 0]
+      min: [1, 4, 4, 1]
+      step: [1, 16, 16, 0]
     preprocessing:
       - name: zero_mean_unit_variance
-        kwargs: {mean: 100.0, std: 10.0}
+        kwargs: {mode: fixed, mean: [100.0], std: [10.0]}
 outputs:
   - name: output
-    axes: XYZC
+    axes: bxyc
     shape:
       offset: [0, 0, 0, 3]
-      scale: [2.0, 2.0, 2.0, 1.0]
+      scale: [1.0, 2.0, 2.0, 1.0]
       reference_input: input
     postprocessing:
       - name: scale_linear
-        kwargs: {gain: 10.0, offset: 100.0}
-training:
-  source: trainingSource
-  kwargs: {arg1: 1}
-prediction:
-  weights: {source: ./variables/variables}
+        kwargs: {mode: fixed, gain: [10.0], offset: [100.0]}
+weights:
+  - weight_format: tensorflow_saved_model_bundle
+    source: ./tensorflow_saved_model_bundle.zip
+    sha256: TODO
+    timestamp: TODO
+config:
+  fiji:
+    training: {TRAINING_PARAMETERS}
