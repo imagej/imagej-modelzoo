@@ -19,8 +19,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public class SpecificationReaderWriterV1 {
+public class SpecificationReaderWriterV3 {
 
 	private final static String idName = "name";
 	private final static String idDescription = "description";
@@ -355,5 +356,10 @@ public class SpecificationReaderWriterV1 {
 		citation.setCitationText((String) data.get(idCiteText));
 		citation.setDOIText((String) data.get(idCiteDoi));
 		return citation;
+	}
+
+	public static boolean canRead(Map<String, Object> obj) {
+		String version = (String) obj.get(idFormatVersion);
+		return Objects.equals(version, "0.3.0");
 	}
 }

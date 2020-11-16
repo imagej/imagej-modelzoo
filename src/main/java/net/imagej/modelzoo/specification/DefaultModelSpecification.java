@@ -28,7 +28,9 @@
  */
 package net.imagej.modelzoo.specification;
 
-import net.imagej.modelzoo.specification.io.SpecificationReaderWriterV1;
+import net.imagej.modelzoo.specification.io.SpecificationReaderV1;
+import net.imagej.modelzoo.specification.io.SpecificationReaderV2;
+import net.imagej.modelzoo.specification.io.SpecificationReaderWriterV3;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -85,7 +87,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	final static String dependenciesFileName = "dependencies.yaml";
 
 	final static String modelZooSpecificationVersion = "0.3.0";
-	private String modelFileName = "my.model.yaml";
+	private String modelFileName = "model.yaml";
 
 	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
@@ -149,8 +151,23 @@ public class DefaultModelSpecification implements ModelSpecification {
 		Map<String, Object> obj = yaml.load(stream);
 //		System.out.println(obj);
 		if (obj == null) return false;
-		SpecificationReaderWriterV1.read(this, obj);
-		return true;
+		return read(obj);
+	}
+
+	private boolean read(Map<String, Object> obj) {
+		if(SpecificationReaderWriterV3.canRead(obj)) {
+			SpecificationReaderWriterV3.read(this, obj);
+			return true;
+		}
+		if(SpecificationReaderV2.canRead(obj)) {
+			SpecificationReaderV2.read(this, obj);
+			return true;
+		}
+		if(SpecificationReaderV1.canRead(obj)) {
+			SpecificationReaderV1.read(this, obj);
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -171,11 +188,12 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	public Map<String, Object> toMap() {
-		return SpecificationReaderWriterV1.write(this);
+		return SpecificationReaderWriterV3.write(this);
 	}
 
 	@Override
 	public void write(Path modelSpecificationPath) throws IOException {
+		setFormatVersion(modelZooSpecificationVersion);
 		Map<String, Object> data = toMap();
 		Yaml yaml = new Yaml();
 		try {
@@ -413,4 +431,28 @@ public class DefaultModelSpecification implements ModelSpecification {
 		return zf.getInputStream(zf.getEntry(fileName));
 	}
 
+	public void read(ModelSpecification spec) {
+		setName(spec.getName());
+		setDocumentation(spec.getDocumentation());
+		setDescription(spec.getDescription());
+		setAuthors(spec.getAuthors());
+		setTestInput(spec.getTestInput());
+		setTestOutput(spec.getTestOutput());
+		setFramework(spec.getFramework());
+		setLanguage(spec.getLanguage());
+		setLicense(spec.getLicense());
+		setPredictionWeightsSource(spec.getPredictionWeightsSource());
+		setSource(spec.getSource());
+		setTags(spec.getTags());
+		setTrainingKwargs(spec.getTrainingKwargs());
+		setTrainingSource(spec.getTrainingSource());
+		setGitRepo(spec.getGitRepo());
+		setModelFileName(spec.getModelFileName());
+		getInputs().clear();
+		getInputs().addAll(spec.getInputs());
+		getOutputs().clear();
+		getOutputs().addAll(spec.getOutputs());
+		getAttachments().clear();
+		getAttachments().putAll(spec.getAttachments());
+	}
 }

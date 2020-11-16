@@ -196,6 +196,6 @@ public class TiledPredictionExecutor implements Cancelable {
 	}
 
 	public void dispose() {
-		tiling.dispose();
+		if(tiling != null) tiling.dispose();
 	}
 }
