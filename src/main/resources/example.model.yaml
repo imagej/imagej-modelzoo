@@ -40,4 +40,4 @@ weights:
     timestamp: TODO
 config:
   fiji:
-    training: {TRAINING_PARAMETERS}
+    training: {source: "", kwargs: {some: argument}}

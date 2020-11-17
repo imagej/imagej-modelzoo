@@ -46,6 +46,8 @@ public class SpecificationReaderWriterV3 {
 	private final static String idPredictionWeights = "weights";
 	private final static String idPredictionWeightsSource = "source";
 	private final static String idPredictionWeightsHash = "hash";
+	private final static String idConfig = "config";
+	private final static String idConfigFiji = "fiji";
 	private final static String idTraining = "training";
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";
@@ -82,7 +84,7 @@ public class SpecificationReaderWriterV3 {
 	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) {
 		readMeta(specification, obj);
 		readInputsOutputs(specification, obj);
-		readTraining(specification, obj);
+		readConfig(specification, obj);
 		readPrediction(specification, obj);
 		return specification;
 	}
@@ -135,12 +137,15 @@ public class SpecificationReaderWriterV3 {
 		}
 	}
 
-	private static void readTraining(DefaultModelSpecification specification, Map<String, Object> obj) {
-		Map<String, Object> training = (Map<String, Object>) obj.get(idTraining);
-		if (training != null) {
-			specification.setTrainingSource((String) training.get(idTrainingSource));
-			specification.setTrainingKwargs((Map<String, Object>) training.get(idTrainingKwargs));
-		}
+	private static void readConfig(DefaultModelSpecification specification, Map<String, Object> obj) {
+		Map<String, Object> config = (Map<String, Object>) obj.get(idConfig);
+		if(config == null) return;
+		Map<String, Object> fijiConfig = (Map<String, Object>) config.get(idConfigFiji);
+		if(fijiConfig == null) return;
+		Map<String, Object> training = (Map<String, Object>) fijiConfig.get(idTraining);
+		if(training == null) return;
+		specification.setTrainingSource((String) training.get(idTrainingSource));
+		specification.setTrainingKwargs((Map<String, Object>) training.get(idTrainingKwargs));
 	}
 
 	private static void readPrediction(DefaultModelSpecification specification, Map<String, Object> obj) {
@@ -154,7 +159,7 @@ public class SpecificationReaderWriterV3 {
 		Map<String, Object> data = new LinkedHashMap<>();
 		writeMeta(specification, data);
 		writeInputsOutputs(specification, data);
-		writeTraining(specification, data);
+		writeConfig(specification, data);
 		writePrediction(specification, data);
 		return data;
 	}
@@ -176,12 +181,17 @@ public class SpecificationReaderWriterV3 {
 		return res;
 	}
 
-	private static void writeTraining(ModelSpecification specification, Map<String, Object> data) {
+	private static void writeConfig(ModelSpecification specification, Map<String, Object> data) {
 		Map<String, Object> training = new LinkedHashMap<>();
 		training.put(idTrainingSource, specification.getTrainingSource());
-		if (specification.getTrainingKwargs() != null)
+		if (specification.getTrainingKwargs() != null) {
 			training.put(idTrainingKwargs, specification.getTrainingKwargs());
-		data.put(idTraining, training);
+		}
+		Map<String, Object> fijiConfig = new LinkedHashMap<>();
+		fijiConfig.put(idTraining, training);
+		Map<String, Object> config = new LinkedHashMap<>();
+		config.put(idConfigFiji, fijiConfig);
+		data.put(idConfig, config);
 	}
 
 	private static void writeInputsOutputs(ModelSpecification specification, Map<String, Object> data) {
@@ -254,16 +264,26 @@ public class SpecificationReaderWriterV3 {
 		switch ((String)data.get(idTransformationName)) {
 			case idTransformationScaleLinear:
 				ScaleLinearTransformation scaleLinear = new ScaleLinearTransformation();
-				scaleLinear.setGain((Number) kwargs.get(idTransformationScaleLinearGain));
-				scaleLinear.setOffset((Number) kwargs.get(idTransformationScaleLinearOffset));
+				scaleLinear.setGain(toNumber(kwargs.get(idTransformationScaleLinearGain)));
+				scaleLinear.setOffset(toNumber(kwargs.get(idTransformationScaleLinearOffset)));
 				return scaleLinear;
 			case idTransformationZeroMean:
 				ZeroMeanUnitVarianceTransformation zeroMean = new ZeroMeanUnitVarianceTransformation();
-				zeroMean.setMean((Number) kwargs.get(idTransformationZeroMeanMean));
-				zeroMean.setStd((Number) kwargs.get(idTransformationZeroMeanStd));
+				zeroMean.setMean(toNumber(kwargs.get(idTransformationZeroMeanMean)));
+				zeroMean.setStd(toNumber(kwargs.get(idTransformationZeroMeanStd)));
 				return zeroMean;
 		}
 		return null;
+	}
+
+	private static Number toNumber(Object obj) {
+		if(Number.class.isAssignableFrom(obj.getClass())) {
+			return (Number) obj;
+		}
+		if(List.class.isAssignableFrom(obj.getClass())) {
+			return toNumber(((List) obj).get(0));
+		}
+		throw new ClassCastException("Cannot convert " + obj + " to number.");
 	}
 
 	private static OutputNodeSpecification readOutputNode(Map data) {
