@@ -1,5 +1,6 @@
 package net.imagej.modelzoo.specification.io;
 
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowSavedModelBundleSpecification;
 import net.imagej.modelzoo.specification.CitationSpecification;
 import net.imagej.modelzoo.specification.DefaultCitationSpecification;
 import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
@@ -10,8 +11,10 @@ import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imagej.modelzoo.specification.TransformationSpecification;
+import net.imagej.modelzoo.specification.WeightsSpecification;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
+import org.tensorflow.TensorFlow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,10 +45,11 @@ public class SpecificationReaderWriterV3 {
 	private final static String idTestOutput = "test_output";
 	private final static String idInputs = "inputs";
 	private final static String idOutputs = "outputs";
-	private final static String idPrediction = "prediction";
-	private final static String idPredictionWeights = "weights";
-	private final static String idPredictionWeightsSource = "source";
-	private final static String idPredictionWeightsHash = "hash";
+	private final static String idWeights = "weights";
+	private final static String idWeightsSource = "source";
+	private final static String idWeightsHash = "sha256";
+	private final static String idWeightsTag = "tag";
+	private final static String idWeightsTimestamp = "timestamp";
 	private final static String idConfig = "config";
 	private final static String idConfigFiji = "fiji";
 	private final static String idTraining = "training";
@@ -80,12 +84,13 @@ public class SpecificationReaderWriterV3 {
 	private static final String idTransformationZeroMean = "zero_mean_unit_variance";
 	private static final String idTransformationZeroMeanMean = "mean";
 	private static final String idTransformationZeroMeanStd = "std";
+	private static final String idWeightsTensorFlowSavedModelBundle = "tensorflow_saved_model_bundle";
 
 	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) {
 		readMeta(specification, obj);
 		readInputsOutputs(specification, obj);
 		readConfig(specification, obj);
-		readPrediction(specification, obj);
+		readWeights(specification, obj);
 		return specification;
 	}
 
@@ -148,10 +153,22 @@ public class SpecificationReaderWriterV3 {
 		specification.setTrainingKwargs((Map<String, Object>) training.get(idTrainingKwargs));
 	}
 
-	private static void readPrediction(DefaultModelSpecification specification, Map<String, Object> obj) {
-		Map<String, Object> prediction = (Map<String, Object>) obj.get(idPrediction);
-		if (prediction != null) {
-			specification.setPredictionWeightsSource((String) prediction.get(idPredictionWeightsSource));
+	private static void readWeights(ModelSpecification specification, Map<String, Object> obj) {
+		Map<String, Object> weights = (Map<String, Object>) obj.get(idWeights);
+		if(weights == null) return;
+		weights.forEach((name, object) -> readWeightsEntry(specification, name, (Map<String, Object>) object));
+	}
+
+	private static void readWeightsEntry(ModelSpecification specification, String name, Map<String, Object> data) {
+		if(name.equals(idWeightsTensorFlowSavedModelBundle)) {
+			TensorFlowSavedModelBundleSpecification weightsSpec = new TensorFlowSavedModelBundleSpecification();
+			if(data != null) {
+				weightsSpec.setTag((String) data.get(idWeightsTag));
+				weightsSpec.setSha256((String) data.get(idWeightsHash));
+				weightsSpec.setSource((String) data.get(idWeightsSource));
+				weightsSpec.setTimestamp((String) data.get(idWeightsTimestamp));
+			}
+			specification.getWeights().add(weightsSpec);
 		}
 	}
 
@@ -166,11 +183,24 @@ public class SpecificationReaderWriterV3 {
 
 
 	private static void writePrediction(DefaultModelSpecification specification, Map<String, Object> data) {
-		Map<String, Object> prediction = new LinkedHashMap<>();
 		Map<String, Object> weights = new LinkedHashMap<>();
-		weights.put(idPredictionWeightsSource, specification.getPredictionWeightsSource());
-		prediction.put(idPredictionWeights, weights);
-		data.put(idPrediction, prediction);
+		for (WeightsSpecification weight : specification.getWeights()) {
+			Map<String, Object> weightData = new HashMap<>();
+			weightData.put(idWeightsSource, weight.getSource());
+			weightData.put(idWeightsHash, weight.getSha256());
+			weightData.put(idWeightsTimestamp, weight.getTimestamp());
+			if(weight instanceof TensorFlowSavedModelBundleSpecification) {
+				weightData.put(idWeightsTag, ((TensorFlowSavedModelBundleSpecification) weight).getTag());
+			}
+			weightData.put(idWeightsTimestamp, weight.getTimestamp());
+			weights.put(getWeightsName(weight), weightData);
+		}
+		data.put(idWeights, weights);
+	}
+
+	private static String getWeightsName(WeightsSpecification weight) {
+		if(weight instanceof TensorFlowSavedModelBundleSpecification) return idWeightsTensorFlowSavedModelBundle;
+		return null;
 	}
 
 	private static List<Map<String, Object>> buildTransformationList(List<TransformationSpecification> transformations) {

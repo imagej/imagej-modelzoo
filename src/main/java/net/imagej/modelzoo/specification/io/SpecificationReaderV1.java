@@ -1,14 +1,17 @@
 package net.imagej.modelzoo.specification.io;
 
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowSavedModelBundleSpecification;
 import net.imagej.modelzoo.specification.CitationSpecification;
 import net.imagej.modelzoo.specification.DefaultCitationSpecification;
 import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.DefaultOutputNodeSpecification;
+import net.imagej.modelzoo.specification.DefaultWeightsSpecification;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import net.imagej.modelzoo.specification.WeightsSpecification;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 
@@ -69,6 +72,8 @@ public class SpecificationReaderV1 {
 		readInputsOutputs(specification, obj);
 		readTraining(specification, obj);
 		readPrediction(specification, obj);
+		WeightsSpecification weights  = new TensorFlowSavedModelBundleSpecification();
+		specification.getWeights().add(weights);
 		return specification;
 	}
 
@@ -122,7 +127,6 @@ public class SpecificationReaderV1 {
 	private static void readPrediction(DefaultModelSpecification specification, Map<String, Object> obj) {
 		Map<String, Object> prediction = (Map<String, Object>) obj.get(idPrediction);
 		if (prediction != null) {
-			specification.setPredictionWeightsSource((String) prediction.get(idPredictionWeightsSource));
 			Map<String, Object> preprocess = (Map<String, Object>) prediction.get(idPredictionPreprocess);
 			if(preprocess != null) {
 				Map<String, Object> kwargs = (Map<String, Object>) preprocess.get(idTransformationKwargs);

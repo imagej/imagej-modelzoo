@@ -103,8 +103,6 @@ public interface ModelSpecification {
 
 	String getFramework();
 
-	String getPredictionWeightsSource();
-
 	Map<String, Object> getTrainingKwargs();
 
 	String getName();
@@ -112,6 +110,8 @@ public interface ModelSpecification {
 	String getDescription();
 
 	List<CitationSpecification> getCitations();
+
+	List<WeightsSpecification> getWeights();
 
 	List<String> getAuthors();
 

@@ -34,8 +34,9 @@ outputs:
       - name: scale_linear
         kwargs: {mode: fixed, gain: [10.0], offset: [100.0]}
 weights:
-  - weight_format: tensorflow_saved_model_bundle
+  tensorflow_saved_model_bundle:
     source: ./tensorflow_saved_model_bundle.zip
+    tag: serve
     sha256: TODO
     timestamp: TODO
 config:

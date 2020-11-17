@@ -56,32 +56,6 @@ import java.util.zip.ZipFile;
  */
 public class DefaultModelSpecification implements ModelSpecification {
 
-	private final static String idName = "name";
-	private final static String idDescription = "description";
-	private final static String idCite = "cite";
-	private final static String idAuthors = "authors";
-	private final static String idDocumentation = "documentation";
-	private final static String idTags = "tags";
-	private final static String idLicense = "license";
-	private final static String idFormatVersion = "format_version";
-
-	private final static String idLanguage = "language";
-
-	private final static String idFramework = "framework";
-	private final static String idSource = "source";
-	private final static String idGitRepo = "git_repo";
-	private final static String idAttachments = "attachments";
-	private final static String idTestInput = "test_input";
-	private final static String idTestOutput = "test_output";
-	private final static String idInputs = "inputs";
-	private final static String idOutputs = "outputs";
-	private final static String idPrediction = "prediction";
-	private final static String idPredictionWeights = "weights";
-	private final static String idPredictionWeightsSource = "source";
-	private final static String idPredictionWeightsHash = "hash";
-	private final static String idTraining = "training";
-	private final static String idTrainingSource = "source";
-	private final static String idTrainingKwargs = "kwargs";
 	private final static String defaultTestInput = "testinput.tif";
 	private final static String defaultTestOutput = "testoutput.tif";
 	final static String dependenciesFileName = "dependencies.yaml";
@@ -94,7 +68,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String framework = "tensorflow";
 	private String testInput = defaultTestInput;
 	private String testOutput = defaultTestOutput;
-	private String predictionWeightsSource = "./variables/variables";
 
 	private Map<String, Object> trainingKwargs;
 	private String name;
@@ -107,6 +80,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String source;
 	private final List<InputNodeSpecification> inputNodes = new ArrayList<>();
 	private final List<OutputNodeSpecification> outputNodes = new ArrayList<>();
+	private final List<WeightsSpecification> weights = new ArrayList<>();
 	private String trainingSource;
 	private String gitRepo;
 	private final Map<String, Object> attachments = new HashMap<>();
@@ -178,9 +152,9 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public void write(File targetDirectory) throws IOException {
 		writeDependenciesFile(targetDirectory);
-		Map<String, Object> data = toMap();
 		// when (re)writing the specification, use the most recent specification version
-		data.put(idFormatVersion, modelZooSpecificationVersion);
+		setFormatVersion(modelZooSpecificationVersion);
+		Map<String, Object> data = toMap();
 		Yaml yaml = new Yaml();
 		try (FileWriter writer = new FileWriter(new File(targetDirectory, modelFileName))) {
 			yaml.dump(data, writer);
@@ -295,11 +269,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public String getPredictionWeightsSource() {
-		return predictionWeightsSource;
-	}
-
-	@Override
 	public Map<String, Object> getTrainingKwargs() {
 		return trainingKwargs;
 	}
@@ -317,6 +286,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public List<CitationSpecification> getCitations() {
 		return citations;
+	}
+
+	@Override
+	public List<WeightsSpecification> getWeights() {
+		return weights;
 	}
 
 	@Override
@@ -418,10 +392,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 		this.language = language;
 	}
 
-	public void setPredictionWeightsSource(String weightsSource) {
-		this.predictionWeightsSource = weightsSource;
-	}
-
 	public void setModelFileName(String modelFileName) {
 		this.modelFileName = modelFileName;
 	}
@@ -441,7 +411,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 		setFramework(spec.getFramework());
 		setLanguage(spec.getLanguage());
 		setLicense(spec.getLicense());
-		setPredictionWeightsSource(spec.getPredictionWeightsSource());
 		setSource(spec.getSource());
 		setTags(spec.getTags());
 		setTrainingKwargs(spec.getTrainingKwargs());
@@ -454,5 +423,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		getOutputs().addAll(spec.getOutputs());
 		getAttachments().clear();
 		getAttachments().putAll(spec.getAttachments());
+		getWeights().clear();
+		getWeights().addAll(spec.getWeights());
 	}
 }
