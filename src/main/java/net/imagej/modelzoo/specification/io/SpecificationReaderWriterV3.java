@@ -14,7 +14,6 @@ import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imagej.modelzoo.specification.WeightsSpecification;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
-import org.tensorflow.TensorFlow;
 
 import java.util.ArrayList;
 import java.util.Arrays;

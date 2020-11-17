@@ -42,7 +42,6 @@ public class SpecificationReaderV2 {
 	private final static String idInputs = "inputs";
 	private final static String idOutputs = "outputs";
 	private final static String idPrediction = "prediction";
-	private final static String idPredictionWeightsSource = "source";
 	private final static String idTraining = "training";
 	private final static String idTrainingSource = "source";
 	private final static String idTrainingKwargs = "kwargs";

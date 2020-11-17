@@ -28,6 +28,7 @@
  */
 package net.imagej.modelzoo.specification;
 
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowSavedModelBundleSpecification;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 import org.apache.commons.io.FileUtils;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ModelSpecificationTest {
 
+	private final String weightsTimestamp = "a-timestamp";
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
 
@@ -82,6 +84,8 @@ public class ModelSpecificationTest {
 	private final static String testInput = "input.png";
 	private final static String testOutput = "output.png";
 	private final static Map<String, Object> attachments = Collections.singletonMap("manifest", "./manifest/README.txt");
+	private final static String weightsSha256 = "1234567";
+	private final static String weightsSource = "./weights.zip";
 
 	@Test
 	public void testEmptySpec() throws IOException {
@@ -188,6 +192,12 @@ public class ModelSpecificationTest {
 		postprocessing.setOffset(mean);
 		outputNode.setPostprocessing(Collections.singletonList(postprocessing));
 		specification.addOutputNode(outputNode);
+		// weights
+		TensorFlowSavedModelBundleSpecification weights = new TensorFlowSavedModelBundleSpecification();
+		weights.setSha256(weightsSha256);
+		weights.setSource(weightsSource);
+		weights.setTimestamp(weightsTimestamp);
+		specification.getWeights().add(weights);
 	}
 
 	private void checkExampleValues(ModelSpecification specification) {
@@ -242,6 +252,14 @@ public class ModelSpecificationTest {
 		assertEquals(std, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getGain());
 		assertEquals(mean, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getOffset());
 
+		assertNotNull(specification.getWeights());
+		assertEquals(1, specification.getWeights().size());
+		WeightsSpecification weights = specification.getWeights().get(0);
+		assertTrue(weights instanceof TensorFlowSavedModelBundleSpecification);
+		assertEquals(weightsTimestamp, weights.getTimestamp());
+		assertEquals(weightsSha256, weights.getSha256());
+		assertEquals(weightsSource, weights.getSource());
+		assertEquals("serve", ((TensorFlowSavedModelBundleSpecification)weights).getTag());
 	}
 
 }
