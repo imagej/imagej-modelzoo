@@ -96,22 +96,34 @@ public class ImageToImageSanityCheck implements SanityCheck {
 			compare((RandomAccessibleInterval)input.get(0),
 					(RandomAccessibleInterval)output.get(0),
 					(RandomAccessibleInterval)gt.get(0),
-					(RandomAccessibleInterval) model.getSampleInputs().get(0),
-					(RandomAccessibleInterval) model.getSampleOutputs(), opService);
+					model,
+					opService);
 		}
+	}
+
+	public static void compare(
+			RandomAccessibleInterval input,
+			RandomAccessibleInterval output,
+			RandomAccessibleInterval groundTruth,
+			ModelZooArchive model,
+			OpService opService) {
+
+		RandomAccessibleInterval sampleInput = null;
+		if(model.getSampleInputs() != null && model.getSampleInputs().size() > 0) {
+			sampleInput = (RandomAccessibleInterval) model.getSampleInputs().get(0).getData();
+		}
+		RandomAccessibleInterval sampleOutput = null;
+		if(model.getSampleOutputs() != null && model.getSampleOutputs().size() > 0) {
+			sampleOutput = (RandomAccessibleInterval) model.getSampleOutputs().get(0).getData();
+		}
+		compare(input, output, groundTruth,
+				sampleInput,
+				sampleOutput,
+				opService);
 	}
 
 	public ImageToImageSanityCheck(Context context) {
 		context.inject(this);
-	}
-
-	public static <T extends RealType<T>, U extends RealType<U>> void compare(Dataset input, Dataset output, Dataset gt, RandomAccessibleInterval<T> modelDemoInput, RandomAccessibleInterval<U> modelDemoOutput, OpService opService) {
-		compare((RandomAccessibleInterval)input,
-				(RandomAccessibleInterval)output,
-				(RandomAccessibleInterval)gt,
-				modelDemoInput,
-				modelDemoOutput,
-				opService);
 	}
 
 	public static <T extends RealType<T>, U extends RealType<U>, V extends RealType<V>, W extends RealType<W>, X extends RealType<X>> void compare(

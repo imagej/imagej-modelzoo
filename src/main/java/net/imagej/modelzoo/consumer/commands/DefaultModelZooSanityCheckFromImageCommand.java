@@ -30,13 +30,21 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.TensorSample;
 import net.imagej.modelzoo.consumer.ImageToImageSanityCheck;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
+import net.imglib2.Dimensions;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.loops.LoopBuilder;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
@@ -76,6 +84,9 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	@Parameter(label = "Model prediction", type = ItemIO.OUTPUT)
 	private Dataset output;
 
+	@Parameter(label = "Difference input - prediction", type = ItemIO.OUTPUT)
+	private Dataset difference;
+
 	@Parameter
 	private LogService log;
 
@@ -89,9 +100,10 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	private OpService opService;
 
 	@Parameter
-	private ModelZooService modelZooService;
+	private DatasetService datasetService;
 
-	private static final int numBins = 20;
+	@Parameter
+	private ModelZooService modelZooService;
 
 	public void run() {
 
@@ -103,13 +115,13 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 			prediction.resolveInput("input");
 			context().service(ModuleService.class).run(prediction, true).get();
 			output = (Dataset) prediction.getOutput("output");
+			difference = datasetService.create(getDifference((RandomAccessibleInterval)input, (RandomAccessibleInterval)output, new FloatType()));
 			ModelZooArchive model = modelZooService.open(modelFile);
 			ImageToImageSanityCheck.compare(
 					input,
 					output,
 					inputGroundTruth,
-					getFirstSample(model.getSampleInputs()),
-					getFirstSample(model.getSampleOutputs()),
+					model,
 					opService);
 		} catch (ExecutionException | InterruptedException | IOException e) {
 			e.printStackTrace();
@@ -117,6 +129,14 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 
 		log("ModelZoo sanity check exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
+	}
+
+	private <TI extends RealType<TI>, TO extends RealType<TO>, TR extends RealType<TR> & NativeType<TR>> RandomAccessibleInterval<TR> getDifference(RandomAccessibleInterval<TI> input, RandomAccessibleInterval<TO> output, TR resultType) {
+		Img<TR> res = opService.create().img(input, resultType);
+		LoopBuilder.setImages(input, output, res).multiThreaded().forEachPixel((ti, to, tr) -> {
+			tr.setReal(ti.getRealDouble()-to.getRealDouble());
+		});
+		return res;
 	}
 
 	private RandomAccessibleInterval getFirstSample(List<TensorSample> sampleInputs) {
