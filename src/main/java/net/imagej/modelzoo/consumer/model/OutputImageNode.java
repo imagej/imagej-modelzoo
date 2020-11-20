@@ -29,68 +29,37 @@
 
 package net.imagej.modelzoo.consumer.model;
 
-import net.imglib2.FinalInterval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.view.Views;
+import net.imagej.axis.AxisType;
 
-public class OutputImageNode<O extends RealType<O> & NativeType<O>, I extends RealType<I> & NativeType<I>> extends ImageNode<O> {
-	private InputImageNode<I> reference;
+import java.util.List;
 
-	public void makeDataFit() {
-		RandomAccessibleInterval<O> img = getData();
-		img = toActualSize(img);
-		img = Views.dropSingletonDimensions(img);
-		setData(img);
+public class OutputImageNode extends ImageNode implements ModelZooOutputNode<ImageDataReference<?>, ImageDataReference<?>> {
+	private InputImageNode reference;
+
+	@Override
+	public void setReference(ModelZooNode<ImageDataReference<?>> input) {
+		this.reference = (InputImageNode) input;
 	}
 
-	private RandomAccessibleInterval<O> toActualSize(RandomAccessibleInterval<O> img) {
-
-		if (getReference() == null) return img;
-
-		long[] expectedSize = new long[img.numDimensions()];
-		int[] mappingIndices = getMappingIndices();
-		for (int i = 0; i < img.numDimensions(); i++) {
-			Long newSize = getExpectedSize(mappingIndices[i]);
-			if (newSize == null) expectedSize[i] = -1;
-			else expectedSize[i] = newSize;
-		}
-		for (int i = 0; i < expectedSize.length; i++) {
-			img = reduceDimToSize(img, i, expectedSize[i]);
-		}
-		return img;
-	}
-
-	private Long getExpectedSize(int mappingIndex) {
-		ModelZooAxis inAxis = getReference().getAxes().get(mappingIndex);
-		ModelZooAxis outAxis = getAxes().get(mappingIndex);
-		Long actual = inAxis.getActual();
-		Integer offset = outAxis.getOffset();
-		Double scale = outAxis.getScale();
-		Long newSize = actual != null ? actual : 1;
-		if (scale != null) newSize = (long) (newSize * scale);
-		if (offset != null) newSize += (int) offset;
-		return newSize;
-	}
-
-
-	private <T extends RealType<T>> RandomAccessibleInterval<T> reduceDimToSize(
-			final RandomAccessibleInterval<T> im, final int d, final long size) {
-		final int n = im.numDimensions();
-		final long[] min = new long[n];
-		final long[] max = new long[n];
-		im.min(min);
-		im.max(max);
-		max[d] += (size - im.dimension(d));
-		return Views.interval(im, new FinalInterval(min, max));
-	}
-
-	public void setReference(InputImageNode<I> input) {
-		this.reference = input;
-	}
-
-	public InputImageNode<I> getReference() {
+	@Override
+	public InputImageNode getReference() {
 		return reference;
+	}
+
+	@Override
+	public List<AxisType> getDataMapping() {
+		if(reference != null) return reference.getDataMapping();
+		return super.getDataMapping();
+	}
+
+	@Override
+	public int[] getMappingIndices() {
+		if(reference != null) return reference.getMappingIndices();
+		return super.getMappingIndices();
+	}
+
+	@Override
+	public boolean accepts(Object data) {
+		return ImageNode.class.isAssignableFrom(data.getClass());
 	}
 }

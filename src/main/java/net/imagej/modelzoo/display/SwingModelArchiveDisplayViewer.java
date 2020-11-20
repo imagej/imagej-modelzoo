@@ -32,6 +32,7 @@ import net.imagej.display.ColorTables;
 import net.imagej.display.SourceOptimizedCompositeXYProjector;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.TensorSample;
 import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromFileCommand;
 import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromImageCommand;
 import net.imagej.modelzoo.specification.CitationSpecification;
@@ -351,7 +352,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return button;
 	}
 
-	private void predict(ModelZooArchive<?, ?> model) {
+	private void predict(ModelZooArchive model) {
 		try {
 			modelZooService.predictInteractive(model);
 		} catch (FileNotFoundException | ModuleException e) {
@@ -359,7 +360,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		}
 	}
 
-	private void batchPredict(ModelZooArchive<?, ?> model) {
+	private void batchPredict(ModelZooArchive model) {
 		try {
 			modelZooService.batchPredictInteractive(model);
 		} catch (FileNotFoundException | ModuleException e) {
@@ -413,7 +414,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private void updateTestImageFromFile(
-			ModelZooArchive<?, ?> model, ImageIcon inputIcon, ImageIcon outputIcon) {
+			ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
 		try {
 			commandService.run(ModelArchiveUpdateDemoFromFileCommand.class, true, "archive", model).get();
 			reloadTestImages(model, inputIcon, outputIcon);
@@ -423,7 +424,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private void updateTestImageFromOpenImages(
-			ModelZooArchive<?, ?> model, ImageIcon inputIcon, ImageIcon outputIcon) {
+			ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
 		try {
 			commandService.run(ModelArchiveUpdateDemoFromImageCommand.class, true, "archive", model).get();
 			reloadTestImages(model, inputIcon, outputIcon);
@@ -442,10 +443,22 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return btn;
 	}
 
-	private <TI extends RealType<TI>, TO extends RealType<TO>> void reloadTestImages(ModelZooArchive<TI, TO> model, ImageIcon testInputIcon, ImageIcon testOutputIcon) {
-		if(model.getTestInput() == null || model.getTestOutput() == null) return;
-		testInputIcon.setImage(toBufferedImage(model.getTestInput()));
-		testOutputIcon.setImage(toBufferedImage(model.getTestOutput()));
+	private void reloadTestImages(ModelZooArchive model, ImageIcon testInputIcon, ImageIcon testOutputIcon) {
+		// TODO this is not great. ideally, we could display multiple input and output tensor samples,
+		//  (e.g. by having arrow buttons to go through multiple outputs)
+		//  and we could also use the UIService / DisplayService to display the data and not do this type check
+		display(model, testInputIcon, model.getSampleInputs());
+		display(model, testOutputIcon, model.getSampleOutputs());
+	}
+
+	private void display(ModelZooArchive model, ImageIcon testInputIcon, List<TensorSample> sampleInputs) {
+		if(sampleInputs == null) return;
+		if (sampleInputs.size() > 0) {
+			TensorSample sample = model.getSampleInputs().get(0);
+			if (RandomAccessibleInterval.class.isAssignableFrom(sample.getData().getClass())) {
+				testInputIcon.setImage(toBufferedImage((RandomAccessibleInterval) sample.getData()));
+			}
+		}
 	}
 
 	private <T extends RealType<T>> BufferedImage toBufferedImage(RandomAccessibleInterval<T> img) {

@@ -29,34 +29,10 @@
 package net.imagej.modelzoo.consumer.model;
 
 import net.imagej.modelzoo.specification.TransformationSpecification;
-import net.imglib2.RandomAccessibleInterval;
 
-public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T> {
+public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T>, Runnable {
+	void setup(ImageNode imageNode, InputImageNode processorInputReference);
 
-	void setInput(RandomAccessibleInterval input);
-	RandomAccessibleInterval getOutput();
-
-	void setOutputType(Object outputType);
-	default InputImageNode<?> getImageReference() {
-		return null;
-	}
-	default void setImageReference(InputImageNode<?> reference) {
-	}
-
-	@Override
-	default void process(ModelZooModel model, ModelZooNode<?> node) {
-		if(!ImageNode.class.isAssignableFrom(node.getClass())) return;
-		ImageNode imageNode = (ImageNode) node;
-		setInput(imageNode.getData());
-		setOutputType(imageNode.getDataType());
-		if(getReference() != null) {
-			for (InputImageNode<?> inputNode : model.getInputNodes()) {
-				if(inputNode.getName().equals(getReference())) {
-					setImageReference(inputNode);
-				}
-			}
-		}
-		run();
-		imageNode.setData(getOutput());
-	}
+	InputImageNode getProcessorInputReference();
+	ImageNode getImageNode();
 }

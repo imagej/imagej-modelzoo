@@ -37,69 +37,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 import org.scijava.log.LogService;
 
-public class InputImageNode<T extends RealType<T> & NativeType<T>> extends ImageNode<T> {
+public class InputImageNode extends ImageNode {
 
-	//TODO this is ugly
-	public boolean makeDataFit(LogService log) {
-		RandomAccessibleInterval<T> img = getData();
-		int[] mappingIndices = getMappingIndices();
-		try {
 
-			img = addAxesIfNeeded(img);
-
-			for (int i = 0; i < img.numDimensions(); i++) {
-				ModelZooAxis axis = getAxes().get(mappingIndices[i]);
-				int min = axis.getMin();
-				Object step = axis.getStep();
-				long size = img.dimension(i);
-				long newsize = size;
-				if (size < min) {
-					newsize = min;
-				} else {
-					if (step == null) {
-						axis.setActual(size);
-						continue;
-					}
-					if ((int) step == 0) {
-						if (size != min) {
-							log.error("Input \"" + getName() + "\" dimension " + i + " should have size " + min + " but is " + size);
-							return false;
-						} else {
-							continue;
-						}
-					} else {
-						long rest = (size - min) % (int) step;
-						if (rest != 0) {
-							newsize = size - rest + (int) step;
-						}
-					}
-				}
-				img = expandDimToSize(img, i, newsize);
-				axis.setActual(size);
-			}
-			setData(img);
-		} catch (ClassCastException ignored) {
-		}
-		return true;
-	}
-
-	private RandomAccessibleInterval<T> addAxesIfNeeded(RandomAccessibleInterval<T> img) {
-		AxisType[] axes = getAxesArray();
-		while (img.numDimensions() < axes.length) {
-			img = Views.addDimension(img, 0, 0);
-		}
-		return img;
-	}
-
-	private RandomAccessibleInterval<T> expandDimToSize(
-			final RandomAccessibleInterval<T> im, final int d, final long size) {
-		final int n = im.numDimensions();
-		final long[] min = new long[n];
-		final long[] max = new long[n];
-		im.min(min);
-		im.max(max);
-		max[d] += (size - im.dimension(d));
-		return Views.interval(Views.extendMirrorDouble(im), new FinalInterval(min,
-				max));
-	}
 }

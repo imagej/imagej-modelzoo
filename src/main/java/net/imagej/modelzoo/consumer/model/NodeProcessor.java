@@ -31,9 +31,9 @@ package net.imagej.modelzoo.consumer.model;
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import org.scijava.plugin.SciJavaPlugin;
 
-public interface NodeProcessor<T extends TransformationSpecification> extends Runnable, SciJavaPlugin {
+public interface NodeProcessor<T extends TransformationSpecification> extends SciJavaPlugin {
 	default void setReference(String reference){}
 	default String getReference() { return null; }
-	void process(ModelZooModel model, ModelZooNode<?> node);
-	void readSpecification(T specification);
+	default void readSpecification(T specification){}
+	void run() throws NodeProcessorException;
 }

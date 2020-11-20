@@ -28,8 +28,13 @@
  */
 package net.imagej.modelzoo.consumer.model;
 
+import java.util.List;
+
 public interface ModelZooNode<T> {
 	void setName(String name);
-
 	String getName();
+	List<NodeProcessor> getProcessors();
+	T getData();
+	void setData(T data);
+	boolean accepts(Object data);
 }

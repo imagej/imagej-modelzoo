@@ -37,6 +37,8 @@ import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
 
+import java.util.Map;
+
 public class E01_Prediction {
 
 	private ImageJ ij;
@@ -65,9 +67,11 @@ public class E01_Prediction {
 
 		ModelZooArchive model = modelZooService.open(modelPath);
 
-		RandomAccessibleInterval output = modelZooService.predict(model, input, "XY");
+		Map<String, Object> outputs = modelZooService.predict(model, input, "XY");
 
-		ij.ui().show(output);
+		outputs.forEach((name, output) -> {
+			ij.ui().show(name, output);
+		});
 
 	}
 

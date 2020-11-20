@@ -30,28 +30,20 @@ package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.ImageNode;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooNode;
 import net.imagej.ops.OpService;
-import net.imagej.ops.convert.RealTypeConverter;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.converter.Converter;
-import net.imglib2.converter.Converters;
-import net.imglib2.converter.RealDoubleConverter;
-import net.imglib2.converter.RealFloatConverter;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
-import org.tensorflow.op.core.Real;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,7 +68,7 @@ public class InputMappingHandler {
 	private ModelZooModel model;
 	private boolean success;
 
-	private final Map<String, RandomAccessibleInterval<?>> inputs = new HashMap<>();
+	private final Map<String, Object> inputs = new HashMap<>();
 	private final Map<String, String> mapping = new HashMap<>();
 
 	public void setModel(ModelZooModel model) {
@@ -84,55 +76,38 @@ public class InputMappingHandler {
 		try {
 			runInputHarvesting();
 			runInputMapping();
-			runOutputMapping();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
+			success = false;
+			return;
 		}
-		success = validateAndFitInputs(model);
-	}
-
-	private boolean validateAndFitInputs(final ModelZooModel model) {
-		boolean failed = false;
-		for (InputImageNode inputNode : model.getInputNodes()) {
-			boolean validInput = inputNode.makeDataFit(log);
-			if (!validInput) {
-				failed = true;
-			}
-		}
-		return !failed;
+		success = true;
 	}
 
 	private void runInputHarvesting() {
 		if (model == null) return;
 		Map<String, Object> inputMap = new HashMap<>(inputs);
 		inputMap.put("model", model);
-		for (InputImageNode<?> inputNode : model.getInputNodes()) {
-			RandomAccessibleInterval data = (RandomAccessibleInterval) inputMap.get(inputNode.getName());
-			assignData(inputNode, data);
+		for (ModelZooNode inputNode : model.getInputNodes()) {
+			Object data = inputMap.get(inputNode.getName());
+			data = possiblyWrap(data);
+			if(inputNode.accepts(data)) {
+				setData(inputNode, data);
+			}
 		}
 	}
 
-	private <T extends RealType<T>, U extends RealType<U> & NativeType<U>> void assignData(InputImageNode<U> inputNode, RandomAccessibleInterval<T> data) {
-		if (data == null) return;
-		if(inputNode.getDataType() == null) {
-			inputNode.setData((RandomAccessibleInterval<U>) data);
+	private <T extends RealType<T> & NativeType<T>> Object possiblyWrap(Object data) {
+		if(RandomAccessibleInterval.class.isAssignableFrom(data.getClass())) {
+			RandomAccessibleInterval<T> rai = (RandomAccessibleInterval<T>) data;
+			// RAIs need to be wrapped because an image node might change the data type when being processed
+			return new DefaultImageDataReference<>(rai, rai.randomAccess().get().copy());
 		}
-		else if(inputNode.getDataType().getClass().isAssignableFrom(data.randomAccess().get().getClass())) {
-			inputNode.setData((RandomAccessibleInterval<U>) data);
-		} else {
-			Converter<? super T, ? super U> converter = null;
-			if(FloatType.class.isAssignableFrom(inputNode.getDataType().getClass())) {
-				converter = new RealFloatConverter();
-			}
-			if(DoubleType.class.isAssignableFrom(inputNode.getDataType().getClass())) {
-				converter = new RealDoubleConverter();
-			}
-			if(converter != null) {
-				inputNode.setData(Converters.convert(data, converter, inputNode.getDataType()));
-			} else {
-				inputNode.setData((RandomAccessibleInterval<U>) data);
-			}
-		}
+		return data;
+	}
+
+	private <T> void setData(ModelZooNode<T> inputNode, T data) {
+		inputNode.setData(data);
 	}
 
 	private void runInputMapping() throws InterruptedException, ExecutionException {
@@ -140,10 +115,12 @@ public class InputMappingHandler {
 		context.inject(mapping);
 		addText(mapping, "Inputs");
 		boolean mappingCommandNeeded = false;
-		for (InputImageNode node : model.getInputNodes()) {
+		for (ModelZooNode<?> node : model.getInputNodes()) {
 			// TODO only do this for nodes of type image
-			if (handleMapping(mapping, node)) {
-				mappingCommandNeeded = true;
+			if(isImage(node)) {
+				if (guessMappingIfAmbiguous(mapping, (ImageNode) node)) {
+					mappingCommandNeeded = true;
+				}
 			}
 		}
 		if (mappingCommandNeeded) {
@@ -151,17 +128,13 @@ public class InputMappingHandler {
 		}
 	}
 
-	private void runOutputMapping() {
-		for (OutputImageNode<?, ?> outputNode : model.getOutputNodes()) {
-			if (outputNode.getReference() != null) {
-				outputNode.setDataMapping(outputNode.getReference().getDataMapping());
-			}
-		}
+	private boolean isImage(ModelZooNode<?> node) {
+		return ImageNode.class.isAssignableFrom(node.getClass());
 	}
 
-	private boolean handleMapping(InputMappingCommand mappingCommand, ImageNode node) {
+	private boolean guessMappingIfAmbiguous(InputMappingCommand mappingCommand, ImageNode node) {
 		try {
-			RandomAccessibleInterval rai = node.getData();
+			RandomAccessibleInterval rai = node.getData().getData();
 			if (rai.numDimensions() > 2) {
 				if (mapping.containsKey(node.getName())) {
 					node.setDataMapping(InputMappingCommand.parseMappingStr(mapping.get(node.getName())));
@@ -190,7 +163,7 @@ public class InputMappingHandler {
 //		MutableModuleItem<String> item = command.addInput(text, String.class);
 	}
 
-	private <T extends RealType<T> & NativeType<T>> void addMappingChoice(DynamicCommand command, ImageNode<T> node, RandomAccessibleInterval<T> rai) {
+	private <T extends RealType<T> & NativeType<T>> void addMappingChoice(DynamicCommand command, ImageNode node, RandomAccessibleInterval<T> rai) {
 		String name = node.getName();
 		MutableModuleItem<String> moduleItem = command.addInput(name, String.class);
 		final List<String> choices = InputMappingCommand.getMappingOptions(rai.numDimensions());
@@ -202,7 +175,7 @@ public class InputMappingHandler {
 		return success;
 	}
 
-	public void addInput(String name, RandomAccessibleInterval<?> value, String mapping) {
+	public void addInput(String name, Object value, String mapping) {
 		inputs.put(name, value);
 		this.mapping.put(name, mapping);
 	}

@@ -40,9 +40,9 @@ public interface ModelZooModel extends Disposable, SciJavaPlugin {
 
 	void loadModel(Location location, String modelName) throws Exception;
 
-	List<InputImageNode<?>> getInputNodes();
+	List<ModelZooNode<?>> getInputNodes();
 
-	List<OutputImageNode<?, ?>> getOutputNodes();
+	List<ModelZooNode<?>> getOutputNodes();
 
 	boolean isInitialized();
 

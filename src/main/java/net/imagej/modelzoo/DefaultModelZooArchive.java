@@ -30,8 +30,6 @@ package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.scijava.Context;
 import org.scijava.io.location.Location;
@@ -51,7 +49,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
-public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO>> implements ModelZooArchive<TI, TO> {
+public class DefaultModelZooArchive implements ModelZooArchive {
 
 	@Parameter
 	private PluginService pluginService;
@@ -64,9 +62,8 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 
 	private Location source;
 	private ModelSpecification specification;
-	private RandomAccessibleInterval<TI> testInput;
-
-	private RandomAccessibleInterval<TO> testOutput;
+	private List<TensorSample> sampleInputs;
+	private List<TensorSample> sampleOutputs;
 
 	@Override
 	public Location getLocation() {
@@ -79,13 +76,13 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	}
 
 	@Override
-	public RandomAccessibleInterval<TI> getTestInput() {
-		return testInput;
+	public List<TensorSample> getSampleInputs() {
+		return sampleInputs;
 	}
 
 	@Override
-	public RandomAccessibleInterval<TO> getTestOutput() {
-		return testOutput;
+	public List<TensorSample> getSampleOutputs() {
+		return sampleOutputs;
 	}
 
 	@Override
@@ -134,13 +131,13 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	}
 
 	@Override
-	public void setTestInput(RandomAccessibleInterval<TI> testInput) {
-		this.testInput = testInput;
+	public void setSampleInputs(List sampleInputs) {
+		this.sampleInputs = sampleInputs;
 	}
 
 	@Override
-	public void setTestOutput(RandomAccessibleInterval<TO> testOutput) {
-		this.testOutput = testOutput;
+	public void setSampleOutputs(List sampleOutputs) {
+		this.sampleOutputs = sampleOutputs;
 	}
 
 	@Override

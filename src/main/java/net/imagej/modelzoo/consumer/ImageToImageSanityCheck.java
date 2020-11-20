@@ -68,8 +68,9 @@ import java.awt.Component;
 import java.awt.Paint;
 import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.List;
 
-public class DefaultSanityCheck implements SanityCheck {
+public class ImageToImageSanityCheck implements SanityCheck {
 
 	@Parameter
 	private OpService opService;
@@ -82,10 +83,25 @@ public class DefaultSanityCheck implements SanityCheck {
 	private static final String expected = "Expected (GT)";
 	private static int numBins = 40;
 
-	public DefaultSanityCheck() {
+	@Override
+	public void checkInteractive(List<?> input, List<?> output, List<?> gt, ModelZooArchive model) {
+		if(model.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0
+				|| model.getSampleInputs() == null
+				|| model.getSampleOutputs() == null) {
+			compare((RandomAccessibleInterval)input.get(0),
+					(RandomAccessibleInterval)output.get(0),
+					(RandomAccessibleInterval)gt.get(0),
+					null, null, opService);
+		} else {
+			compare((RandomAccessibleInterval)input.get(0),
+					(RandomAccessibleInterval)output.get(0),
+					(RandomAccessibleInterval)gt.get(0),
+					(RandomAccessibleInterval) model.getSampleInputs().get(0),
+					(RandomAccessibleInterval) model.getSampleOutputs(), opService);
+		}
 	}
 
-	public DefaultSanityCheck(Context context) {
+	public ImageToImageSanityCheck(Context context) {
 		context.inject(this);
 	}
 
@@ -361,14 +377,5 @@ public class DefaultSanityCheck implements SanityCheck {
 		dif.sub(minMax.getA());
 		double minMaxDif = dif.getRealDouble();
 		return 20.*Math.log10(minMaxDif) - 10*Math.log10(mse);
-	}
-
-	@Override
-	public void checkInteractive(Dataset input, Dataset output, Dataset gt, ModelZooArchive model) {
-		if(model.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
-			compare(input, output, gt, null, null, opService);
-		} else {
-			compare(input, output, gt, model.getTestInput(), model.getTestOutput(), opService);
-		}
 	}
 }

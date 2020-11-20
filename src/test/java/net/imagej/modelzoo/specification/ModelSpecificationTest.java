@@ -160,8 +160,8 @@ public class ModelSpecificationTest {
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		specification.addCitation(citation);
-		specification.setTestInput(testInput);
-		specification.setTestOutput(testOutput);
+		specification.setSampleInputs(Collections.singletonList(testInput));
+		specification.setSampleOutputs(Collections.singletonList(testOutput));
 		attachments.forEach((s, o) -> specification.getAttachments().put(s, o));
 		// training
 		specification.setTrainingKwargs(trainingKwargs);
@@ -216,8 +216,12 @@ public class ModelSpecificationTest {
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
 		assertEquals(citation, specification.getCitations().get(0));
-		assertEquals(testInput, specification.getTestInput());
-		assertEquals(testOutput, specification.getTestOutput());
+		assertNotNull(specification.getSampleInputs());
+		assertEquals(1, specification.getSampleInputs().size());
+		assertEquals(testInput, specification.getSampleInputs().get(0));
+		assertNotNull(specification.getSampleOutputs());
+		assertEquals(1, specification.getSampleOutputs().size());
+		assertEquals(testOutput, specification.getSampleOutputs().get(0));
 		// training
 		assertTrue(trainingKwargs.equals(specification.getTrainingKwargs()));
 		assertEquals(trainingSource, specification.getTrainingSource());

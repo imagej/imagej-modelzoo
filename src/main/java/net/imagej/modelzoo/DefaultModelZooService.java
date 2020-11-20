@@ -33,12 +33,12 @@ import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromImageCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
+import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
@@ -60,7 +60,9 @@ import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Plugin(type = Service.class)
 public class DefaultModelZooService extends AbstractService implements ModelZooService {
@@ -140,47 +142,41 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		} catch (ModuleException e) {
 			return false;
 		}
-		SingleImagePrediction prediction = getSingleImagePrediction(trainedModel);
+		ModelZooPrediction prediction = getPrediction(trainedModel);
 		return predictionCommand != null && prediction.getSanityCheck() != null;
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive <TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception {
+	public Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes) throws Exception {
 		return predict(trainedModel, input, axes, ModelZooPredictionOptions.options());
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception {
-		SingleImagePrediction prediction = getSingleImagePrediction(trainedModel);
+	public <T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes) throws Exception {
+		return predict(trainedModel, Collections.singletonList(input), Collections.singletonList(axes));
+	}
+
+	@Override
+	public Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes, ModelZooPredictionOptions options) throws Exception {
+		ModelZooPrediction prediction = getPrediction(trainedModel);
 		if (prediction == null) return null;
 		prediction.setTrainedModel(trainedModel);
-		prediction.setInput(input, axes);
+		List<InputNodeSpecification> inputs = trainedModel.getSpecification().getInputs();
+		for (int i = 0; i < inputs.size(); i++) {
+			InputNodeSpecification inputNodeSpecification = inputs.get(i);
+			prediction.setInput(inputNodeSpecification.getName(), input.get(i), axes.get(i));
+		}
 		prediction.setBatchSize(options.values.batchSize());
 		prediction.setCacheDir(options.values.cacheDirectory());
 		prediction.setNumberOfTiles(options.values.numberOfTiles());
 		prediction.setTilingEnabled(options.values.tilingEnabled());
 		prediction.run();
-		return prediction.getOutput();
+		return prediction.getOutputs();
 	}
 
-	private <TI extends RealType<TI>, TO extends RealType<TO>> SingleImagePrediction getSingleImagePrediction(ModelZooArchive<TI, TO> trainedModel) {
-		String archivePrediction = trainedModel.getSpecification().getSource();
-		SingleImagePrediction prediction = null;
-		if(archivePrediction == null) {
-			prediction = new DefaultSingleImagePrediction(getContext());
-		} else {
-			List<PluginInfo<SingleImagePrediction>> predictionCommands = pluginService.getPluginsOfType(SingleImagePrediction.class);
-			for (PluginInfo<SingleImagePrediction> command : predictionCommands) {
-				if(command.getAnnotation().name().equals(archivePrediction)) {
-					prediction = pluginService.createInstance(command);
-				}
-			}
-			if(prediction == null) {
-				log().error("Could not find prediction plugin for model source " + archivePrediction + ".");
-				return null;
-			}
-		}
-		return prediction;
+	@Override
+	public <T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes, ModelZooPredictionOptions options) throws Exception {
+		return predict(trainedModel, Collections.singletonList(input), Collections.singletonList(axes), options);
 	}
 
 	@Override
@@ -205,7 +201,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive <TI, TO> trainedModel) throws ModuleException {
+	public void predictInteractive(ModelZooArchive trainedModel) throws ModuleException {
 		Module mycommand = getModule(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
 		if (mycommand == null) return;
 		File value = new File(trainedModel.getLocation().getURI());
@@ -256,7 +252,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void batchPredictInteractive(ModelZooArchive<TI, TO> trainedModel) throws ModuleException {
+	public void batchPredictInteractive(ModelZooArchive trainedModel) throws ModuleException {
 		Module predictionCommand = getModule(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
 		if (predictionCommand == null) return;
 		File value = new File(trainedModel.getLocation().getURI());
@@ -267,16 +263,16 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromFilesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException {
+	public void sanityCheckFromFilesInteractive(ModelZooArchive model) throws ModuleException {
 		sanityCheck(model, DefaultModelZooSanityCheckFromFileCommand.class);
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromImagesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException {
+	public void sanityCheckFromImagesInteractive(ModelZooArchive model) throws ModuleException {
 		sanityCheck(model, DefaultModelZooSanityCheckFromImageCommand.class);
 	}
 
-	private <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheck(ModelZooArchive<TI, TO> model, Class commandClass) throws ModuleException {
+	private void sanityCheck(ModelZooArchive model, Class commandClass) throws ModuleException {
 		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
 		if (predictionCommand == null) return;
 		File value = new File(model.getLocation().getURI());
@@ -289,7 +285,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public <TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckInteractive(ModelZooArchive<TI, TO> model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException {
+	public void sanityCheckInteractive(ModelZooArchive model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException {
 		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
 		if (predictionCommand == null) return;
 		File value = new File(model.getLocation().getURI());

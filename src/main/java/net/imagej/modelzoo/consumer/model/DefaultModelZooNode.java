@@ -28,9 +28,18 @@
  */
 package net.imagej.modelzoo.consumer.model;
 
-public class DefaultModelZooNode<T> implements ModelZooNode<T> {
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class DefaultModelZooNode<T> implements ModelZooNode<T> {
 
 	private String name;
+	private List<NodeProcessor> processors;
+	private T data;
+
+	public DefaultModelZooNode() {
+		processors = new ArrayList<>();
+	}
 
 	@Override
 	public void setName(final String name) {
@@ -40,6 +49,20 @@ public class DefaultModelZooNode<T> implements ModelZooNode<T> {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public List<NodeProcessor> getProcessors() {
+		return processors;
+	}
+
+	@Override
+	public T getData() {
+		return data;
+	}
+
+	public void setData(T data) {
+		this.data = data;
 	}
 
 }

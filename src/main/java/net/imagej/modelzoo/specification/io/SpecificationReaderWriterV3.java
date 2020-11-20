@@ -17,6 +17,7 @@ import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTran
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,8 +41,10 @@ public class SpecificationReaderWriterV3 {
 	private final static String idSource = "source";
 	private final static String idGitRepo = "git_repo";
 	private final static String idAttachments = "attachments";
-	private final static String idTestInput = "test_input";
-	private final static String idTestOutput = "test_output";
+	private final static String idTestInputs = "test_inputs";
+	private final static String idTestOutputs = "test_outputs";
+	private final static String idSampleInputs = "sample_inputs";
+	private final static String idSampleOutputs = "sample_outputs";
 	private final static String idInputs = "inputs";
 	private final static String idOutputs = "outputs";
 	private final static String idWeights = "weights";
@@ -126,8 +129,10 @@ public class SpecificationReaderWriterV3 {
 		specification.setFramework((String) obj.get(idFramework));
 		specification.setSource((String) obj.get(idSource));
 		specification.setGitRepo((String) obj.get(idGitRepo));
-		specification.setTestInput((String) obj.get(idTestInput));
-		specification.setTestOutput((String) obj.get(idTestOutput));
+		specification.setTestInputs((List<String>) obj.get(idTestInputs));
+		specification.setTestOutputs((List<String>) obj.get(idTestOutputs));
+		specification.setSampleInputs((List<String>) obj.get(idSampleInputs));
+		specification.setSampleOutputs((List<String>) obj.get(idSampleOutputs));
 	}
 
 	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) {
@@ -242,8 +247,10 @@ public class SpecificationReaderWriterV3 {
 		data.put(idSource, specification.getSource());
 		data.put(idGitRepo, specification.getGitRepo());
 		data.put(idAttachments, specification.getAttachments());
-		data.put(idTestInput, specification.getTestInput());
-		data.put(idTestOutput, specification.getTestOutput());
+		data.put(idTestInputs, specification.getTestInputs());
+		data.put(idTestOutputs, specification.getTestOutputs());
+		data.put(idSampleInputs, specification.getSampleInputs());
+		data.put(idSampleOutputs, specification.getSampleOutputs());
 	}
 
 	private static List<Map<String, Object>> buildInputList(ModelSpecification specification) {
@@ -382,12 +389,12 @@ public class SpecificationReaderWriterV3 {
 		Map<String, Object> kwargs = new LinkedHashMap<>();
 		if(transformation instanceof ScaleLinearTransformation) {
 			res.put(idTransformationName, idTransformationScaleLinear);
-			kwargs.put(idTransformationScaleLinearGain, ((ScaleLinearTransformation) transformation).getGain());
-			kwargs.put(idTransformationScaleLinearOffset, ((ScaleLinearTransformation) transformation).getOffset());
+			kwargs.put(idTransformationScaleLinearGain, Collections.singletonList(((ScaleLinearTransformation) transformation).getGain()));
+			kwargs.put(idTransformationScaleLinearOffset, Collections.singletonList(((ScaleLinearTransformation) transformation).getOffset()));
 		} else if(transformation instanceof ZeroMeanUnitVarianceTransformation) {
 			res.put(idTransformationName, idTransformationZeroMean);
-			kwargs.put(idTransformationZeroMeanMean, ((ZeroMeanUnitVarianceTransformation) transformation).getMean());
-			kwargs.put(idTransformationZeroMeanStd, ((ZeroMeanUnitVarianceTransformation) transformation).getStd());
+			kwargs.put(idTransformationZeroMeanMean, Collections.singletonList(((ZeroMeanUnitVarianceTransformation) transformation).getMean()));
+			kwargs.put(idTransformationZeroMeanStd, Collections.singletonList(((ZeroMeanUnitVarianceTransformation) transformation).getStd()));
 		}
 		res.put(idTransformationKwargs, kwargs);
 		return res;

@@ -28,9 +28,10 @@
  */
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.Dataset;
 import net.imagej.modelzoo.ModelZooArchive;
 
+import java.util.List;
+
 public interface SanityCheck {
-	void checkInteractive(Dataset input, Dataset output, Dataset gt, ModelZooArchive model);
+	void checkInteractive(List<?> input, List<?> output, List<?> gt, ModelZooArchive model);
 }

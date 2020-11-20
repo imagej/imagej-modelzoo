@@ -97,7 +97,8 @@ public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements 
 			prediction.setNumberOfTiles(numTiles);
 			prediction.setBatchSize(batchSize);
 			prediction.run();
-			output = datasetService.create(prediction.getOutput());
+			RandomAccessibleInterval output = prediction.getOutput();
+			this.output = datasetService.create(output);
 
 		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");

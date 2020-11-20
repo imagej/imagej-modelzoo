@@ -100,8 +100,8 @@ public class SpecificationReaderV1 {
 		specification.setLanguage((String) obj.get(idLanguage));
 		specification.setFramework((String) obj.get(idFramework));
 		specification.setSource((String) obj.get(idSource));
-		specification.setTestInput((String) obj.get(idTestInput));
-		specification.setTestOutput((String) obj.get(idTestOutput));
+		specification.setTestInputs(Collections.singletonList((String) obj.get(idTestInput)));
+		specification.setTestOutputs(Collections.singletonList((String) obj.get(idTestOutput)));
 	}
 
 	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) {
@@ -137,6 +137,8 @@ public class SpecificationReaderV1 {
 						pre.setStd(std);
 						pre.setMean(mean);
 						ScaleLinearTransformation post = new ScaleLinearTransformation();
+						post.setGain(std);
+						post.setOffset(mean);
 						specification.getInputs().get(0).setPreprocessing(Collections.singletonList(pre));
 						specification.getOutputs().get(0).setPostprocessing(Collections.singletonList(post));
 					}

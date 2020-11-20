@@ -31,23 +31,25 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.model.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.postprocessing.PredictionPostprocessing;
+import net.imagej.modelzoo.consumer.model.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.NodeProcessor;
+import net.imagej.modelzoo.consumer.model.NodeProcessorException;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
-import net.imagej.modelzoo.consumer.preprocessing.PredictionPreprocessing;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultModelZooPrediction implements ModelZooPrediction {
 
-	private ModelZooArchive<? extends RealType<?>, ? extends RealType<?>> modelArchive;
+	private ModelZooArchive modelArchive;
 
 	@Parameter
 	private LogService log;
@@ -65,7 +67,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 
 	private Path cacheDir = null;
 
-	private Map<String, RandomAccessibleInterval<?>> outputs;
+	private Map<String, Object> outputs;
 
 	private boolean contextInjected = false;
 
@@ -112,25 +114,36 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	@Override
-	public <T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes) {
+	public void setInput(String name, Object value, String axes) {
 		inputHandling.addInput(name, value, axes);
 	}
 
-	protected void preprocessing(ModelZooModel model) {
-		PredictionPreprocessing preprocessing = new PredictionPreprocessing(context);
-		preprocessing.setModel(model);
-		preprocessing.run();
+	protected void preprocessing(ModelZooModel model) throws NodeProcessorException {
+		for (ModelZooNode<?> inputNode : model.getInputNodes()) {
+			for (NodeProcessor processor : inputNode.getProcessors()) {
+				processor.run();
+			}
+		}
 	}
 
-	protected void postprocessing(ModelZooModel model) {
-		PredictionPostprocessing postprocessing = new PredictionPostprocessing(context);
-		postprocessing.setModel(model);
-		postprocessing.run();
-		this.outputs = postprocessing.getOutputs();
+	protected void postprocessing(ModelZooModel model) throws NodeProcessorException {
+		for (ModelZooNode<?> outputNode : model.getOutputNodes()) {
+			for (NodeProcessor processor : outputNode.getProcessors()) {
+				processor.run();
+			}
+		}
+		outputs = new HashMap<>();
+		model.getOutputNodes().forEach(node -> {
+			if(ImageNode.class.isAssignableFrom(node.getClass())) {
+				outputs.put(node.getName(), ((ImageNode)node).getData().getData());
+			} else {
+				outputs.put(node.getName(), node.getData());
+			}
+		});
 	}
 
 	@Override
-	public Map<String, RandomAccessibleInterval<?>> getOutputs() {
+	public Map<String, Object> getOutputs() {
 		return outputs;
 	}
 
@@ -150,7 +163,7 @@ public class DefaultModelZooPrediction implements ModelZooPrediction {
 	}
 
 	@Override
-	public ModelZooArchive<? extends RealType<?>, ? extends RealType<?>> getTrainedModel() {
+	public ModelZooArchive getTrainedModel() {
 		return modelArchive;
 	}
 

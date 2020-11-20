@@ -56,19 +56,21 @@ import java.util.zip.ZipFile;
  */
 public class DefaultModelSpecification implements ModelSpecification {
 
-	private final static String defaultTestInput = "testinput.tif";
-	private final static String defaultTestOutput = "testoutput.tif";
-	final static String dependenciesFileName = "dependencies.yaml";
+	private final static String defaultSampleInput = "testinput.tif";
 
+	private final static String defaultSampleOutput = "testoutput.tif";
+
+	final static String dependenciesFileName = "dependencies.yaml";
 	final static String modelZooSpecificationVersion = "0.3.0";
 	private String modelFileName = "model.yaml";
-
-	private String formatVersion = modelZooSpecificationVersion;
 	private String language = "java";
 	private String framework = "tensorflow";
-	private String testInput = defaultTestInput;
-	private String testOutput = defaultTestOutput;
+	private String formatVersion = modelZooSpecificationVersion;
+	private List<String> sampleInputs = new ArrayList<>();
 
+	private List<String> sampleOutputs = new ArrayList<>();
+	private List<String> testInputs = new ArrayList<>();
+	private List<String> testOutputs = new ArrayList<>();
 	private Map<String, Object> trainingKwargs;
 	private String name;
 	private String description;
@@ -84,7 +86,6 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private String gitRepo;
 	private final Map<String, Object> attachments = new HashMap<>();
-
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -123,7 +124,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	public boolean read(InputStream stream) {
 		Yaml yaml = new Yaml();
 		Map<String, Object> obj = yaml.load(stream);
-//		System.out.println(obj);
+		System.out.println(obj);
 		if (obj == null) return false;
 		return read(obj);
 	}
@@ -339,25 +340,43 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public String getTestInput() {
-		if(testInput == null) testInput = defaultTestInput;
-		return testInput;
+	public List<String> getTestInputs() {
+		return testInputs;
 	}
 
 	@Override
-	public void setTestInput(String testInput) {
-		this.testInput = testInput;
+	public void setTestInputs(List<String> testInputs) {
+		this.testInputs = testInputs;
 	}
 
 	@Override
-	public String getTestOutput() {
-		if(testOutput == null) testOutput = defaultTestOutput;
-		return testOutput;
+	public List<String> getTestOutputs() {
+		return testOutputs;
 	}
 
 	@Override
-	public void setTestOutput(String testOutput) {
-		this.testOutput = testOutput;
+	public void setTestOutputs(List<String> testOutputs) {
+		this.testOutputs = testOutputs;
+	}
+
+	@Override
+	public List<String> getSampleInputs() {
+		return sampleInputs;
+	}
+
+	@Override
+	public void setSampleInputs(List<String> sampleInputs) {
+		this.sampleInputs = sampleInputs;
+	}
+
+	@Override
+	public List<String> getSampleOutputs() {
+		return sampleOutputs;
+	}
+
+	@Override
+	public void setSampleOutputs(List<String> sampleOutputs) {
+		this.sampleOutputs = sampleOutputs;
 	}
 
 	@Override
@@ -368,6 +387,51 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public void setFormatVersion(String version) {
 		formatVersion = version;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public void setModelFileName(String modelFileName) {
+		this.modelFileName = modelFileName;
+	}
+
+	public void read(ModelSpecification spec) {
+		setName(spec.getName());
+		setDocumentation(spec.getDocumentation());
+		setDescription(spec.getDescription());
+		setAuthors(spec.getAuthors());
+		getTestInputs().clear();
+		getTestInputs().addAll(spec.getTestInputs());
+		getTestOutputs().clear();
+		getTestOutputs().addAll(spec.getTestOutputs());
+		getSampleInputs().clear();
+		getSampleInputs().addAll(spec.getSampleInputs());
+		getSampleOutputs().clear();
+		getSampleOutputs().addAll(spec.getSampleOutputs());
+		setFramework(spec.getFramework());
+		setLanguage(spec.getLanguage());
+		setLicense(spec.getLicense());
+		setSource(spec.getSource());
+		setTags(spec.getTags());
+		setTrainingKwargs(spec.getTrainingKwargs());
+		setTrainingSource(spec.getTrainingSource());
+		setGitRepo(spec.getGitRepo());
+		setModelFileName(spec.getModelFileName());
+		getInputs().clear();
+		getInputs().addAll(spec.getInputs());
+		getOutputs().clear();
+		getOutputs().addAll(spec.getOutputs());
+		getAttachments().clear();
+		getAttachments().putAll(spec.getAttachments());
+		getWeights().clear();
+		getWeights().addAll(spec.getWeights());
+	}
+
+	private static InputStream extractFile(File zipFile, String fileName) throws IOException {
+		ZipFile zf = new ZipFile(zipFile);
+		return zf.getInputStream(zf.getEntry(fileName));
 	}
 
 	private static void writeDependenciesFile(File targetDirectory) {
@@ -388,42 +452,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 		yaml.dump(data, writer);
 	}
 
-	public void setLanguage(String language) {
-		this.language = language;
+	public static String getDefaultSampleInput() {
+		return defaultSampleInput;
 	}
 
-	public void setModelFileName(String modelFileName) {
-		this.modelFileName = modelFileName;
-	}
-
-	private static InputStream extractFile(File zipFile, String fileName) throws IOException {
-		ZipFile zf = new ZipFile(zipFile);
-		return zf.getInputStream(zf.getEntry(fileName));
-	}
-
-	public void read(ModelSpecification spec) {
-		setName(spec.getName());
-		setDocumentation(spec.getDocumentation());
-		setDescription(spec.getDescription());
-		setAuthors(spec.getAuthors());
-		setTestInput(spec.getTestInput());
-		setTestOutput(spec.getTestOutput());
-		setFramework(spec.getFramework());
-		setLanguage(spec.getLanguage());
-		setLicense(spec.getLicense());
-		setSource(spec.getSource());
-		setTags(spec.getTags());
-		setTrainingKwargs(spec.getTrainingKwargs());
-		setTrainingSource(spec.getTrainingSource());
-		setGitRepo(spec.getGitRepo());
-		setModelFileName(spec.getModelFileName());
-		getInputs().clear();
-		getInputs().addAll(spec.getInputs());
-		getOutputs().clear();
-		getOutputs().addAll(spec.getOutputs());
-		getAttachments().clear();
-		getAttachments().putAll(spec.getAttachments());
-		getWeights().clear();
-		getWeights().addAll(spec.getWeights());
+	public static String getDefaultSampleOutput() {
+		return defaultSampleOutput;
 	}
 }

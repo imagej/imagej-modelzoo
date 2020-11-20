@@ -30,14 +30,13 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.tiling.Tiling;
+import net.imagej.modelzoo.consumer.tiling.TilingAction;
 import org.scijava.ItemIO;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +45,7 @@ public class OOMThrowingNetwork implements ModelZooModel
 {
 
 	@Parameter
-	Tiling.TilingAction[] actions;
+	TilingAction[] actions;
 
 	@Parameter(type = ItemIO.OUTPUT)
 	List nTilesHistory = new ArrayList();
@@ -59,12 +58,12 @@ public class OOMThrowingNetwork implements ModelZooModel
 	}
 
 	@Override
-	public List<InputImageNode<?>> getInputNodes() {
+	public List<ModelZooNode<?>> getInputNodes() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public List<OutputImageNode<?, ?>> getOutputNodes() {
+	public List<ModelZooNode<?>> getOutputNodes() {
 		return Collections.emptyList();
 	}
 

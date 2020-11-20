@@ -29,13 +29,22 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.Dataset;
+import net.imagej.modelzoo.DefaultTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imglib2.RandomAccessibleInterval;
+import net.imagej.modelzoo.TensorSample;
+import net.imagej.modelzoo.specification.DefaultModelSpecification;
+import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imglib2.img.Img;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromFileCommand.getTensorSamples;
 
 @Plugin(type = Command.class, name = "Update modelzoo archive demo image")
 public class ModelArchiveUpdateDemoFromImageCommand implements Command {
@@ -56,15 +65,27 @@ public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 //			return;
 //		}
 		try {
-			RandomAccessibleInterval output = modelZooService.predict(archive, (Img)inputImage, "XY");
-			archive.setTestOutput(output);
-			archive.setTestInput(inputImage);
+			Map outputs = modelZooService.predict(archive, (Img) inputImage, "XY");
+			List<TensorSample> inputSamples = new ArrayList<>();
+			inputSamples.add(new DefaultTensorSample(inputImage, getSampleInput(archive)));
+			List<OutputNodeSpecification> outputNodeSpecifications = archive.getSpecification().getOutputs();
+			List<TensorSample> outputSamples = getTensorSamples(archive, outputs, outputNodeSpecifications);
+			archive.setSampleOutputs(outputSamples);
+			archive.setSampleInputs(inputSamples);
 			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
 				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static String getSampleInput(ModelZooArchive archive) {
+		List<String> sampleInputs = archive.getSpecification().getSampleInputs();
+		if(sampleInputs != null && sampleInputs.size() > 0) {
+			return sampleInputs.get(0);
+		}
+		return DefaultModelSpecification.getDefaultSampleInput();
 	}
 
 }

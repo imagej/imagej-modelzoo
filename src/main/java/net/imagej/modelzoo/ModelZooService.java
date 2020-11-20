@@ -40,6 +40,8 @@ import org.scijava.module.ModuleException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public interface ModelZooService extends ImageJService {
 	ModelZooArchive open(String location) throws IOException;
@@ -51,12 +53,14 @@ public interface ModelZooService extends ImageJService {
 	void save(String archivePath, ModelSpecification specification, String location) throws IOException;
 	boolean canRunPredictionInteractive(ModelZooArchive trainedModel);
 	boolean canRunSanityCheckInteractive(ModelZooArchive trainedModel);
-	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes) throws Exception;
-	<TI extends RealType<TI>, TO extends RealType<TO>> RandomAccessibleInterval<TO> predict(ModelZooArchive<TI, TO> trainedModel, RandomAccessibleInterval<TI> input, String axes, ModelZooPredictionOptions options) throws Exception;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void predictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void batchPredictInteractive(ModelZooArchive<TI, TO> trainedModel) throws FileNotFoundException, ModuleException;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromFilesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckFromImagesInteractive(ModelZooArchive<TI, TO> model) throws ModuleException;
-	<TI extends RealType<TI>, TO extends RealType<TO>> void sanityCheckInteractive(ModelZooArchive<TI, TO> model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException;
+	Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes) throws Exception;
+	<T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes) throws Exception;
+	Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes, ModelZooPredictionOptions options) throws Exception;
+	<T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes, ModelZooPredictionOptions options) throws Exception;
+	void predictInteractive(ModelZooArchive trainedModel) throws FileNotFoundException, ModuleException;
+	void batchPredictInteractive(ModelZooArchive trainedModel) throws FileNotFoundException, ModuleException;
+	void sanityCheckFromFilesInteractive(ModelZooArchive model) throws ModuleException;
+	void sanityCheckFromImagesInteractive(ModelZooArchive model) throws ModuleException;
+	void sanityCheckInteractive(ModelZooArchive model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException;
 	ModelZooPrediction getPrediction(ModelZooArchive model);
 }

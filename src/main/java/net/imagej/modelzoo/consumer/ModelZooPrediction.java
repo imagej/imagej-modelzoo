@@ -30,8 +30,6 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
 
 import java.nio.file.Path;
@@ -39,11 +37,11 @@ import java.util.Map;
 
 public interface ModelZooPrediction extends SciJavaPlugin {
 
-	<T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes);
+	void setInput(String name, Object value, String axes);
 
 	void run() throws OutOfMemoryError, Exception;
 
-	Map<String, RandomAccessibleInterval<?>> getOutputs();
+	Map<String, Object> getOutputs();
 
 	void setTilingEnabled(boolean enabled);
 

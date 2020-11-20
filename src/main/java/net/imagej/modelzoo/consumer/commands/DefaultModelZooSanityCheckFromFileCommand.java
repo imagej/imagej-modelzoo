@@ -48,6 +48,7 @@ import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 @Plugin(type = Command.class)
@@ -114,7 +115,7 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 			uiService.show("result after prediction", output);
 			ModelZooArchive model = modelZooService.open(modelFile);
 			SanityCheck sanityCheck = modelZooService.getPrediction(model).getSanityCheck();
-			sanityCheck.checkInteractive(input, output, gt, model);
+			sanityCheck.checkInteractive(Collections.singletonList(input), Collections.singletonList(output), Collections.singletonList(gt), model);
 		} catch (IOException | ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}

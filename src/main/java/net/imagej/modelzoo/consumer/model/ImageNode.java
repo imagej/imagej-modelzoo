@@ -30,26 +30,19 @@ package net.imagej.modelzoo.consumer.model;
 
 import net.imagej.axis.AxisType;
 import net.imglib2.EuclideanSpace;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
 import org.scijava.util.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultModelZooNode<RandomAccessibleInterval<T>> implements EuclideanSpace {
-
-	private RandomAccessibleInterval<T> data;
-	private T dataType;
+public class ImageNode extends DefaultModelZooNode<ImageDataReference<?>> implements EuclideanSpace {
 
 	private final List<ModelZooAxis> axes = new ArrayList<>();
 	private List<AxisType> mapping;
 
-	private final List<NodeProcessor> processors;
-
-	public ImageNode() {
-		processors = new ArrayList<>();
+	@Override
+	public int numDimensions() {
+		return axes.size();
 	}
 
 	public void clearAxes() {
@@ -60,15 +53,7 @@ public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultMod
 		axes.add(axis);
 	}
 
-	public void setData(RandomAccessibleInterval<T> input) {
-		this.data = input;
-	}
-
-	public RandomAccessibleInterval<T> getData() {
-		return data;
-	}
-
-	AxisType[] getAxesArray() {
+	public AxisType[] getAxesArray() {
 		AxisType[] res = new AxisType[axes.size()];
 		for (int i = 0; i < res.length; i++) {
 			res[i] = axes.get(i).getType();
@@ -77,7 +62,7 @@ public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultMod
 	}
 
 	public AxisType[] getDataAxesArray() {
-		AxisType[] res = new AxisType[data.numDimensions()];
+		AxisType[] res = new AxisType[getData().getData().numDimensions()];
 		for (int i = 0; i < res.length; i++) {
 			res[i] = getDataAxis(i).getType();
 		}
@@ -118,26 +103,13 @@ public class ImageNode<T extends RealType<T> & NativeType<T>> extends DefaultMod
 		return getAxes().get(getMappingIndices()[index]);
 	}
 
-	@Override
-	public int numDimensions() {
-		return axes.size();
-	}
-
 	public List<ModelZooAxis> getAxes() {
 		return axes;
 	}
 
-	public void setDataType(T type) {
-		this.dataType = type;
+	@Override
+	public boolean accepts(Object data) {
+		return ImageDataReference.class.isAssignableFrom(data.getClass());
 	}
-
-	public T getDataType() {
-		return dataType;
-	}
-
-	public List<NodeProcessor> getProcessors() {
-		return processors;
-	}
-
 }
 

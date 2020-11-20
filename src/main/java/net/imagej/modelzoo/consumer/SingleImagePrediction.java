@@ -30,15 +30,16 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public interface SingleImagePrediction<TI extends RealType<TI>, TO extends RealType<TO>> extends ModelZooPrediction {
+public interface SingleImagePrediction extends ModelZooPrediction {
 
-	default void setInput(RandomAccessibleInterval<TI> value, String axes) {
+	default <TI extends RealType<TI> & NativeType<TI>> void setInput(RandomAccessibleInterval<TI> value, String axes) {
 		setInput(getTrainedModel().getSpecification().getInputs().get(0).getName(), value, axes);
 	}
 
-	default RandomAccessibleInterval<TO> getOutput() {
+	default <TO extends RealType<TO>> RandomAccessibleInterval<TO> getOutput() {
 		if(getOutputs() == null) return null;
 		if(getOutputs().size() == 0) return null;
 		return (RandomAccessibleInterval<TO>) getOutputs().values().iterator().next();

@@ -32,10 +32,11 @@ package net.imagej.modelzoo.consumer.commands;
 import net.imagej.Dataset;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSanityCheck;
+import net.imagej.modelzoo.TensorSample;
+import net.imagej.modelzoo.consumer.ImageToImageSanityCheck;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
-import net.imglib2.img.Img;
+import net.imglib2.RandomAccessibleInterval;
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
@@ -49,6 +50,7 @@ import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand.descriptionText;
@@ -102,13 +104,24 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 			context().service(ModuleService.class).run(prediction, true).get();
 			output = (Dataset) prediction.getOutput("output");
 			ModelZooArchive model = modelZooService.open(modelFile);
-			DefaultSanityCheck.compare((Img)input, (Img)output, (Img)inputGroundTruth, model.getTestInput(), model.getTestOutput(), opService);
+			ImageToImageSanityCheck.compare(
+					input,
+					output,
+					inputGroundTruth,
+					getFirstSample(model.getSampleInputs()),
+					getFirstSample(model.getSampleOutputs()),
+					opService);
 		} catch (ExecutionException | InterruptedException | IOException e) {
 			e.printStackTrace();
 		}
 
 		log("ModelZoo sanity check exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
+	}
+
+	private RandomAccessibleInterval getFirstSample(List<TensorSample> sampleInputs) {
+		if(sampleInputs == null || sampleInputs.size() == 0) return null;
+		return (RandomAccessibleInterval) sampleInputs.get(0);
 	}
 
 	private void log(String msg) {

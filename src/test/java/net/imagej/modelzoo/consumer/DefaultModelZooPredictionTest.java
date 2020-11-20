@@ -44,6 +44,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class DefaultModelZooPredictionTest {
 
@@ -63,8 +64,8 @@ public class DefaultModelZooPredictionTest {
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, RandomAccessibleInterval<?>> res = prediction.getOutputs();
-		RandomAccessibleInterval output = res.values().iterator().next();
+		Map<String, Object> res = prediction.getOutputs();
+		Object output = res.values().iterator().next();
 		assertNotNull(output);
 	}
 
@@ -78,9 +79,10 @@ public class DefaultModelZooPredictionTest {
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, RandomAccessibleInterval<?>> res = prediction.getOutputs();
-		RandomAccessibleInterval output = res.values().iterator().next();
+		Map<String, Object> res = prediction.getOutputs();
+		Object output = res.values().iterator().next();
 		assertNotNull(output);
-		assertArrayEquals(Intervals.dimensionsAsLongArray(inputFloat), Intervals.dimensionsAsLongArray(output));
+		assertTrue(RandomAccessibleInterval.class.isAssignableFrom(output.getClass()));
+		assertArrayEquals(Intervals.dimensionsAsLongArray(inputFloat), Intervals.dimensionsAsLongArray((RandomAccessibleInterval)output));
 	}
 }

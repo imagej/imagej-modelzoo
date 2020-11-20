@@ -32,9 +32,12 @@ package net.imagej.modelzoo.consumer.model.tensorflow;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
+import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
+import net.imagej.modelzoo.consumer.model.DefaultSpecificationLoader;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
@@ -52,7 +55,6 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.tensorflow.Tensor;
-import org.tensorflow.TensorFlowException;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 
@@ -108,7 +110,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		// The strings "input", "probabilities" and "patches" are meant to be
 		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
-		ModelSpecification specification = SpecificationLoader.guessSpecification(log, sig);
+		ModelSpecification specification = TensorFlowUtils.guessSpecification(log, sig);
 		specification.setName(modelName);
 		return specification;
 	}
@@ -184,10 +186,25 @@ public class TensorFlowModel extends DefaultModelZooModel {
 			return false;
 		}
 		inputNodes.clear();
-		SpecificationLoader loader = new SpecificationLoader(context, sig, specification);
-		inputNodes.addAll(loader.processInputs());
-		outputNodes.clear();
-		outputNodes.addAll(loader.processOutputs(inputNodes));
+		if(!verifySpecification(specification)) return false;
+		DefaultSpecificationLoader loader = new DefaultSpecificationLoader(context, specification, this);
+		loader.process();
+		return true;
+	}
+
+	private boolean verifySpecification(ModelSpecification specification) {
+		if (sig.getInputsCount() != specification.getInputs().size()) {
+			log.error("Model signature (" + sig.getInputsCount() +
+					" inputs) does not match model description signature (" +
+					specification.getInputs().size() + " inputs).");
+			return false;
+		}
+		if (sig.getInputsCount() != specification.getOutputs().size()) {
+			log.error("Model signature (" + sig.getOutputsCount() +
+					" outputs) does not match model description signature (" +
+					specification.getOutputs().size() + " outputs).");
+			return false;
+		}
 		return true;
 	}
 
@@ -208,8 +225,10 @@ public class TensorFlowModel extends DefaultModelZooModel {
 
 	private List<Tensor<?>> getInputTensors() {
 		List<Tensor<?>> res = new ArrayList<>();
-		for (InputImageNode node : getInputNodes()) {
-			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData(), node.getMappingIndices());
+		for (ModelZooNode<?> _node : getInputNodes()) {
+			//TODO currently, we assume all inputs are images
+			InputImageNode node = (InputImageNode) _node;
+			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData().getData(), node.getMappingIndices());
 			if (tensor == null) {
 				log.error("Cannot convert to tensor: " + node.getData());
 			}
@@ -219,20 +238,20 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	private List<String> getInputNames() {
-		return getInputNodes().stream().map(InputImageNode::getName).collect(Collectors.toList());
+		return getInputNodes().stream().map(ModelZooNode::getName).collect(Collectors.toList());
 	}
 
 	private List<String> getOutputNames() {
-		return getOutputNodes().stream().map(OutputImageNode::getName).collect(Collectors.toList());
+		return getOutputNodes().stream().map(ModelZooNode::getName).collect(Collectors.toList());
 	}
 
 	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {
 		for (int i = 0; i < tensors.size(); i++) {
 			Tensor tensor = tensors.get(i);
-			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
+			OutputImageNode node = (OutputImageNode) getOutputNodes().get(i);
 //			System.out.println(Arrays.toString(node.getMappingIndices()));
 			RandomAccessibleInterval<TO> output = TensorFlowConverter.tensorToImage(tensor, node.getMappingIndices());
-			node.setData(output);
+			node.setData(new DefaultImageDataReference(output, node.getData().getDataType()));
 		}
 	}
 

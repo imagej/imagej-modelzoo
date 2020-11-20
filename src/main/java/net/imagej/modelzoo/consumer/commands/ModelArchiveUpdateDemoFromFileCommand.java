@@ -29,9 +29,14 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import io.scif.services.DatasetIOService;
+import net.imagej.modelzoo.DefaultTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.TensorSample;
+import net.imagej.modelzoo.specification.NodeSpecification;
+import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imglib2.RandomAccessibleInterval;
+import org.jetbrains.annotations.NotNull;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
 import org.scijava.io.location.FileLocation;
@@ -39,6 +44,10 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Plugin(type = Command.class, name = "Update modelzoo archive demo image")
 public class ModelArchiveUpdateDemoFromFileCommand implements Command {
@@ -59,15 +68,31 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 	public void run() {
 		try {
 			RandomAccessibleInterval input = ioService.open(new FileLocation(inputFile));
-			RandomAccessibleInterval output = modelZooService.predict(archive, input, "XY");
-			archive.setTestOutput(output);
-			archive.setTestInput(input);
+			Map outputs = modelZooService.predict(archive, input, "XY");
+			List<TensorSample> inputSamples = new ArrayList<>();
+			inputSamples.add(new DefaultTensorSample(input, inputFile.getName()));
+			List<OutputNodeSpecification> outputNodeSpecifications = archive.getSpecification().getOutputs();
+			List<TensorSample> outputSamples = getTensorSamples(archive, outputs, outputNodeSpecifications);
+			archive.setSampleOutputs(outputSamples);
+			archive.setSampleInputs(inputSamples);
 			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
 				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	static List<TensorSample> getTensorSamples(ModelZooArchive archive, Map outputs, List<OutputNodeSpecification> outputNodeSpecifications) {
+		List<TensorSample> outputSamples = new ArrayList<>();
+		for (int i = 0; i < outputNodeSpecifications.size(); i++) {
+			NodeSpecification output = outputNodeSpecifications.get(i);
+			Object data = outputs.get(output.getName());
+			String name = archive.getSpecification().getSampleOutputs().get(i);
+			TensorSample sample = new DefaultTensorSample(data, name);
+			outputSamples.add(sample);
+		}
+		return outputSamples;
 	}
 
 }

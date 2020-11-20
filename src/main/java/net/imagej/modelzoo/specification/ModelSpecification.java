@@ -41,13 +41,21 @@ import java.util.Map;
  */
 public interface ModelSpecification {
 
-	String getTestInput();
+	List<String> getTestInputs();
 
-	void setTestInput(String testInput);
+	void setTestInputs(List<String> testInputs);
 
-	String getTestOutput();
+	List<String> getTestOutputs();
 
-	void setTestOutput(String testOutput);
+	void setTestOutputs(List<String> testOutputs);
+
+	List<String> getSampleInputs();
+
+	void setSampleInputs(List<String> sampleInputs);
+
+	List<String> getSampleOutputs();
+
+	void setSampleOutputs(List<String> sampleOutputs);
 
 	boolean readFromZIP(File zippedModel);
 

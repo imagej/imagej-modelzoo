@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer.model;
 
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.tiling.Tiling;
+import net.imagej.modelzoo.consumer.tiling.TilingAction;
 
 public class ModelZooAxis {
 
@@ -38,7 +38,7 @@ public class ModelZooAxis {
 	private Integer halo;
 	private Double scale;
 	private Integer offset;
-	private Tiling.TilingAction tiling;
+	private TilingAction tiling;
 	private Long actual;
 	private AxisType type;
 	private Integer step;
@@ -59,7 +59,7 @@ public class ModelZooAxis {
 		return offset;
 	}
 
-	public Tiling.TilingAction getTiling() {
+	public TilingAction getTiling() {
 		return tiling;
 	}
 
@@ -91,7 +91,7 @@ public class ModelZooAxis {
 		this.offset = offset;
 	}
 
-	public void setTiling(Tiling.TilingAction tiling) {
+	public void setTiling(TilingAction tiling) {
 		this.tiling = tiling;
 	}
 
