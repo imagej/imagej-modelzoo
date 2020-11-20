@@ -29,6 +29,7 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
+import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
@@ -132,5 +133,9 @@ public class DefaultTiling {
 
 	public TiledImageDataReference<?, ?> getTilingData() {
 		return tiledDataReference;
+	}
+
+	public void finish() {
+		tiledDataReference.assignFullOutput();
 	}
 }

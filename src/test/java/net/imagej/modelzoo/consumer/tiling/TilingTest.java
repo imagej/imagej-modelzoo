@@ -40,12 +40,9 @@ import net.imagej.modelzoo.consumer.model.NodeProcessorException;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.postprocessing.ResizePostprocessor;
 import net.imagej.modelzoo.consumer.preprocessing.ResizePreprocessor;
-import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.TiledView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.view.Views;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -91,6 +88,7 @@ public class TilingTest extends AbstractModelZooTest {
 			tiling.assignNextTile();
 			tiling.resolveCurrentTile();
 		}
+		tiling.finish();
 
 		new ResizePostprocessor(nodeOut).run();
 

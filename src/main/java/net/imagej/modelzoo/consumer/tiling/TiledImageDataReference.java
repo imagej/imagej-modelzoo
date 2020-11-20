@@ -33,6 +33,8 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 	private Cursor<RandomAccessibleInterval<TI>> tiledInputViewCursor;
 	private Cursor<RandomAccessibleInterval<TO>> tiledOutputViewCursor;
 	private Path cacheDir;
+	private TiledView<TO> tiledOutputView;
+	private DiskCachedCellImg<TO, ?> outputData;
 
 	TiledImageDataReference(InputImageNode inputNode, OutputImageNode outputNode, ImageDataReference<TI> inputReference, ImageDataReference<TO> outputReference, Path cacheDir) {
 		super(inputReference.getData(), inputReference.getDataType());
@@ -65,10 +67,7 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 
 	void resolveCurrentTile(ImageDataReference<?> data) {
 		outputReference = (ImageDataReference<TO>) data;
-		resolveTile(tiledOutputViewCursor.next());
-	}
-
-	private void resolveTile(RandomAccessibleInterval<TO> currentTile) {
+		RandomAccessibleInterval<TO> currentTile = tiledOutputViewCursor.next();
 		long[] padding = tiledInputView.getOverlap();
 		for (int i = 0; i < padding.length; i++) {
 			padding[i] = -padding[i];
@@ -146,12 +145,12 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 		System.out.println("Output dimensions: " + Arrays.toString(dims));
 		clearCacheDir();
 //		if(outputData != null) outputData.shutdown();
-		DiskCachedCellImg<TO, ?> outputData = new DiskCachedCellImgFactory<>(dataType,
+		outputData = new DiskCachedCellImgFactory<>(dataType,
 				DiskCachedCellImgOptions.options()
 						.cacheType(DiskCachedCellImgOptions.CacheType.SOFTREF)
 						.cacheDirectory(cacheDir)
 						.deleteCacheDirectoryOnExit(cacheDir == null)).create(dims);
-		TiledView<TO> tiledOutputView = new TiledView<>(outputData, tileSize, padding);
+		tiledOutputView = new TiledView<>(outputData, tileSize, padding);
 		tiledOutputViewCursor = Views.iterable(tiledOutputView).cursor();
 	}
 
@@ -301,5 +300,9 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 
 	void assignNextTile() {
 		inputNode.setData(new DefaultImageDataReference<>(tiledInputViewCursor.next(), getDataType()));
+	}
+
+	public void assignFullOutput() {
+		outputNode.setData(new DefaultImageDataReference(outputData, outputNode.getData().getDataType()));
 	}
 }
