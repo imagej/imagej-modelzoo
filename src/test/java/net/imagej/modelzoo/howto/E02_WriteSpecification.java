@@ -92,6 +92,7 @@ public class E02_WriteSpecification {
 		specification.addOutputNode(output);
 
 		// create temporary directory to save model specification to
+		folder.create();
 		File destination = folder.getRoot();
 
 		// save model specification
