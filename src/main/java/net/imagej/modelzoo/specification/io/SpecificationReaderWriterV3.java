@@ -78,19 +78,19 @@ public class SpecificationReaderWriterV3 {
 
 	private final static String idTransformationName = "name";
 	private final static String idTransformationKwargs = "kwargs";
-	private static final String idTransformationMode = "mode";
-	private static String idTransformationModeFixed = "fixed";
-	private static String idTransformationModePerDataset = "per_dataset";
-	private static String idTransformationModePerSample = "per_sample";
+	private final static String idTransformationMode = "mode";
+	private final static String idTransformationModeFixed = "fixed";
+	private final static String idTransformationModePerDataset = "per_dataset";
+	private final static String idTransformationModePerSample = "per_sample";
 
-	private static final String idTransformationScaleLinear = "scale_linear";
-	private static final String idTransformationScaleLinearGain = "gain";
-	private static final String idTransformationScaleLinearOffset = "offset";
+	private final static String idTransformationScaleLinear = "scale_linear";
+	private final static String idTransformationScaleLinearGain = "gain";
+	private final static String idTransformationScaleLinearOffset = "offset";
 
-	private static final String idTransformationZeroMean = "zero_mean_unit_variance";
-	private static final String idTransformationZeroMeanMean = "mean";
-	private static final String idTransformationZeroMeanStd = "std";
-	private static final String idWeightsTensorFlowSavedModelBundle = "tensorflow_saved_model_bundle";
+	private final static String idTransformationZeroMean = "zero_mean_unit_variance";
+	private final static String idTransformationZeroMeanMean = "mean";
+	private final static String idTransformationZeroMeanStd = "std";
+	private final static String idWeightsTensorFlowSavedModelBundle = "tensorflow_saved_model_bundle";
 
 	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) {
 		readMeta(specification, obj);
