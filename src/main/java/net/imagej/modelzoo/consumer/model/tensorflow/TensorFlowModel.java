@@ -39,7 +39,6 @@ import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
@@ -59,10 +58,11 @@ import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 
 import javax.swing.JOptionPane;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Plugin(type= ModelZooModel.class, name = "tensorflow")
@@ -133,7 +133,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	@Override
-	public void loadModel(final Location source, final String modelName) throws IOException, MissingLibraryException {
+	public void loadModel(final Location source, final String modelName, ModelSpecification specification) throws IOException, MissingLibraryException {
 		if (!tensorFlowLoaded) throw new MissingLibraryException("TensorFlow not loaded");
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
 		loadModelFile(source, modelName);
@@ -141,16 +141,10 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		// The strings "input", "probabilities" and "patches" are meant to be
 		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
-		loadModelSettings(source, modelName);
-	}
-
-	private boolean loadModelSettings(Location source, String modelName) {
-		try {
-			return loadModelSettingsFromYaml(tensorFlowService.loadFile(source, modelName, "model.yaml"));
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
+		inputNodes.clear();
+		if(!verifySpecification(specification)) return;
+		DefaultSpecificationLoader loader = new DefaultSpecificationLoader(context, specification, this);
+		loader.process();
 	}
 
 	private void loadSignature() throws InvalidProtocolBufferException {
@@ -172,24 +166,6 @@ public class TensorFlowModel extends DefaultModelZooModel {
 //					System.out.println(name);
 //				}
 //			});
-	}
-
-	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		log.info("load settings from yaml file " + yamlFile);
-		if (!yamlFile.exists()) {
-			log.warn("Could not load settings from YAML " + yamlFile + ": file does not exist.");
-			return false;
-		}
-		ModelSpecification specification = new DefaultModelSpecification();
-		if (!specification.read(yamlFile)) {
-			log.error("Model seems to be incompatible.");
-			return false;
-		}
-		inputNodes.clear();
-		if(!verifySpecification(specification)) return false;
-		DefaultSpecificationLoader loader = new DefaultSpecificationLoader(context, specification, this);
-		loader.process();
-		return true;
 	}
 
 	private boolean verifySpecification(ModelSpecification specification) {
@@ -221,6 +197,11 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		setOutputTensors(outputTensors);
 		inputTensors.forEach(Tensor::close);
 		outputTensors.forEach(Tensor::close);
+	}
+
+	@Override
+	public Set<String> getSupportedWeights() {
+		return Collections.singleton(TensorFlowSavedModelBundleSpecification.id());
 	}
 
 	private List<Tensor<?>> getInputTensors() {

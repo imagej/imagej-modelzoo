@@ -30,8 +30,11 @@ package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.specification.ModelSpecification;
+import net.imagej.modelzoo.specification.WeightsSpecification;
 import org.apache.commons.compress.utils.FileNameUtils;
+import org.jetbrains.annotations.Nullable;
 import org.scijava.Context;
+import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -99,11 +102,39 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 		}
 		if(model != null) {
 			model.loadLibrary();
-			model.loadModel(source, getNameWithTimeStamp());
+			Location weightsSource = getCompatibleWeight(model);
+			model.loadModel(weightsSource, getNameWithTimeStamp(), getSpecification());
+			cleanup(weightsSource);
 		} else {
 			logService.error("Could not find a plugin matching the model framework " + specification.getFramework());
 		}
 		return model;
+	}
+
+	private void cleanup(Location weightsSource) {
+		// in case the weights where extracted from the model,
+		//  the temporary weights file can be deleted after loading the model
+		if(!weightsSource.equals(source)) {
+			if(weightsSource instanceof FileLocation) {
+				((FileLocation) weightsSource).getFile().delete();
+			}
+		}
+	}
+
+	@Nullable
+	private Location getCompatibleWeight(ModelZooModel model) throws IOException {
+		for (WeightsSpecification weight : specification.getWeights()) {
+			if(model.getSupportedWeights().contains(weight.getId())) {
+				String source = weight.getSource();
+				if(source == null) {
+					// older specs did not zip the weights
+					return this.source;
+				}
+				File weightsFile = extract(source);
+				return new FileLocation(weightsFile);
+			}
+		}
+		return null;
 	}
 
 	private String getNameWithTimeStamp() {

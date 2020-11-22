@@ -1,6 +1,6 @@
 package net.imagej.modelzoo.specification;
 
-public class DefaultWeightsSpecification implements WeightsSpecification {
+public abstract class DefaultWeightsSpecification implements WeightsSpecification {
 
 	private String source;
 	private String sha256;

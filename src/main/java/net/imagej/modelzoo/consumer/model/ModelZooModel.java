@@ -30,15 +30,17 @@
 package net.imagej.modelzoo.consumer.model;
 
 import io.scif.MissingLibraryException;
+import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.Disposable;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.SciJavaPlugin;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ModelZooModel extends Disposable, SciJavaPlugin {
 
-	void loadModel(Location location, String modelName) throws Exception;
+	void loadModel(Location location, String modelName, ModelSpecification specification) throws Exception;
 
 	List<ModelZooNode<?>> getInputNodes();
 
@@ -53,4 +55,5 @@ public interface ModelZooModel extends Disposable, SciJavaPlugin {
 
 	void predict() throws IllegalArgumentException, OutOfMemoryError;
 
+	Set<String> getSupportedWeights();
 }

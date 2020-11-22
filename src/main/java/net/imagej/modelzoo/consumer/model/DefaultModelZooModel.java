@@ -29,6 +29,7 @@
 
 package net.imagej.modelzoo.consumer.model;
 
+import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.io.location.Location;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public abstract class DefaultModelZooModel implements ModelZooModel {
 	}
 
 	@Override
-	public abstract void loadModel(Location source, String modelName) throws Exception;
+	public abstract void loadModel(Location source, String modelName, ModelSpecification specification) throws Exception;
 
 	@Override
 	public List<ModelZooNode<?>> getInputNodes() {

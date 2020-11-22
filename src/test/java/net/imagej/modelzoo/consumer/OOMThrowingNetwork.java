@@ -28,11 +28,10 @@
  */
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.ModelZooNode;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.TilingAction;
+import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.ItemIO;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
@@ -40,6 +39,7 @@ import org.scijava.plugin.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class OOMThrowingNetwork implements ModelZooModel
 {
@@ -54,7 +54,7 @@ public class OOMThrowingNetwork implements ModelZooModel
 	List batchSizeHistory = new ArrayList();
 
 	@Override
-	public void loadModel(Location location, String modelName) {
+	public void loadModel(Location location, String modelName, ModelSpecification specification) {
 	}
 
 	@Override
@@ -80,6 +80,11 @@ public class OOMThrowingNetwork implements ModelZooModel
 	@Override
 	public void predict() {
 		throw new OutOfMemoryError();
+	}
+
+	@Override
+	public Set<String> getSupportedWeights() {
+		return null;
 	}
 //
 //

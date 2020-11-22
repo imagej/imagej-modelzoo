@@ -35,5 +35,5 @@ public interface WeightsSpecification {
 	void setSha256(String sha256);
 	String getTimestamp();
 	void setTimestamp(String timestamp);
-
+	String getId();
 }
