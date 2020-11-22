@@ -278,7 +278,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 				+ " | <span style='font-weight: normal;'>Format:</span> "
 				+ model.getSpecification().getFormatVersion()
 				+ " | <span style='font-weight: normal;'>Input axes:</span> "
-				+ model.getSpecification().getInputs().get(0).getAxes();
+				+ getInputAxes(model);
 		panel.add(new JLabel(text), "spanx");
 //		panel.add(createActionButton("Train", () -> train(model)), "newline");
 		panel.add(createSanityCheckActionsBtn(model), "");
@@ -289,6 +289,13 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private static String getSource(ModelZooArchive model) {
 		if(model.getSpecification().getSource() == null) return "default";
 		return model.getSpecification().getSource();
+	}
+
+	private String getInputAxes(ModelZooArchive model) {
+		if(model.getSpecification().getInputs() != null &&
+				model.getSpecification().getInputs().size() > 0)
+			return model.getSpecification().getInputs().get(0).getAxes();
+		return "";
 	}
 
 	private void sanityCheckFromFiles(ModelZooArchive model) {
