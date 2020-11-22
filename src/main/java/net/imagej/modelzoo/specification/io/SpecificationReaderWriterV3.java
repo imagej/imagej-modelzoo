@@ -326,6 +326,7 @@ public class SpecificationReaderWriterV3 {
 	}
 
 	private static ImageTransformation.Mode toMode(Object obj) {
+		if(obj == null) return null;
 		String mode = (String) obj;
 		if(mode.equals(idTransformationModeFixed)) {
 			return ImageTransformation.Mode.FIXED;
@@ -432,6 +433,7 @@ public class SpecificationReaderWriterV3 {
 	}
 
 	private static String writeMode(ImageTransformation.Mode mode) {
+		if(mode == null) return null;
 		if(mode.equals(ImageTransformation.Mode.FIXED)) return idTransformationModeFixed;
 		if(mode.equals(ImageTransformation.Mode.PER_DATASET)) return idTransformationModePerDataset;
 		if(mode.equals(ImageTransformation.Mode.PER_SAMPLE)) return idTransformationModePerSample;
