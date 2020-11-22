@@ -32,6 +32,7 @@ import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.After;
@@ -67,7 +68,9 @@ public class E01_Prediction {
 
 		ModelZooArchive model = modelZooService.open(modelPath);
 
-		Map<String, Object> outputs = modelZooService.predict(model, input, "XY");
+		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
+		options.numberOfTiles(10);
+		Map<String, Object> outputs = modelZooService.predict(model, input, "XY", options);
 
 		outputs.forEach((name, output) -> {
 			ij.ui().show(name, output);
