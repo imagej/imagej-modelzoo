@@ -36,16 +36,13 @@ import net.imagej.modelzoo.TensorSample;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imglib2.RandomAccessibleInterval;
-import org.jetbrains.annotations.NotNull;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.io.location.FileLocation;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +61,8 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 	@Parameter
 	private DatasetIOService ioService;
 
+	private static String defaultSampleOuput = "sample_out.tif";
+
 	@Override
 	public void run() {
 		try {
@@ -75,9 +74,7 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 			List<TensorSample> outputSamples = getTensorSamples(archive, outputs, outputNodeSpecifications);
 			archive.setSampleOutputs(outputSamples);
 			archive.setSampleInputs(inputSamples);
-			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
-				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
-			}
+			archive.getSpecification().updateToNewestVersion();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -88,7 +85,11 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 		for (int i = 0; i < outputNodeSpecifications.size(); i++) {
 			NodeSpecification output = outputNodeSpecifications.get(i);
 			Object data = outputs.get(output.getName());
-			String name = archive.getSpecification().getSampleOutputs().get(i);
+			String name = defaultSampleOuput + "_" + i;
+			if(archive.getSpecification().getSampleOutputs() != null
+				&& archive.getSpecification().getSampleOutputs().size() > i) {
+				name = archive.getSpecification().getSampleOutputs().get(i);
+			}
 			TensorSample sample = new DefaultTensorSample(data, name);
 			outputSamples.add(sample);
 		}

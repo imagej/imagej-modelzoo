@@ -56,10 +56,6 @@ import java.util.zip.ZipFile;
  */
 public class DefaultModelSpecification implements ModelSpecification {
 
-	private final static String defaultSampleInput = "testinput.tif";
-
-	private final static String defaultSampleOutput = "testoutput.tif";
-
 	final static String dependenciesFileName = "dependencies.yaml";
 	final static String modelZooSpecificationVersion = "0.3.0";
 	private String modelFileName = "model.yaml";
@@ -401,6 +397,11 @@ public class DefaultModelSpecification implements ModelSpecification {
 		this.timestamp = timestamp;
 	}
 
+	@Override
+	public void updateToNewestVersion() {
+		setFormatVersion(modelZooSpecificationVersion);
+	}
+
 	public void setLanguage(String language) {
 		this.language = language;
 	}
@@ -462,13 +463,5 @@ public class DefaultModelSpecification implements ModelSpecification {
 			e.printStackTrace();
 		}
 		yaml.dump(data, writer);
-	}
-
-	public static String getDefaultSampleInput() {
-		return defaultSampleInput;
-	}
-
-	public static String getDefaultSampleOutput() {
-		return defaultSampleOutput;
 	}
 }

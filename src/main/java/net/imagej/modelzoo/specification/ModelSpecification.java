@@ -147,4 +147,5 @@ public interface ModelSpecification {
 
 	void setTimestamp(String timestamp);
 
+	void updateToNewestVersion();
 }

@@ -58,6 +58,8 @@ public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 	@Parameter
 	private ModelZooService modelZooService;
 
+	private final static String defaultSampleInput = "sample_in.tif";
+
 	@Override
 	public void run() {
 //		if(inputImage.numDimensions() > 2) {
@@ -72,9 +74,7 @@ public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 			List<TensorSample> outputSamples = getTensorSamples(archive, outputs, outputNodeSpecifications);
 			archive.setSampleOutputs(outputSamples);
 			archive.setSampleInputs(inputSamples);
-			if(archive.getSpecification().getFormatVersion().compareTo("0.2.1-csbdeep") < 0) {
-				archive.getSpecification().setFormatVersion("0.2.1-csbdeep");
-			}
+			archive.getSpecification().updateToNewestVersion();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -85,7 +85,7 @@ public class ModelArchiveUpdateDemoFromImageCommand implements Command {
 		if(sampleInputs != null && sampleInputs.size() > 0) {
 			return sampleInputs.get(0);
 		}
-		return DefaultModelSpecification.getDefaultSampleInput();
+		return defaultSampleInput;
 	}
 
 }
