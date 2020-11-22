@@ -244,6 +244,7 @@ public class SpecificationReaderWriterV3 {
 	}
 
 	private static void writeMeta(ModelSpecification specification, Map<String, Object> data) {
+		data.put(idFormatVersion, specification.getFormatVersion());
 		data.put(idName, specification.getName());
 		data.put(idTimestamp, specification.getTimestamp());
 		data.put(idDescription, specification.getDescription());
@@ -252,7 +253,6 @@ public class SpecificationReaderWriterV3 {
 		data.put(idDocumentation, specification.getDocumentation());
 		data.put(idTags, specification.getTags());
 		data.put(idLicense, specification.getLicense());
-		data.put(idFormatVersion, specification.getFormatVersion());
 		data.put(idLanguage, specification.getLanguage());
 		data.put(idFramework, specification.getFramework());
 		data.put(idSource, specification.getSource());

@@ -1,44 +1,54 @@
+format_version: 0.3.0
 name: model name
+timestamp: '2020-11-22 12:29:28.197'
 description: description
+authors: [author1, author2]
 cite:
   - {text: 'Publication name, authors, journal', doi: DOI}
-authors: [author1, author2]
 documentation: DOCUMENTATION_LINK
 tags: [tag1, tag2]
 license: bsd
-format_version: 0.3.0
 language: java
 framework: tensorflow
-sample_inputs: [input.tif]
-sample_outputs: [output.tif]
+source: source
+git_repo: https://github.com/name/repo
+attachments: {manifest: ./manifest/README.txt}
+test_inputs: []
+test_outputs: []
+sample_inputs: [input.png]
+sample_outputs: [output.png]
 inputs:
   - name: input
-    axes: bxyc
+    axes: XYZC
     data_type: float
     data_range: [-inf, inf]
-    halo: [0, 16, 16, 0]
+    halo: [16, 16, 16, 1]
     shape:
-      min: [1, 4, 4, 1]
-      step: [1, 16, 16, 0]
+      min: [4, 4, 4, 1]
+      step: [16, 16, 16, 0]
     preprocessing:
       - name: zero_mean_unit_variance
-        kwargs: {mode: fixed, mean: [100.0], std: [10.0]}
+        kwargs:
+          mode: fixed
+          mean: [100.0]
+          std: [10.0]
 outputs:
   - name: output
-    axes: bxyc
+    axes: XYZC
     shape:
       offset: [0, 0, 0, 3]
-      scale: [1.0, 2.0, 2.0, 1.0]
+      scale: [2.0, 2.0, 2.0, 1.0]
       reference_input: input
     postprocessing:
       - name: scale_linear
-        kwargs: {mode: fixed, gain: [10.0], offset: [100.0]}
+        kwargs:
+          mode: fixed
+          gain: [10.0]
+          offset: [100.0]
 weights:
-  tensorflow_saved_model_bundle:
-    source: ./tensorflow_saved_model_bundle.zip
-    tag: serve
-    sha256: TODO
-    timestamp: TODO
+  tensorflow_saved_model_bundle: {sha256: '1234567', source: ./weights.zip, tag: serve}
 config:
   fiji:
-    training: {source: "", kwargs: {some: argument}}
+    training:
+      source: trainingSource
+      kwargs: {arg1: 1}
