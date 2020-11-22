@@ -4,7 +4,6 @@ public abstract class DefaultWeightsSpecification implements WeightsSpecificatio
 
 	private String source;
 	private String sha256;
-	private String timestamp;
 
 	@Override
 	public String getSource() {
@@ -26,13 +25,4 @@ public abstract class DefaultWeightsSpecification implements WeightsSpecificatio
 		this.sha256 = sha256;
 	}
 
-	@Override
-	public String getTimestamp() {
-		return timestamp;
-	}
-
-	@Override
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
-	}
 }

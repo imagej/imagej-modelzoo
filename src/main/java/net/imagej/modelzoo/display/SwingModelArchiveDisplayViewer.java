@@ -274,7 +274,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[]push[][]", "align bottom"));
 		//TODO enable once the features are all ready
 		String text = "<html><span style='font-weight: normal;'>Source:</span> "
-				+ model.getSpecification().getSource()
+				+ getSource(model)
 				+ " | <span style='font-weight: normal;'>Format:</span> "
 				+ model.getSpecification().getFormatVersion()
 				+ " | <span style='font-weight: normal;'>Input axes:</span> "
@@ -284,6 +284,11 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		panel.add(createSanityCheckActionsBtn(model), "");
 		panel.add(createPredictActionsBtn(model), "");
 		return panel;
+	}
+
+	private static String getSource(ModelZooArchive model) {
+		if(model.getSpecification().getSource() == null) return "default";
+		return model.getSpecification().getSource();
 	}
 
 	private void sanityCheckFromFiles(ModelZooArchive model) {
@@ -548,7 +553,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		JPanel panel = new JPanel(new MigLayout());
 		addToPanel(panel, "Language", model.getSpecification().getLanguage());
 		addToPanel(panel, "Framework", model.getSpecification().getFramework());
-		addToPanel(panel, "Source", model.getSpecification().getSource());
+		addToPanel(panel, "Source", getSource(model));
 		addToPanel(panel, "Inputs", asString(model.getSpecification().getInputs(), SwingModelArchiveDisplayViewer::inputToString));
 		addToPanel(panel, "Outputs", asString(model.getSpecification().getOutputs(), SwingModelArchiveDisplayViewer::outputToString));
 		return scroll(panel);

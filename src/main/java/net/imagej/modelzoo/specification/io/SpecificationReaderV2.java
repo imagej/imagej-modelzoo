@@ -6,7 +6,6 @@ import net.imagej.modelzoo.specification.DefaultCitationSpecification;
 import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
 import net.imagej.modelzoo.specification.DefaultModelSpecification;
 import net.imagej.modelzoo.specification.DefaultOutputNodeSpecification;
-import net.imagej.modelzoo.specification.DefaultWeightsSpecification;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.modelzoo.specification.NodeSpecification;
@@ -15,7 +14,6 @@ import net.imagej.modelzoo.specification.WeightsSpecification;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +71,7 @@ public class SpecificationReaderV2 {
 		readTraining(specification, obj);
 		readPrediction(specification, obj);
 		WeightsSpecification weights  = new TensorFlowSavedModelBundleSpecification();
+		weights.setSource(null);
 		specification.getWeights().add(weights);
 		return specification;
 	}
@@ -100,9 +99,15 @@ public class SpecificationReaderV2 {
 		specification.setFormatVersion((String) obj.get(idFormatVersion));
 		specification.setLanguage((String) obj.get(idLanguage));
 		specification.setFramework((String) obj.get(idFramework));
-		specification.setSource((String) obj.get(idSource));
+		specification.setSource((String) getSource(obj));
 		specification.setTestInputs(Collections.singletonList((String) obj.get(idTestInput)));
 		specification.setTestOutputs(Collections.singletonList((String) obj.get(idTestOutput)));
+	}
+
+	private static Object getSource(Map<String, Object> obj) {
+		Object source = obj.get(idSource);
+		if(source != null && source.equals("n2v")) source = null;
+		return source;
 	}
 
 	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) {
@@ -138,6 +143,8 @@ public class SpecificationReaderV2 {
 		pre.setStd((Number) stdList.get(0));
 		pre.setMean((Number) meanList.get(0));
 		ScaleLinearTransformation post = new ScaleLinearTransformation();
+		post.setOffset(pre.getMean());
+		post.setGain(pre.getStd());
 		specification.getInputs().get(0).setPreprocessing(Collections.singletonList(pre));
 		specification.getOutputs().get(0).setPostprocessing(Collections.singletonList(post));
 	}
@@ -178,6 +185,7 @@ public class SpecificationReaderV2 {
 
 	public static boolean canRead(Map<String, Object> obj) {
 		String version = (String) obj.get(idFormatVersion);
-		return Objects.equals(version, "0.2.0-csbdeep");
+		return Objects.equals(version, "0.2.1-csbdeep")
+				|| Objects.equals(version, "0.2.0-csbdeep");
 	}
 }

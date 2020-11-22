@@ -142,4 +142,9 @@ public interface ModelSpecification {
 	void setFramework(String framework);
 
 	void setFormatVersion(String formatVersion);
+
+	String getTimestamp();
+
+	void setTimestamp(String timestamp);
+
 }

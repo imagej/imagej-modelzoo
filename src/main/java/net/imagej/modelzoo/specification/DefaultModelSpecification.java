@@ -86,6 +86,8 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String trainingSource;
 	private String gitRepo;
 	private final Map<String, Object> attachments = new HashMap<>();
+	private String timestamp;
+
 	@Override
 	public boolean readFromZIP(File zippedModel) {
 		try {
@@ -387,6 +389,16 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public void setFormatVersion(String version) {
 		formatVersion = version;
+	}
+
+	@Override
+	public String getTimestamp() {
+		return timestamp;
+	}
+
+	@Override
+	public void setTimestamp(String timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	public void setLanguage(String language) {

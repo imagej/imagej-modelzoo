@@ -29,6 +29,7 @@
 package net.imagej.modelzoo.specification;
 
 import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowSavedModelBundleSpecification;
+import net.imagej.modelzoo.specification.transformation.ImageTransformation;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 import org.apache.commons.io.FileUtils;
@@ -39,6 +40,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -86,6 +88,8 @@ public class ModelSpecificationTest {
 	private final static Map<String, Object> attachments = Collections.singletonMap("manifest", "./manifest/README.txt");
 	private final static String weightsSha256 = "1234567";
 	private final static String weightsSource = "./weights.zip";
+	private final static String timestamp = new Timestamp(System.currentTimeMillis()).toString();
+	private final static ImageTransformation.Mode mode = ImageTransformation.Mode.FIXED;
 
 	@Test
 	public void testEmptySpec() throws IOException {
@@ -156,6 +160,7 @@ public class ModelSpecificationTest {
 		specification.setSource(source);
 		specification.setGitRepo(gitRepo);
 		specification.setTags(tags);
+		specification.setTimestamp(timestamp);
 		CitationSpecification citation = new DefaultCitationSpecification();
 		citation.setCitationText(citationText);
 		citation.setDOIText(doi);
@@ -178,6 +183,7 @@ public class ModelSpecificationTest {
 		ZeroMeanUnitVarianceTransformation preprocessing = new ZeroMeanUnitVarianceTransformation();
 		preprocessing.setMean(mean);
 		preprocessing.setStd(std);
+		preprocessing.setMode(mode);
 		inputNode.setPreprocessing(Collections.singletonList(preprocessing));
 		specification.addInputNode(inputNode);
 		// output node
@@ -190,13 +196,13 @@ public class ModelSpecificationTest {
 		ScaleLinearTransformation postprocessing = new ScaleLinearTransformation();
 		postprocessing.setGain(std);
 		postprocessing.setOffset(mean);
+		postprocessing.setMode(mode);
 		outputNode.setPostprocessing(Collections.singletonList(postprocessing));
 		specification.addOutputNode(outputNode);
 		// weights
 		TensorFlowSavedModelBundleSpecification weights = new TensorFlowSavedModelBundleSpecification();
 		weights.setSha256(weightsSha256);
 		weights.setSource(weightsSource);
-		weights.setTimestamp(weightsTimestamp);
 		specification.getWeights().add(weights);
 	}
 
@@ -222,6 +228,8 @@ public class ModelSpecificationTest {
 		assertNotNull(specification.getSampleOutputs());
 		assertEquals(1, specification.getSampleOutputs().size());
 		assertEquals(testOutput, specification.getSampleOutputs().get(0));
+		assertEquals(timestamp, specification.getTimestamp());
+
 		// training
 		assertTrue(trainingKwargs.equals(specification.getTrainingKwargs()));
 		assertEquals(trainingSource, specification.getTrainingSource());
@@ -239,8 +247,10 @@ public class ModelSpecificationTest {
 		assertNotNull(_input.getPreprocessing());
 		assertEquals(1, _input.getPreprocessing().size());
 		assertEquals(ZeroMeanUnitVarianceTransformation.name, _input.getPreprocessing().get(0).getName());
-		assertEquals(mean, ((ZeroMeanUnitVarianceTransformation)_input.getPreprocessing().get(0)).getMean());
-		assertEquals(std, ((ZeroMeanUnitVarianceTransformation)_input.getPreprocessing().get(0)).getStd());
+		ZeroMeanUnitVarianceTransformation preprocessing = (ZeroMeanUnitVarianceTransformation) _input.getPreprocessing().get(0);
+		assertEquals(mean, preprocessing.getMean());
+		assertEquals(std, preprocessing.getStd());
+		assertEquals(mode, preprocessing.getMode());
 
 		// output
 		assertEquals(1, specification.getOutputs().size());
@@ -252,15 +262,16 @@ public class ModelSpecificationTest {
 		assertArrayEquals(shapeScale.toArray(), _output.getShapeScale().toArray());
 		assertNotNull(_output.getPostprocessing());
 		assertEquals(1, _output.getPostprocessing().size());
-		assertEquals(ScaleLinearTransformation.name, _output.getPostprocessing().get(0).getName());
-		assertEquals(std, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getGain());
-		assertEquals(mean, ((ScaleLinearTransformation)_output.getPostprocessing().get(0)).getOffset());
+		ScaleLinearTransformation postprocessing = (ScaleLinearTransformation) _output.getPostprocessing().get(0);
+		assertEquals(ScaleLinearTransformation.name, postprocessing.getName());
+		assertEquals(std, postprocessing.getGain());
+		assertEquals(mean, postprocessing.getOffset());
+		assertEquals(mode, postprocessing.getMode());
 
 		assertNotNull(specification.getWeights());
 		assertEquals(1, specification.getWeights().size());
 		WeightsSpecification weights = specification.getWeights().get(0);
 		assertTrue(weights instanceof TensorFlowSavedModelBundleSpecification);
-		assertEquals(weightsTimestamp, weights.getTimestamp());
 		assertEquals(weightsSha256, weights.getSha256());
 		assertEquals(weightsSource, weights.getSource());
 		assertEquals("serve", ((TensorFlowSavedModelBundleSpecification)weights).getTag());

@@ -12,6 +12,7 @@ import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imagej.modelzoo.specification.WeightsSpecification;
+import net.imagej.modelzoo.specification.transformation.ImageTransformation;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 
@@ -34,9 +35,8 @@ public class SpecificationReaderWriterV3 {
 	private final static String idTags = "tags";
 	private final static String idLicense = "license";
 	private final static String idFormatVersion = "format_version";
-
 	private final static String idLanguage = "language";
-
+	private final static String idTimestamp = "timestamp";
 	private final static String idFramework = "framework";
 	private final static String idSource = "source";
 	private final static String idGitRepo = "git_repo";
@@ -51,7 +51,6 @@ public class SpecificationReaderWriterV3 {
 	private final static String idWeightsSource = "source";
 	private final static String idWeightsHash = "sha256";
 	private final static String idWeightsTag = "tag";
-	private final static String idWeightsTimestamp = "timestamp";
 	private final static String idConfig = "config";
 	private final static String idConfigFiji = "fiji";
 	private final static String idTraining = "training";
@@ -73,11 +72,16 @@ public class SpecificationReaderWriterV3 {
 	private final static String idNodeShapeOffset = "offset";
 	private final static String idNodePostprocessing = "postprocessing";
 
-	private final static String idTransformationName = "name";
-	private final static String idTransformationKwargs = "kwargs";
 
 	private final static String idCiteText = "text";
 	private final static String idCiteDoi = "doi";
+
+	private final static String idTransformationName = "name";
+	private final static String idTransformationKwargs = "kwargs";
+	private static final String idTransformationMode = "mode";
+	private static String idTransformationModeFixed = "fixed";
+	private static String idTransformationModePerDataset = "per_dataset";
+	private static String idTransformationModePerSample = "per_sample";
 
 	private static final String idTransformationScaleLinear = "scale_linear";
 	private static final String idTransformationScaleLinearGain = "gain";
@@ -99,6 +103,7 @@ public class SpecificationReaderWriterV3 {
 	private static void readMeta(DefaultModelSpecification specification, Map<String, Object> obj) {
 		specification.setName((String) obj.get(idName));
 		specification.setDescription((String) obj.get(idDescription));
+		specification.setTimestamp((String) obj.get(idTimestamp));
 		if(obj.get(idCite) != null && List.class.isAssignableFrom(obj.get(idCite).getClass())) {
 			List<Map> citations = (List<Map>) obj.get(idCite);
 			for (Map citation : citations) {
@@ -127,12 +132,20 @@ public class SpecificationReaderWriterV3 {
 		specification.setFormatVersion((String) obj.get(idFormatVersion));
 		specification.setLanguage((String) obj.get(idLanguage));
 		specification.setFramework((String) obj.get(idFramework));
-		specification.setSource((String) obj.get(idSource));
+		specification.setSource((String) parseSource(obj));
 		specification.setGitRepo((String) obj.get(idGitRepo));
 		specification.setTestInputs((List<String>) obj.get(idTestInputs));
 		specification.setTestOutputs((List<String>) obj.get(idTestOutputs));
 		specification.setSampleInputs((List<String>) obj.get(idSampleInputs));
 		specification.setSampleOutputs((List<String>) obj.get(idSampleOutputs));
+	}
+
+	private static Object parseSource(Map<String, Object> obj) {
+		Object source = obj.get(idSource);
+		if(source != null && source.equals("n2v")) {
+			return null;
+		}
+		return source;
 	}
 
 	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) {
@@ -170,7 +183,6 @@ public class SpecificationReaderWriterV3 {
 				weightsSpec.setTag((String) data.get(idWeightsTag));
 				weightsSpec.setSha256((String) data.get(idWeightsHash));
 				weightsSpec.setSource((String) data.get(idWeightsSource));
-				weightsSpec.setTimestamp((String) data.get(idWeightsTimestamp));
 			}
 			specification.getWeights().add(weightsSpec);
 		}
@@ -180,23 +192,21 @@ public class SpecificationReaderWriterV3 {
 		Map<String, Object> data = new LinkedHashMap<>();
 		writeMeta(specification, data);
 		writeInputsOutputs(specification, data);
+		writeWeights(specification, data);
 		writeConfig(specification, data);
-		writePrediction(specification, data);
 		return data;
 	}
 
 
-	private static void writePrediction(DefaultModelSpecification specification, Map<String, Object> data) {
+	private static void writeWeights(DefaultModelSpecification specification, Map<String, Object> data) {
 		Map<String, Object> weights = new LinkedHashMap<>();
 		for (WeightsSpecification weight : specification.getWeights()) {
 			Map<String, Object> weightData = new HashMap<>();
 			weightData.put(idWeightsSource, weight.getSource());
 			weightData.put(idWeightsHash, weight.getSha256());
-			weightData.put(idWeightsTimestamp, weight.getTimestamp());
 			if(weight instanceof TensorFlowSavedModelBundleSpecification) {
 				weightData.put(idWeightsTag, ((TensorFlowSavedModelBundleSpecification) weight).getTag());
 			}
-			weightData.put(idWeightsTimestamp, weight.getTimestamp());
 			weights.put(getWeightsName(weight), weightData);
 		}
 		data.put(idWeights, weights);
@@ -235,9 +245,10 @@ public class SpecificationReaderWriterV3 {
 
 	private static void writeMeta(ModelSpecification specification, Map<String, Object> data) {
 		data.put(idName, specification.getName());
+		data.put(idTimestamp, specification.getTimestamp());
 		data.put(idDescription, specification.getDescription());
-		data.put(idCite, buildCitationList(specification));
 		data.put(idAuthors, specification.getAuthors());
+		data.put(idCite, buildCitationList(specification));
 		data.put(idDocumentation, specification.getDocumentation());
 		data.put(idTags, specification.getTags());
 		data.put(idLicense, specification.getLicense());
@@ -300,14 +311,30 @@ public class SpecificationReaderWriterV3 {
 		switch ((String)data.get(idTransformationName)) {
 			case idTransformationScaleLinear:
 				ScaleLinearTransformation scaleLinear = new ScaleLinearTransformation();
+				scaleLinear.setMode(toMode(kwargs.get(idTransformationMode)));
 				scaleLinear.setGain(toNumber(kwargs.get(idTransformationScaleLinearGain)));
 				scaleLinear.setOffset(toNumber(kwargs.get(idTransformationScaleLinearOffset)));
 				return scaleLinear;
 			case idTransformationZeroMean:
 				ZeroMeanUnitVarianceTransformation zeroMean = new ZeroMeanUnitVarianceTransformation();
+				zeroMean.setMode(toMode(kwargs.get(idTransformationMode)));
 				zeroMean.setMean(toNumber(kwargs.get(idTransformationZeroMeanMean)));
 				zeroMean.setStd(toNumber(kwargs.get(idTransformationZeroMeanStd)));
 				return zeroMean;
+		}
+		return null;
+	}
+
+	private static ImageTransformation.Mode toMode(Object obj) {
+		String mode = (String) obj;
+		if(mode.equals(idTransformationModeFixed)) {
+			return ImageTransformation.Mode.FIXED;
+		}
+		if(mode.equals(idTransformationModePerDataset)) {
+			return ImageTransformation.Mode.PER_DATASET;
+		}
+		if(mode.equals(idTransformationModePerSample)) {
+			return ImageTransformation.Mode.PER_SAMPLE;
 		}
 		return null;
 	}
@@ -389,15 +416,26 @@ public class SpecificationReaderWriterV3 {
 		Map<String, Object> kwargs = new LinkedHashMap<>();
 		if(transformation instanceof ScaleLinearTransformation) {
 			res.put(idTransformationName, idTransformationScaleLinear);
-			kwargs.put(idTransformationScaleLinearGain, Collections.singletonList(((ScaleLinearTransformation) transformation).getGain()));
-			kwargs.put(idTransformationScaleLinearOffset, Collections.singletonList(((ScaleLinearTransformation) transformation).getOffset()));
+			ScaleLinearTransformation scaleLinear = (ScaleLinearTransformation) transformation;
+			kwargs.put(idTransformationMode, writeMode(scaleLinear.getMode()));
+			kwargs.put(idTransformationScaleLinearGain, Collections.singletonList(scaleLinear.getGain()));
+			kwargs.put(idTransformationScaleLinearOffset, Collections.singletonList(scaleLinear.getOffset()));
 		} else if(transformation instanceof ZeroMeanUnitVarianceTransformation) {
 			res.put(idTransformationName, idTransformationZeroMean);
-			kwargs.put(idTransformationZeroMeanMean, Collections.singletonList(((ZeroMeanUnitVarianceTransformation) transformation).getMean()));
-			kwargs.put(idTransformationZeroMeanStd, Collections.singletonList(((ZeroMeanUnitVarianceTransformation) transformation).getStd()));
+			ZeroMeanUnitVarianceTransformation zeroMean = (ZeroMeanUnitVarianceTransformation) transformation;
+			kwargs.put(idTransformationMode, writeMode(zeroMean.getMode()));
+			kwargs.put(idTransformationZeroMeanMean, Collections.singletonList(zeroMean.getMean()));
+			kwargs.put(idTransformationZeroMeanStd, Collections.singletonList(zeroMean.getStd()));
 		}
 		res.put(idTransformationKwargs, kwargs);
 		return res;
+	}
+
+	private static String writeMode(ImageTransformation.Mode mode) {
+		if(mode.equals(ImageTransformation.Mode.FIXED)) return idTransformationModeFixed;
+		if(mode.equals(ImageTransformation.Mode.PER_DATASET)) return idTransformationModePerDataset;
+		if(mode.equals(ImageTransformation.Mode.PER_SAMPLE)) return idTransformationModePerSample;
+		return null;
 	}
 
 	private static Map<String, Object> writeCitation(CitationSpecification citation) {
