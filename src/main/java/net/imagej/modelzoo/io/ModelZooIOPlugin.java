@@ -105,7 +105,10 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 				throw new IOException("Can't open " + source + " as bioimage.io model archive: No *model.yaml file found.");
 			}
 			InputStream inSpec = zf.getInputStream(modelFile);
-			specification.read(inSpec);
+			boolean success = specification.read(inSpec);
+			if(!success) {
+				throw new IOException("Could not read model.yaml specification from source " + source);
+			}
 			specification.setModelFileName(modelFile.getName());
 			inSpec.close();
 			archive.setSpecification(specification);
