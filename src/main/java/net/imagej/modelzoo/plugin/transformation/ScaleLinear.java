@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.plugin.normalization;
+package net.imagej.modelzoo.plugin.transformation;
 
 import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.DefaultImageNodeProcessor;
