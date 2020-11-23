@@ -27,16 +27,9 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer;
+package net.imagej.modelzoo.consumer.model;
 
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+public class InputImageNode extends ImageNode {
 
-public interface SingleImagePrediction extends ModelZooPrediction {
-
-	default <TI extends RealType<TI> & NativeType<TI>> void setInput(RandomAccessibleInterval<TI> value, String axes) {
-		setInput(getTrainedModel().getSpecification().getInputs().get(0).getName(), value, axes);
-	}
 
 }

@@ -31,9 +31,10 @@ package net.imagej.modelzoo.howto;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
+import net.imagej.modelzoo.consumer.DefaultPredictionOutput;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imglib2.RandomAccessibleInterval;
+import net.imagej.modelzoo.consumer.PredictionOutput;
 import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
@@ -66,13 +67,13 @@ public class E01_Prediction {
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
 
-		ModelZooArchive model = modelZooService.open(modelPath);
+		ModelZooArchive model = modelZooService.io().open(modelPath);
 
 		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
 		options.numberOfTiles(10);
-		Map<String, Object> outputs = modelZooService.predict(model, input, "XY", options);
+		PredictionOutput outputs = modelZooService.predict(model, input, "XY", options);
 
-		outputs.forEach((name, output) -> {
+		outputs.asMap().forEach((name, output) -> {
 			ij.ui().show(name, output);
 		});
 
@@ -90,16 +91,13 @@ public class E01_Prediction {
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
 
-		// convert to float
-		input = ij.op().convert().float32(input);
-
 		// create prediction
-		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
+		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 
 		// setup prediction
 		prediction.setInput("input", input, "XY");
 		prediction.setTrainedModel(modelPath);
-		prediction.setNumberOfTiles(8);
+		prediction.setOptions(ModelZooPredictionOptions.options().numberOfTiles(8));
 		prediction.run();
 		Map<String, Object> outputs = prediction.getOutputs();
 

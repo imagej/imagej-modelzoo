@@ -64,7 +64,7 @@ public class DefaultModelZooPredictionTest {
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, Object> res = prediction.getOutputs();
+		DefaultPredictionOutput res = prediction.getOutput();
 		Object output = res.values().iterator().next();
 		assertNotNull(output);
 	}
@@ -79,7 +79,7 @@ public class DefaultModelZooPredictionTest {
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, Object> res = prediction.getOutputs();
+		Map<String, Object> res = prediction.getOutput();
 		Object output = res.values().iterator().next();
 		assertNotNull(output);
 		assertTrue(RandomAccessibleInterval.class.isAssignableFrom(output.getClass()));

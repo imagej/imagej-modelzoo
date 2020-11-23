@@ -114,7 +114,7 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 			output = (Dataset) prediction.getOutput("output");
 
 			difference = datasetService.create(getDifference((RandomAccessibleInterval)input, (RandomAccessibleInterval)output, new FloatType()));
-			ModelZooArchive model = modelZooService.open(modelFile);
+			ModelZooArchive model = modelZooService.io().open(modelFile);
 			ImageToImageSanityCheck.compare(
 					input,
 					output,

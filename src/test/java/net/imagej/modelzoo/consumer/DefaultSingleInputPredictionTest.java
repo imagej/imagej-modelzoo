@@ -59,14 +59,14 @@ public class DefaultSingleInputPredictionTest {
 
 		// load pretrained model
 		File model = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
-		ModelZooArchive modelArchive = ij.get(ModelZooService.class).open(model);
+		ModelZooArchive modelArchive = ij.get(ModelZooService.class).io().open(model);
 
 		// run prediction
-		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
+		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 		prediction.setTrainedModel(modelArchive);
 		prediction.setInput(imgFloat, "XY");
 		prediction.run();
-		Map<String, Object> outputs = prediction.getOutputs();
+		Map<String, Object> outputs = prediction.getOutput();
 		assertNotNull(outputs);
 
 		ij.context().dispose();

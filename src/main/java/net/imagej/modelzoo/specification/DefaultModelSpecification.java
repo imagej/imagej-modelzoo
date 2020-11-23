@@ -83,6 +83,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	private String gitRepo;
 	private final Map<String, Object> attachments = new HashMap<>();
 	private String timestamp;
+	private ConfigSpecification config;
 
 	@Override
 	public boolean readFromZIP(File zippedModel) {
@@ -400,6 +401,16 @@ public class DefaultModelSpecification implements ModelSpecification {
 	@Override
 	public void updateToNewestVersion() {
 		setFormatVersion(modelZooSpecificationVersion);
+	}
+
+	@Override
+	public ConfigSpecification getConfig() {
+		return config;
+	}
+
+	@Override
+	public void setConfig(ConfigSpecification config) {
+		this.config = config;
 	}
 
 	public void setLanguage(String language) {

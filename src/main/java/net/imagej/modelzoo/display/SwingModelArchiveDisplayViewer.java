@@ -408,7 +408,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 			}
 			logService.info("Saving model to " + absolutePath);
 			try {
-				modelZooService.save(model, absolutePath);
+				modelZooService.io().save(model, absolutePath);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -419,7 +419,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		try {
 			String absolutePath = new File(model.getLocation().getURI()).getAbsolutePath();
 			System.out.println(absolutePath);
-			modelZooService.save(model, absolutePath);
+			modelZooService.io().save(model, absolutePath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

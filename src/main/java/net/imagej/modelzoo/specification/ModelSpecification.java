@@ -148,4 +148,8 @@ public interface ModelSpecification {
 	void setTimestamp(String timestamp);
 
 	void updateToNewestVersion();
+
+	ConfigSpecification getConfig();
+
+	void setConfig(ConfigSpecification config);
 }

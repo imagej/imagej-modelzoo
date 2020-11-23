@@ -30,23 +30,25 @@ package net.imagej.modelzoo;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
+import net.imagej.modelzoo.consumer.ImageInput;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
+import net.imagej.modelzoo.consumer.PredictionInput;
+import net.imagej.modelzoo.consumer.PredictionOutput;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromImageCommand;
-import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
-import net.imagej.modelzoo.io.ModelZooIOPlugin;
-import net.imagej.modelzoo.specification.InputNodeSpecification;
+import net.imagej.modelzoo.specification.ConfigSpecification;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
 import org.scijava.command.CommandService;
-import org.scijava.io.location.Location;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleException;
 import org.scijava.plugin.Parameter;
@@ -60,10 +62,8 @@ import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @Plugin(type = Service.class)
 public class DefaultModelZooService extends AbstractService implements ModelZooService {
@@ -83,45 +83,19 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	@Parameter
 	private UIService uiService;
 
+	@Parameter
+	private ModelZooIOService io;
+
 	private final static String modelFileParameter = "modelFile";
+
 	private final static String predictionCommandParameter = "prediction";
 	private final static String inputParameter = "input";
 	private final static String groundTruthParameter = "inputGroundTruth";
 	private final static String outputParameter = "output";
 
 	@Override
-	public ModelZooArchive open(String location) throws IOException {
-		return createIOPlugin().open(location);
-	}
-
-	@Override
-	public ModelZooArchive open(File location) throws IOException {
-		return open(location.getAbsolutePath());
-	}
-
-	@Override
-	public ModelZooArchive open(Location location) throws IOException {
-		return open(new File(location.getURI()));
-	}
-
-	@Override
-	public void save(ModelZooArchive trainedModel, String location) throws IOException {
-		createIOPlugin().save(trainedModel, location);
-	}
-
-	@Override
-	public void save(ModelZooArchive trainedModel, File location) {
-		save(trainedModel, location.getAbsoluteFile());
-	}
-
-	@Override
-	public void save(ModelZooArchive trainedModel, Location location) {
-		save(trainedModel, new File(location.getURI()));
-	}
-
-	@Override
-	public void save(String archivePath, ModelSpecification specification, String location) throws IOException {
-		createIOPlugin().save(archivePath, specification, location);
+	public ModelZooIOService io() {
+		return io;
 	}
 
 	@Override
@@ -148,56 +122,48 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	@Override
-	public Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes) throws Exception {
-		return predict(trainedModel, input, axes, ModelZooPredictionOptions.options());
+	public ModelZooPredictionOptions createOptions() {
+		return ModelZooPredictionOptions.options();
 	}
 
 	@Override
-	public <T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes) throws Exception {
-		return predict(trainedModel, Collections.singletonList(input), Collections.singletonList(axes));
-	}
-
-	@Override
-	public Map<String, Object> predict(ModelZooArchive trainedModel, List<Object> input, List<String> axes, ModelZooPredictionOptions options) throws Exception {
-		ModelZooPrediction prediction = getPrediction(trainedModel);
+	public PredictionOutput predict(ModelZooArchive trainedModel, List<PredictionInput> inputs, ModelZooPredictionOptions options) throws Exception {
+		ModelZooPrediction prediction = getPrediction(trainedModel, options);
 		if (prediction == null) return null;
 		prediction.setTrainedModel(trainedModel);
-		List<InputNodeSpecification> inputs = trainedModel.getSpecification().getInputs();
-		for (int i = 0; i < inputs.size(); i++) {
-			InputNodeSpecification inputNodeSpecification = inputs.get(i);
-			prediction.setInput(inputNodeSpecification.getName(), input.get(i), axes.get(i));
-		}
-		prediction.setBatchSize(options.values.batchSize());
-		prediction.setCacheDir(options.values.cacheDirectory());
-		prediction.setNumberOfTiles(options.values.numberOfTiles());
-		prediction.setTilingEnabled(options.values.tilingEnabled());
+		prediction.addInputs(inputs);
 		prediction.run();
-		return prediction.getOutputs();
+		return prediction.getOutput();
 	}
 
 	@Override
-	public <T extends RealType<T>> Map<String, Object> predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes, ModelZooPredictionOptions options) throws Exception {
-		return predict(trainedModel, Collections.singletonList(input), Collections.singletonList(axes), options);
+	public <T extends RealType<T> & NativeType<T>> PredictionOutput predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes, ModelZooPredictionOptions options) throws Exception {
+		String inputName = trainedModel.getSpecification().getInputs().get(0).getName();
+		ImageInput<T> imageInput = new ImageInput<>(inputName, input, axes);
+		return predict(trainedModel, Collections.singletonList(imageInput), options);
 	}
 
 	@Override
-	public ModelZooPrediction getPrediction(ModelZooArchive trainedModel) {
-		String archivePrediction = trainedModel.getSpecification().getSource();
+	public ModelZooPrediction getPrediction(ModelZooArchive trainedModel, ModelZooPredictionOptions options) {
+		String runner = null;
+		ConfigSpecification config = trainedModel.getSpecification().getConfig();
+		if(config != null) runner = config.getRunner();
 		ModelZooPrediction prediction = null;
-		if(archivePrediction == null) {
-			prediction = new DefaultSingleImagePrediction(getContext());
+		if(runner == null) {
+			prediction = new DefaultModelZooPrediction(getContext());
 		} else {
 			List<PluginInfo<ModelZooPrediction>> predictionCommands = pluginService.getPluginsOfType(ModelZooPrediction.class);
 			for (PluginInfo<ModelZooPrediction> command : predictionCommands) {
-				if(command.getAnnotation().name().equals(archivePrediction)) {
+				if(command.getAnnotation().name().equals(runner)) {
 					prediction = pluginService.createInstance(command);
 				}
 			}
 			if(prediction == null) {
-				log().error("Could not find prediction plugin for model source " + archivePrediction + ".");
+				log().error("Could not find prediction plugin for model runner " + runner + ".");
 				return null;
 			}
 		}
+		prediction.setOptions(options);
 		return prediction;
 	}
 
@@ -304,11 +270,5 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 				inputParameter, input,
 				groundTruthParameter, groundTruth,
 				predictionCommandParameter, module);
-	}
-
-	private ModelZooIOPlugin createIOPlugin() {
-		ModelZooIOPlugin modelZooIOPlugin = new ModelZooIOPlugin();
-		getContext().inject(modelZooIOPlugin);
-		return modelZooIOPlugin;
 	}
 }

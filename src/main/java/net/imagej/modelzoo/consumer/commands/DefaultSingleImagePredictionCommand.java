@@ -29,16 +29,21 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
+import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
-import net.imagej.modelzoo.consumer.SingleImagePrediction;
+import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
+import net.imagej.modelzoo.consumer.ImageInput;
+import net.imagej.modelzoo.consumer.ModelZooPrediction;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
+import net.imagej.modelzoo.consumer.PredictionOutput;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
+import org.scijava.ItemIO;
 import org.scijava.ItemVisibility;
 import org.scijava.log.LogService;
-import org.scijava.module.DefaultMutableModule;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -46,7 +51,7 @@ import java.io.File;
 import java.util.concurrent.CancellationException;
 
 @Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo")
-public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implements SingleImagePredictionCommand {
+public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>> implements SingleImagePredictionCommand {
 
 	@Parameter(label = "Trained model file (.zip)")
 	private File modelFile;
@@ -66,6 +71,9 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implemen
 	@Parameter(required = false, visibility = ItemVisibility.INVISIBLE)
 	private boolean showProgressDialog = true;
 
+	@Parameter(type = ItemIO.OUTPUT)
+	private Dataset output;
+
 	@Parameter
 	private LogService log;
 
@@ -78,7 +86,7 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implemen
 	@Parameter
 	private Context context;
 
-	private SingleImagePrediction prediction;
+	private ModelZooPrediction<ImageInput<?>, ?> prediction;
 
 	@Override
 	public void run() {
@@ -86,12 +94,15 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implemen
 		final long startTime = System.currentTimeMillis();
 
 		try {
-			SingleImagePrediction prediction = getPrediction();
-			prediction.setTrainedModel(modelZooService.open(modelFile));
-			prediction.setInput("input", input, axes);
-			prediction.setNumberOfTiles(numTiles);
-			prediction.setBatchSize(batchSize);
+			ModelZooPrediction<ImageInput<?>, ?> prediction = getPrediction();
+			prediction.setTrainedModel(modelZooService.io().open(modelFile));
+			prediction.setInput(new ImageInput<>("input", input, axes));
+			prediction.setOptions(ModelZooPredictionOptions.options()
+					.numberOfTiles(numTiles)
+					.batchSize(batchSize));
 			prediction.run();
+			PredictionOutput output = prediction.getOutput();
+			this.output = datasetService.create((RandomAccessibleInterval)output.asMap().values().iterator().next());
 
 		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
@@ -102,9 +113,9 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implemen
 
 	}
 
-	public SingleImagePrediction getPrediction() {
+	public ModelZooPrediction<ImageInput<?>, ?> getPrediction() {
 		if(prediction == null) {
-			setPrediction(new DefaultSingleImagePrediction(getContext()));
+			setPrediction(new DefaultModelZooPrediction(getContext()));
 		}
 		return prediction;
 	}
@@ -113,7 +124,7 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implemen
 		return context;
 	}
 
-	public void setPrediction(SingleImagePrediction prediction) {
+	public void setPrediction(ModelZooPrediction<ImageInput<?>, ?> prediction) {
 		this.prediction = prediction;
 	}
 

@@ -26,38 +26,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
+package net.imagej.modelzoo.consumer.model;
 
-package net.imagej.modelzoo.consumer;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.specification.TransformationSpecification;
 
-import net.imagej.modelzoo.consumer.sanitycheck.ImageToImageSanityCheck;
-import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
-import org.scijava.Context;
-import org.scijava.plugin.Plugin;
+public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T>, Runnable {
+	void setup(ImageNode imageNode, InputImageNode processorInputReference);
 
-import java.util.Map;
-
-@Plugin(type = SingleImagePrediction.class, name = "imagej-modelzoo")
-public class DefaultSingleImagePrediction extends DefaultModelZooPrediction implements SingleImagePrediction {
-
-	public DefaultSingleImagePrediction() {
-	}
-
-	public DefaultSingleImagePrediction(Context context) {
-		super(context);
-	}
-
-	@Override
-	public SanityCheck getSanityCheck() {
-		return new ImageToImageSanityCheck(context());
-	}
-
-	public <T extends RealType<T> & NativeType<T>> Map<String, Object> predict(RandomAccessibleInterval<T> input, String axes) throws Exception {
-		setInput(input, axes);
-		run();
-		return getOutputs();
-	}
+	InputImageNode getProcessorInputReference();
+	ImageNode getImageNode();
 }

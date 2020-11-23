@@ -33,6 +33,7 @@ import net.imagej.modelzoo.DefaultTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.TensorSample;
+import net.imagej.modelzoo.consumer.PredictionOutput;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imglib2.RandomAccessibleInterval;
@@ -67,11 +68,11 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 	public void run() {
 		try {
 			RandomAccessibleInterval input = ioService.open(new FileLocation(inputFile));
-			Map outputs = modelZooService.predict(archive, input, "XY");
+			PredictionOutput outputs = modelZooService.predict(archive, input, "XY");
 			List<TensorSample> inputSamples = new ArrayList<>();
 			inputSamples.add(new DefaultTensorSample(input, inputFile.getName()));
 			List<OutputNodeSpecification> outputNodeSpecifications = archive.getSpecification().getOutputs();
-			List<TensorSample> outputSamples = getTensorSamples(archive, outputs, outputNodeSpecifications);
+			List<TensorSample> outputSamples = getTensorSamples(archive, outputs.asMap(), outputNodeSpecifications);
 			archive.setSampleOutputs(outputSamples);
 			archive.setSampleInputs(inputSamples);
 			archive.getSpecification().updateToNewestVersion();

@@ -31,10 +31,7 @@ package net.imagej.modelzoo.consumer.commands;
 
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
-import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
-import org.scijava.Context;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.io.location.FileLocation;
@@ -47,12 +44,10 @@ import org.scijava.widget.FileWidget;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 @Plugin(type = Command.class)

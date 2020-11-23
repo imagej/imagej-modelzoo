@@ -54,7 +54,7 @@ public class ModelZooArchiveImportCommand implements Command {
 	public void run() {
 
 		try {
-			model = modelZooService.open(modelFile);
+			model = modelZooService.io().open(modelFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

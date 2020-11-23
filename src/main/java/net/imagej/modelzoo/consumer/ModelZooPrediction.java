@@ -31,32 +31,38 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
 
-import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
-public interface ModelZooPrediction extends SciJavaPlugin {
+public interface ModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> extends SciJavaPlugin {
 
-	void setInput(String name, Object value, String axes);
+	void setOptions(ModelZooPredictionOptions options);
+
+	default void setInput(I input) {
+		input.addToPrediction(this);
+	}
 
 	void run() throws OutOfMemoryError, Exception;
 
-	Map<String, Object> getOutputs();
+	O getOutput();
 
-	void setTilingEnabled(boolean enabled);
-
-	void setNumberOfTiles(int nTiles);
-
-	void setBatchSize(int batchSize);
+	default Map<String, Object> getOutputs() {
+		return getOutput().asMap();
+	}
 
 	ModelZooArchive getTrainedModel();
 
 	void setTrainedModel(ModelZooArchive trainedModel);
 
-	void setCacheDir(Path cacheDir);
-
 	default SanityCheck getSanityCheck() {
 		return null;
 	}
+
+	<T extends RealType<T> & NativeType<T>> void addImageInput(ImageInput<T> input);
+
+	void addInputs(List<PredictionInput> inputs);
 }

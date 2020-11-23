@@ -1,5 +1,8 @@
 package net.imagej.modelzoo.consumer.model;
 
+import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;

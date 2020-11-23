@@ -66,7 +66,7 @@ public class E06_RunSanityCheck {
 
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
-		ModelZooArchive model = modelZooService.open(modelPath);
+		ModelZooArchive model = modelZooService.io().open(modelPath);
 		modelZooService.sanityCheckInteractive(model, noisy, input);
 
 	}
