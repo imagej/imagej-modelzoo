@@ -67,7 +67,7 @@ public interface ModelSpecification {
 
 	boolean read(File modelSpecificationFile) throws IOException;
 
-	boolean read(InputStream in);
+	boolean read(InputStream in) throws IOException;
 
 	void write(String targetDirectory) throws IOException;
 

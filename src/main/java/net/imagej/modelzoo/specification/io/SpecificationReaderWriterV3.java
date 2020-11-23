@@ -92,7 +92,7 @@ public class SpecificationReaderWriterV3 {
 	private final static String idTransformationZeroMeanStd = "std";
 	private final static String idWeightsTensorFlowSavedModelBundle = "tensorflow_saved_model_bundle";
 
-	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) {
+	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) throws IOException {
 		readMeta(specification, obj);
 		readInputsOutputs(specification, obj);
 		readConfig(specification, obj);
@@ -148,7 +148,7 @@ public class SpecificationReaderWriterV3 {
 		return source;
 	}
 
-	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) {
+	private static void readInputsOutputs(DefaultModelSpecification specification, Map<String, Object> obj) throws IOException {
 		List<Map> inputs = (List<Map>) obj.get(idInputs);
 		for (Map input : inputs) {
 			specification.addInputNode(readInputNode(input));
@@ -288,7 +288,7 @@ public class SpecificationReaderWriterV3 {
 		return cite;
 	}
 
-	private static InputNodeSpecification readInputNode(Map data) {
+	private static InputNodeSpecification readInputNode(Map data) throws IOException {
 		InputNodeSpecification node = new DefaultInputNodeSpecification();
 		readNode(node, data);
 		Map<String, Object> shapeData = (Map<String, Object>) data.get(idNodeShape);
@@ -306,9 +306,11 @@ public class SpecificationReaderWriterV3 {
 		return node;
 	}
 
-	private static TransformationSpecification readTransformation(Map data) {
+	private static TransformationSpecification readTransformation(Map data) throws IOException {
 		Map<String, Object> kwargs = (Map<String, Object>) data.get(idTransformationKwargs);
-		switch ((String)data.get(idTransformationName)) {
+		Object transformation = data.get(idTransformationName);
+		if(transformation == null) throw new IOException("Can't find name of transformation " + data);
+		switch ((String) transformation) {
 			case idTransformationScaleLinear:
 				ScaleLinearTransformation scaleLinear = new ScaleLinearTransformation();
 				scaleLinear.setMode(toMode(kwargs.get(idTransformationMode)));
@@ -350,7 +352,7 @@ public class SpecificationReaderWriterV3 {
 		throw new ClassCastException("Cannot convert " + obj + " to number.");
 	}
 
-	private static OutputNodeSpecification readOutputNode(Map data) {
+	private static OutputNodeSpecification readOutputNode(Map data) throws IOException {
 		OutputNodeSpecification node = new DefaultOutputNodeSpecification();
 		readNode(node, data);
 		Map<String, Object> shapeData = (Map<String, Object>) data.get(idNodeShape);

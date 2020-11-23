@@ -119,7 +119,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 	}
 
 	@Override
-	public boolean read(InputStream stream) {
+	public boolean read(InputStream stream) throws IOException {
 		Yaml yaml = new Yaml();
 		Map<String, Object> obj = yaml.load(stream);
 		System.out.println(obj);
@@ -127,7 +127,7 @@ public class DefaultModelSpecification implements ModelSpecification {
 		return read(obj);
 	}
 
-	private boolean read(Map<String, Object> obj) {
+	private boolean read(Map<String, Object> obj) throws IOException {
 		if(SpecificationReaderWriterV3.canRead(obj)) {
 			SpecificationReaderWriterV3.read(this, obj);
 			return true;
