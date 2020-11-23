@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -65,8 +66,8 @@ public class DefaultSingleInputPredictionTest {
 		prediction.setTrainedModel(modelArchive);
 		prediction.setInput(imgFloat, "XY");
 		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
-		assertNotNull(output);
+		Map<String, Object> outputs = prediction.getOutputs();
+		assertNotNull(outputs);
 
 		ij.context().dispose();
 	}

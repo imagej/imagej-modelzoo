@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -58,7 +58,7 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 //		for (int i = 0; i < 3; i++) {
 		for (String networkSrc : networks) {
 			URL networkUrl = this.getClass().getResource(networkSrc);
-			CommandModule module = ij.command().run(DefaultModelZooPredictionCommand.class,
+			CommandModule module = ij.command().run(DefaultSingleImagePredictionCommand.class,
 					false,
 					"input", input,
 					"axes", "XYZ",

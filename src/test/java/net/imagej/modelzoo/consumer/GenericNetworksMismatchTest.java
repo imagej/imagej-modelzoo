@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -81,7 +81,7 @@ public class GenericNetworksMismatchTest extends AbstractModelZooTest {
 
 	private void test(String network, RandomAccessibleInterval input, String axes) throws ExecutionException, InterruptedException {
 		URL networkUrl = this.getClass().getResource(network);
-		final Module module = ij.command().run(DefaultModelZooPredictionCommand.class,
+		final Module module = ij.command().run(DefaultSingleImagePredictionCommand.class,
 				false,
 				"input", input,
 				"axes", axes,

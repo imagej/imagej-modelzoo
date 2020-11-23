@@ -101,9 +101,9 @@ public class E01_Prediction {
 		prediction.setTrainedModel(modelPath);
 		prediction.setNumberOfTiles(8);
 		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
+		Map<String, Object> outputs = prediction.getOutputs();
 
-		ij.ui().show(output);
+		outputs.forEach((name, output) -> ij.ui().show(name, output));
 
 	}
 
