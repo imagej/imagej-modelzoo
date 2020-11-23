@@ -34,7 +34,7 @@ import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
-import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromImageCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
@@ -223,7 +223,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 				}
 			}
 		} else {
-			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
+			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class).createModule();
 		}
 		if (mycommand == null) {
 			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
@@ -244,7 +244,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 				}
 			}
 		} else {
-			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class);
+			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class);
 		}
 		if (mycommand == null) {
 			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);

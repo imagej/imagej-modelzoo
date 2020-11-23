@@ -39,10 +39,4 @@ public interface SingleImagePrediction extends ModelZooPrediction {
 		setInput(getTrainedModel().getSpecification().getInputs().get(0).getName(), value, axes);
 	}
 
-	default <TO extends RealType<TO>> RandomAccessibleInterval<TO> getOutput() {
-		if(getOutputs() == null) return null;
-		if(getOutputs().size() == 0) return null;
-		return (RandomAccessibleInterval<TO>) getOutputs().values().iterator().next();
-	}
-
 }

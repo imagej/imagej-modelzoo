@@ -34,8 +34,11 @@ import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.Context;
 import org.scijava.plugin.Plugin;
+
+import java.util.Map;
 
 @Plugin(type = SingleImagePrediction.class, name = "imagej-modelzoo")
 public class DefaultSingleImagePrediction extends DefaultModelZooPrediction implements SingleImagePrediction {
@@ -47,14 +50,14 @@ public class DefaultSingleImagePrediction extends DefaultModelZooPrediction impl
 		super(context);
 	}
 
-	public <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<?> predict(RandomAccessibleInterval<T> input, String axes) throws Exception {
-		setInput(input, axes);
-		run();
-		return getOutput();
-	}
-
 	@Override
 	public SanityCheck getSanityCheck() {
 		return new ImageToImageSanityCheck(context());
+	}
+
+	public <T extends RealType<T> & NativeType<T>> Map<String, Object> predict(RandomAccessibleInterval<T> input, String axes) throws Exception {
+		setInput(input, axes);
+		run();
+		return getOutputs();
 	}
 }

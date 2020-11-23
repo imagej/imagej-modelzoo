@@ -29,7 +29,6 @@
 
 package net.imagej.modelzoo.consumer.commands;
 
-import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
@@ -37,9 +36,9 @@ import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
-import org.scijava.ItemIO;
 import org.scijava.ItemVisibility;
 import org.scijava.log.LogService;
+import org.scijava.module.DefaultMutableModule;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -47,7 +46,7 @@ import java.io.File;
 import java.util.concurrent.CancellationException;
 
 @Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo")
-public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements SingleImagePredictionCommand {
+public class DefaultSingleImagePredictionCommand<T extends RealType<T>> implements SingleImagePredictionCommand {
 
 	@Parameter(label = "Trained model file (.zip)")
 	private File modelFile;
@@ -66,9 +65,6 @@ public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements 
 
 	@Parameter(required = false, visibility = ItemVisibility.INVISIBLE)
 	private boolean showProgressDialog = true;
-
-	@Parameter(type = ItemIO.OUTPUT)
-	private Dataset output;
 
 	@Parameter
 	private LogService log;
@@ -90,15 +86,12 @@ public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements 
 		final long startTime = System.currentTimeMillis();
 
 		try {
-
 			SingleImagePrediction prediction = getPrediction();
 			prediction.setTrainedModel(modelZooService.open(modelFile));
 			prediction.setInput("input", input, axes);
 			prediction.setNumberOfTiles(numTiles);
 			prediction.setBatchSize(batchSize);
 			prediction.run();
-			RandomAccessibleInterval output = prediction.getOutput();
-			this.output = datasetService.create(output);
 
 		} catch (CancellationException e) {
 			log.warn("ModelZoo prediction canceled.");
@@ -122,10 +115,6 @@ public class DefaultModelZooPredictionCommand<T extends RealType<T>> implements 
 
 	public void setPrediction(SingleImagePrediction prediction) {
 		this.prediction = prediction;
-	}
-
-	public Dataset getOutput() {
-		return output;
 	}
 
 	protected RandomAccessibleInterval<T> getInput() {
