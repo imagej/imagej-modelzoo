@@ -36,6 +36,7 @@ import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromImageCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultModelZooPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
 import net.imagej.modelzoo.specification.InputNodeSpecification;
@@ -221,9 +222,10 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 					mycommand = commandInfo.createModule();
 				}
 			}
+		} else {
+			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
 		}
 		if (mycommand == null) {
-//			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
 			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
 			return null;
 		}
@@ -241,9 +243,10 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 					mycommand = commandService.getCommand(command.getClassName());
 				}
 			}
+		} else {
+			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class);
 		}
 		if (mycommand == null) {
-//			mycommand = commandService.getCommand(DefaultModelZooPredictionCommand.class).createModule();
 			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
 			return null;
 		}
