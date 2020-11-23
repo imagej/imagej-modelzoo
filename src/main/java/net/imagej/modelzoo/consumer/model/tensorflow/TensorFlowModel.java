@@ -159,13 +159,6 @@ public class TensorFlowModel extends DefaultModelZooModel {
 			model.close();
 		}
 		model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
-//			model.model().graph().operations().forEachRemaining(op -> {
-//				for (int i = 0; i < op.numOutputs(); i++) {
-//					Output<Object> opOutput = op.output(i);
-//					String name = opOutput.op().name();
-//					System.out.println(name);
-//				}
-//			});
 	}
 
 	private boolean verifySpecification(ModelSpecification specification) {
