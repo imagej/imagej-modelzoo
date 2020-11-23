@@ -1,5 +1,6 @@
-package net.imagej.modelzoo.consumer;
+package net.imagej.modelzoo.consumer.model.prediction;
 
+import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

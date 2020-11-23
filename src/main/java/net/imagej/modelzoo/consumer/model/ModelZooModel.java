@@ -30,6 +30,7 @@
 package net.imagej.modelzoo.consumer.model;
 
 import io.scif.MissingLibraryException;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.Disposable;
 import org.scijava.io.location.Location;

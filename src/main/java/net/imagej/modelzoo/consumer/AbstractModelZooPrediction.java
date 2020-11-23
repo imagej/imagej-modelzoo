@@ -31,11 +31,13 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.model.ImageNode;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.ModelZooNode;
-import net.imagej.modelzoo.consumer.model.NodeProcessor;
-import net.imagej.modelzoo.consumer.model.NodeProcessorException;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessorException;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -44,9 +46,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public abstract class AbstractModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> implements ModelZooPrediction<I, O> {
 

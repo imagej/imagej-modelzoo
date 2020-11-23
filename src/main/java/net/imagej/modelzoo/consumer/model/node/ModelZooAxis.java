@@ -27,7 +27,7 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node;
 
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.consumer.tiling.TilingAction;

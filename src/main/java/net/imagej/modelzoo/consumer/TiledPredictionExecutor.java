@@ -30,8 +30,8 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.ModelZooNode;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

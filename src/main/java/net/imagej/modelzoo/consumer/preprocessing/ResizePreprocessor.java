@@ -1,12 +1,12 @@
 package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.ImageDataReference;
-import net.imagej.modelzoo.consumer.model.ImageNode;
-import net.imagej.modelzoo.consumer.model.ModelZooAxis;
-import net.imagej.modelzoo.consumer.model.NodeProcessor;
-import net.imagej.modelzoo.consumer.model.NodeProcessorException;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessorException;
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;

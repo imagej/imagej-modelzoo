@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node.processor;
 
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import org.scijava.plugin.SciJavaPlugin;

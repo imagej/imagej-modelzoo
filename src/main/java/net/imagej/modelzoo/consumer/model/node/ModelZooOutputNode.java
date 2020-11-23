@@ -26,7 +26,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node;
+
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 
 public interface ModelZooOutputNode<T, I> extends ModelZooNode<T> {
 	void setReference(ModelZooNode<I> input);

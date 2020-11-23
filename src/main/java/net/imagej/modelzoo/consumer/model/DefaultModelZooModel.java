@@ -29,6 +29,7 @@
 
 package net.imagej.modelzoo.consumer.model;
 
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.io.location.Location;
 

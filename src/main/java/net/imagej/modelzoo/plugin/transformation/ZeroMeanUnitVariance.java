@@ -1,9 +1,9 @@
 package net.imagej.modelzoo.plugin.transformation;
 
-import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.DefaultImageNodeProcessor;
-import net.imagej.modelzoo.consumer.model.ImageDataReference;
-import net.imagej.modelzoo.consumer.model.NodeProcessor;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.processor.DefaultImageNodeProcessor;
+import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converter;

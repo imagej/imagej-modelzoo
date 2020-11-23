@@ -30,6 +30,9 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

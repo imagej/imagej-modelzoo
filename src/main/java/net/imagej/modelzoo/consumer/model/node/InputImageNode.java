@@ -27,7 +27,7 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node;
 
 public class InputImageNode extends ImageNode {
 

@@ -33,7 +33,7 @@ import net.imagej.modelzoo.DefaultTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.TensorSample;
-import net.imagej.modelzoo.consumer.PredictionOutput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imglib2.RandomAccessibleInterval;

@@ -1,6 +1,8 @@
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.model.ImageNode;
+import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imglib2.img.Img;
 import org.scijava.Context;

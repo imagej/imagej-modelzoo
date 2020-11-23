@@ -30,6 +30,7 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;

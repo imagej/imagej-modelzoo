@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer;
+package net.imagej.modelzoo.consumer.model.prediction;
 
 import java.util.HashMap;
 import java.util.Map;

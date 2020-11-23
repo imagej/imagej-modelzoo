@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node;
 
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;

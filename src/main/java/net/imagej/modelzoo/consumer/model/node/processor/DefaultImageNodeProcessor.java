@@ -1,4 +1,4 @@
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer.model.node.processor;
 
 import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;

@@ -29,10 +29,9 @@
 
 package net.imagej.modelzoo.consumer.tiling;
 
-import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.ImageDataReference;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imglib2.util.Intervals;
 
 import java.nio.file.Path;

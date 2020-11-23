@@ -1,11 +1,11 @@
 package net.imagej.modelzoo.consumer.tiling;
 
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.ImageDataReference;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
-import net.imagej.modelzoo.consumer.model.ModelZooAxis;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;

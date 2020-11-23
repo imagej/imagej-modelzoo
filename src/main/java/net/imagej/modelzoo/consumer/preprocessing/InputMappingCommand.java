@@ -30,10 +30,9 @@ package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.model.ImageNode;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.plugin.Parameter;

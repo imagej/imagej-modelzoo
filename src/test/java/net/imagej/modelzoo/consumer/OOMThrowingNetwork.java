@@ -29,7 +29,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.tiling.TilingAction;
 import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.ItemIO;

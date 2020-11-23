@@ -29,20 +29,11 @@
 package net.imagej.modelzoo;
 
 import net.imagej.ImageJService;
-import net.imagej.modelzoo.consumer.ModelZooPrediction;
-import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.PredictionInput;
-import net.imagej.modelzoo.consumer.PredictionOutput;
 import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
 import org.scijava.io.location.Location;
-import org.scijava.module.ModuleException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 public interface ModelZooIOService extends ImageJService {
 
