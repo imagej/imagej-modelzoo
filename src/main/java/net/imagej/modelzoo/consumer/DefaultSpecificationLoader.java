@@ -1,7 +1,16 @@
-package net.imagej.modelzoo.consumer.model;
+package net.imagej.modelzoo.consumer;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.ImageNode;
+import net.imagej.modelzoo.consumer.model.ImageNodeProcessor;
+import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.NodeProcessor;
+import net.imagej.modelzoo.consumer.model.OutputImageNode;
 import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
 import net.imagej.modelzoo.consumer.postprocessing.ResizePostprocessor;
 import net.imagej.modelzoo.consumer.preprocessing.InputImageConverterProcessor;

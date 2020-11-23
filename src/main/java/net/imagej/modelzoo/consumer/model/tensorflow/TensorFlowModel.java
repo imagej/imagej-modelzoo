@@ -34,7 +34,7 @@ import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.model.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
-import net.imagej.modelzoo.consumer.model.DefaultSpecificationLoader;
+import net.imagej.modelzoo.consumer.DefaultSpecificationLoader;
 import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.ModelZooNode;
