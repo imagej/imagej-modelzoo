@@ -30,6 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
 import org.scijava.plugin.SciJavaPlugin;
 
 import java.nio.file.Path;

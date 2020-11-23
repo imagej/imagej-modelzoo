@@ -29,6 +29,8 @@
 
 package net.imagej.modelzoo.consumer;
 
+import net.imagej.modelzoo.consumer.sanitycheck.ImageToImageSanityCheck;
+import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

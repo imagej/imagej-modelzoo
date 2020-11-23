@@ -27,25 +27,14 @@
  * #L%
  */
 
-package net.imagej.modelzoo.consumer.commands;
+package net.imagej.modelzoo.consumer.sanitycheck;
 
+import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
-import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.TensorSample;
-import net.imagej.modelzoo.consumer.ImageToImageSanityCheck;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
-import net.imglib2.Dimensions;
-import net.imglib2.IterableInterval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.loops.LoopBuilder;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
-import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
@@ -58,13 +47,11 @@ import org.scijava.ui.UIService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
-import static net.imagej.modelzoo.consumer.commands.DefaultModelZooSanityCheckFromFileCommand.descriptionText;
-
 @Plugin(type = Command.class)
-public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
+public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 
 	@Parameter(label = "Import model (.zip) from file")
 	private File modelFile;
@@ -72,20 +59,24 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	@Parameter
 	private Module prediction;
 
+	final static String descriptionText =
+			"<html>This is what's going to happen:" +
+			"<ol style='width: 350px;'>" +
+				"<li style='margin: 5px;'>In this dialog, choose an image to run the prediction on</li>" +
+				"<li style='margin: 5px;'>In this dialog, choose an image representing the expected result</li>" +
+				"<li style='margin: 5px;'>In the next dialog, choose the prediction parameters you want to use for validation</li>" +
+				"<li style='margin: 5px;'>The prediction will be performed</li>" +
+				"<li style='margin: 5px;'>The result will be displayed and compared to the expected result (also displayed)</li>" +
+			"</ol>";
+
 	@Parameter(label="<html><h1>Sanity check</h1>", description = descriptionText, required = false, style = InfoWidget.STYLE)
 	private String description = "";
 
-	@Parameter(label = "Prediction input image", persist = false)
-	private Dataset input;
+	@Parameter(label = "Prediction input image")
+	private File inputFile;
 
-	@Parameter(label = "Expected result image", persist = false)
-	private Dataset inputGroundTruth;
-
-	@Parameter(label = "Model prediction", type = ItemIO.OUTPUT)
-	private Dataset output;
-
-	@Parameter(label = "Difference input - prediction", type = ItemIO.OUTPUT)
-	private Dataset difference;
+	@Parameter(label = "Expected result image")
+	private File inputGroundTruthFile;
 
 	@Parameter
 	private LogService log;
@@ -94,16 +85,18 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 	private StatusService status;
 
 	@Parameter
+	private DatasetIOService datasetIOService;
+
+	@Parameter
 	private UIService uiService;
 
 	@Parameter
 	private OpService opService;
 
 	@Parameter
-	private DatasetService datasetService;
-
-	@Parameter
 	private ModelZooService modelZooService;
+
+	private static final int numBins = 20;
 
 	public void run() {
 
@@ -111,19 +104,18 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 		log("ModelZoo sanity check start");
 
 		try {
+			Dataset input = datasetIOService.open(inputFile.getAbsolutePath());
+			Dataset gt = datasetIOService.open(inputGroundTruthFile.getAbsolutePath());
 			prediction.setInput("input", input);
 			prediction.resolveInput("input");
 			context().service(ModuleService.class).run(prediction, true).get();
-			output = (Dataset) prediction.getOutput("output");
-			difference = datasetService.create(getDifference((RandomAccessibleInterval)input, (RandomAccessibleInterval)output, new FloatType()));
+			Dataset output = (Dataset) prediction.getOutput("output");
+			uiService.show("expected", gt);
+			uiService.show("result after prediction", output);
 			ModelZooArchive model = modelZooService.open(modelFile);
-			ImageToImageSanityCheck.compare(
-					input,
-					output,
-					inputGroundTruth,
-					model,
-					opService);
-		} catch (ExecutionException | InterruptedException | IOException e) {
+			SanityCheck sanityCheck = modelZooService.getPrediction(model).getSanityCheck();
+			sanityCheck.checkInteractive(Collections.singletonList(input), Collections.singletonList(output), Collections.singletonList(gt), model);
+		} catch (IOException | ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}
 
@@ -131,21 +123,9 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 
 	}
 
-	private <TI extends RealType<TI>, TO extends RealType<TO>, TR extends RealType<TR> & NativeType<TR>> RandomAccessibleInterval<TR> getDifference(RandomAccessibleInterval<TI> input, RandomAccessibleInterval<TO> output, TR resultType) {
-		Img<TR> res = opService.create().img(input, resultType);
-		LoopBuilder.setImages(input, output, res).multiThreaded().forEachPixel((ti, to, tr) -> {
-			tr.setReal(ti.getRealDouble()-to.getRealDouble());
-		});
-		return res;
-	}
-
-	private RandomAccessibleInterval getFirstSample(List<TensorSample> sampleInputs) {
-		if(sampleInputs == null || sampleInputs.size() == 0) return null;
-		return (RandomAccessibleInterval) sampleInputs.get(0);
-	}
-
 	private void log(String msg) {
 		log.info(msg);
 		status.showStatus(msg);
 	}
+
 }

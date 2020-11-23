@@ -31,8 +31,6 @@ package net.imagej.modelzoo.howto;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.ImageToImageSanityCheck;
-import net.imagej.modelzoo.consumer.SanityCheck;
 import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;

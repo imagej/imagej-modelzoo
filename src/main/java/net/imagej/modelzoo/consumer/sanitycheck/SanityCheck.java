@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.consumer;
+package net.imagej.modelzoo.consumer.sanitycheck;
 
 import net.imagej.modelzoo.ModelZooArchive;
 
