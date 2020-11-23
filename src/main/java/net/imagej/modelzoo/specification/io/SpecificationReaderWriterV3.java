@@ -1,6 +1,7 @@
 package net.imagej.modelzoo.specification.io;
 
 import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowSavedModelBundleSpecification;
+import net.imagej.modelzoo.plugin.transformation.Binarize;
 import net.imagej.modelzoo.specification.CitationSpecification;
 import net.imagej.modelzoo.specification.DefaultCitationSpecification;
 import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
@@ -12,10 +13,12 @@ import net.imagej.modelzoo.specification.NodeSpecification;
 import net.imagej.modelzoo.specification.OutputNodeSpecification;
 import net.imagej.modelzoo.specification.TransformationSpecification;
 import net.imagej.modelzoo.specification.WeightsSpecification;
+import net.imagej.modelzoo.specification.transformation.BinarizeTransformation;
 import net.imagej.modelzoo.specification.transformation.ImageTransformation;
 import net.imagej.modelzoo.specification.transformation.ScaleLinearTransformation;
 import net.imagej.modelzoo.specification.transformation.ZeroMeanUnitVarianceTransformation;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -91,6 +94,9 @@ public class SpecificationReaderWriterV3 {
 	private final static String idTransformationZeroMeanMean = "mean";
 	private final static String idTransformationZeroMeanStd = "std";
 	private final static String idWeightsTensorFlowSavedModelBundle = "tensorflow_saved_model_bundle";
+
+	private final static String idTransformationBinarize = "binarize";
+	private final static String idTransformationBinarizeThreshold = "threshold";
 
 	public static ModelSpecification read(DefaultModelSpecification specification, Map<String, Object> obj) throws IOException {
 		readMeta(specification, obj);
@@ -311,6 +317,11 @@ public class SpecificationReaderWriterV3 {
 		Object transformation = data.get(idTransformationName);
 		if(transformation == null) throw new IOException("Can't find name of transformation " + data);
 		switch ((String) transformation) {
+			case idTransformationBinarize:
+				BinarizeTransformation binarize = new BinarizeTransformation();
+				binarize.setMode(toMode(kwargs.get(idTransformationMode)));
+				binarize.setThreshold(toNumber(kwargs.get(idTransformationBinarizeThreshold)));
+				return binarize;
 			case idTransformationScaleLinear:
 				ScaleLinearTransformation scaleLinear = new ScaleLinearTransformation();
 				scaleLinear.setMode(toMode(kwargs.get(idTransformationMode)));
@@ -429,6 +440,11 @@ public class SpecificationReaderWriterV3 {
 			kwargs.put(idTransformationMode, writeMode(zeroMean.getMode()));
 			kwargs.put(idTransformationZeroMeanMean, Collections.singletonList(zeroMean.getMean()));
 			kwargs.put(idTransformationZeroMeanStd, Collections.singletonList(zeroMean.getStd()));
+		} else if(transformation instanceof BinarizeTransformation) {
+			res.put(idTransformationName, idTransformationBinarize);
+			BinarizeTransformation binarize = (BinarizeTransformation) transformation;
+			kwargs.put(idTransformationMode, writeMode(binarize.getMode()));
+			kwargs.put(idTransformationBinarizeThreshold, Collections.singletonList(binarize.getThreshold()));
 		}
 		res.put(idTransformationKwargs, kwargs);
 		return res;
