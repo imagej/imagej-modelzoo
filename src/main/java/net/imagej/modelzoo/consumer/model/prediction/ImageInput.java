@@ -19,4 +19,16 @@ public class ImageInput<T extends RealType<T> & NativeType<T>> implements Predic
 	public void addToPrediction(ModelZooPrediction<?, ?> prediction) {
 		prediction.addImageInput(this);
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public RandomAccessibleInterval<T> getImage() {
+		return image;
+	}
+
+	public String getAxes() {
+		return axes;
+	}
 }

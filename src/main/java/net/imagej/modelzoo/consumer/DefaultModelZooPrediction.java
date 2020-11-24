@@ -1,10 +1,13 @@
 package net.imagej.modelzoo.consumer;
 
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
 import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
-import net.imagej.modelzoo.consumer.model.node.ImageNode;
-import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 
 public class DefaultModelZooPrediction extends AbstractModelZooPrediction<ImageInput<?>, DefaultPredictionOutput> {
@@ -29,7 +32,7 @@ public class DefaultModelZooPrediction extends AbstractModelZooPrediction<ImageI
 		return outputs;
 	}
 
-	public void setInput(Img image, String axes) {
+	public <T extends RealType<T> & NativeType<T>> void setInput(RandomAccessibleInterval<T> image, String axes) {
 		addImageInput(new ImageInput<>("input", image, axes));
 	}
 

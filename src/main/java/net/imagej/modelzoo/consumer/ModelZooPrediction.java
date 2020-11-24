@@ -53,9 +53,7 @@ public interface ModelZooPrediction<I extends PredictionInput, O extends Predict
 
 	O getOutput();
 
-	default Map<String, Object> getOutputs() {
-		return getOutput().asMap();
-	}
+	Map<String, Object> getOutputs();
 
 	ModelZooArchive getTrainedModel();
 

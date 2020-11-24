@@ -31,6 +31,7 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
@@ -46,7 +47,10 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> implements ModelZooPrediction<I, O> {
 
@@ -65,6 +69,8 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 
 	private boolean contextInjected = false;
 	private O output;
+
+	private Map<String, Object> outputs;
 
 	public AbstractModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
@@ -135,6 +141,14 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 				processor.run();
 			}
 		}
+		outputs = new HashMap<>();
+		model.getOutputNodes().forEach(node -> {
+			if(ImageNode.class.isAssignableFrom(node.getClass())) {
+				outputs.put(node.getName(), ((ImageNode)node).getData().getData());
+			} else {
+				outputs.put(node.getName(), node.getData());
+			}
+		});
 	}
 
 	@Override
@@ -149,7 +163,7 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 
 	@Override
 	public <T extends RealType<T> & NativeType<T>> void addImageInput(ImageInput<T> input) {
-		inputHandling.addInput(input.name, input.image, input.axes);
+		inputHandling.addInput(input.getName(), input.getImage(), input.getAxes());
 	}
 
 	@Override
@@ -195,6 +209,11 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 		}
 		inputHandling.setModel(model);
 		return inputHandling.getSuccess();
+	}
+
+	@Override
+	public Map<String, Object> getOutputs() {
+		return outputs;
 	}
 
 	Context context() {
