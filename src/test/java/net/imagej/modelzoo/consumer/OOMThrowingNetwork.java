@@ -31,7 +31,7 @@ package net.imagej.modelzoo.consumer;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.tiling.TilingAction;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import io.bioimage.specification.ModelSpecification;
 import org.scijava.ItemIO;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
@@ -80,11 +80,6 @@ public class OOMThrowingNetwork implements ModelZooModel
 	@Override
 	public void predict() {
 		throw new OutOfMemoryError();
-	}
-
-	@Override
-	public Set<String> getSupportedWeights() {
-		return null;
 	}
 //
 //

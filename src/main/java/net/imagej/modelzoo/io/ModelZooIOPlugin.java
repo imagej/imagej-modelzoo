@@ -29,11 +29,13 @@
 
 package net.imagej.modelzoo.io;
 
+import io.bioimage.specification.DefaultModelSpecification;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.io.SpecificationReader;
+import io.bioimage.specification.io.SpecificationWriter;
 import net.imagej.modelzoo.DefaultModelZooArchive;
 import net.imagej.modelzoo.ModelZooArchive;
-import net.imagej.modelzoo.TensorSample;
-import net.imagej.modelzoo.specification.DefaultModelSpecification;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.scijava.app.StatusService;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
@@ -45,6 +47,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +63,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -92,24 +96,25 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		archive.setLocation(location);
 		DefaultModelSpecification specification = new DefaultModelSpecification();
 		try (ZipFile zf = new ZipFile(source)) {
-			final Enumeration<? extends ZipEntry> entries = zf.entries();
-			ZipEntry modelFile = null;
-			while ( entries.hasMoreElements() ) {
-				final ZipEntry entry = entries.nextElement();
-				if(entry.getName().endsWith("model.yaml")) {
-					modelFile = entry;
-					break;
-				}
-			}
+			ZipEntry modelFile = zf.getEntry(SpecificationWriter.getModelFileName());
 			if(modelFile == null) {
-				throw new IOException("Can't open " + source + " as bioimage.io model archive: No *model.yaml file found.");
+				// older models had a name.model.yaml file, look for that
+				final Enumeration<? extends ZipEntry> entries = zf.entries();
+				modelFile = null;
+				while ( entries.hasMoreElements() ) {
+					final ZipEntry entry = entries.nextElement();
+					if(entry.getName().endsWith(".model.yaml")) {
+					modelFile = entry;
+						break;
+					}
+				}
+				if(modelFile == null) throw new IOException("Can't open " + source + " as bioimage.io model archive: No model.yaml or *.model.yaml file found.");
 			}
 			InputStream inSpec = zf.getInputStream(modelFile);
-			boolean success = specification.read(inSpec);
+			boolean success = SpecificationReader.read(inSpec, specification);
 			if(!success) {
 				throw new IOException("Could not read model.yaml specification from source " + source);
 			}
-			specification.setModelFileName(modelFile.getName());
 			inSpec.close();
 			archive.setSpecification(specification);
 			setSampleImages(archive, specification, zf);
@@ -137,15 +142,25 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 
 	@Override
 	public void save(ModelZooArchive archive, String destination) throws IOException {
+		//FIXME
 		statusService.showStatus("Saving " + destination + "..");
 		Path destinationPath = Paths.get(destination);
-		Path sourcePath = new File(archive.getLocation().getURI()).toPath();
-		Files.copy(sourcePath, destinationPath, REPLACE_EXISTING);
+		if(!destinationPath.toFile().exists()) {
+			Files.createFile(destinationPath);
+		} else {
+			FileLocation sourceFile = (FileLocation) archive.getLocation();
+			if(sourceFile != null && sourceFile.getFile().exists()) {
+				Files.copy(sourceFile.getFile().toPath(), destinationPath, REPLACE_EXISTING);
+			}
+		}
+		FileOutputStream fos = new FileOutputStream(destinationPath.toFile());
+		ZipOutputStream zipOut = new ZipOutputStream(fos);
+		SpecificationWriter.write(archive.getSpecification(), zipOut);
+		fos.close();
+		zipOut.close();
 		List<Path> tmpTestInputs = saveSampleTensors(archive.getSampleInputs());
 		List<Path> tmpTestOutputs = saveSampleTensors(archive.getSampleOutputs());
 		try (FileSystem fileSystem = FileSystems.newFileSystem(destinationPath, null)) {
-			Path specPath = fileSystem.getPath(archive.getSpecification().getModelFileName());
-			archive.getSpecification().write(specPath);
 			copySampleTensors(tmpTestInputs, fileSystem, archive.getSpecification().getTestInputs());
 			copySampleTensors(tmpTestOutputs, fileSystem, archive.getSpecification().getTestOutputs());
 		}

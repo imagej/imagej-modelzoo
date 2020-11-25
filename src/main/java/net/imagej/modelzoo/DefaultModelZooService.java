@@ -28,21 +28,20 @@
  */
 package net.imagej.modelzoo;
 
+import io.bioimage.specification.ModelSpecification;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
-import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
 import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
 import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromImageCommand;
-import net.imagej.modelzoo.specification.ConfigSpecification;
-import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -62,7 +61,6 @@ import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 
 @Plugin(type = Service.class)
@@ -102,7 +100,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	public boolean canRunPredictionInteractive(ModelZooArchive trainedModel) {
 		CommandInfo predictionCommand = null;
 		try {
-			predictionCommand = getCommandInfo(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
+			predictionCommand = getCommandInfo(trainedModel.getSpecification(), SingleImagePredictionCommand.class, false);
 		} catch (ModuleException e) {
 			return false;
 		}
@@ -113,7 +111,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	public boolean canRunSanityCheckInteractive(ModelZooArchive trainedModel) {
 		CommandInfo predictionCommand = null;
 		try {
-			predictionCommand = getCommandInfo(trainedModel.getSpecification(), SingleImagePredictionCommand.class);
+			predictionCommand = getCommandInfo(trainedModel.getSpecification(), SingleImagePredictionCommand.class, false);
 		} catch (ModuleException e) {
 			return false;
 		}
@@ -126,12 +124,11 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		return ModelZooPredictionOptions.options();
 	}
 
-	@Override
-	public PredictionOutput predict(ModelZooArchive trainedModel, List<PredictionInput> inputs, ModelZooPredictionOptions options) throws Exception {
+	private PredictionOutput predict(ModelZooArchive trainedModel, PredictionInput input, ModelZooPredictionOptions options) throws Exception {
 		ModelZooPrediction prediction = getPrediction(trainedModel, options);
 		if (prediction == null) return null;
 		prediction.setTrainedModel(trainedModel);
-		prediction.addInputs(inputs);
+		prediction.setInput(input);
 		prediction.run();
 		return prediction.getOutput();
 	}
@@ -140,14 +137,15 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	public <T extends RealType<T> & NativeType<T>> PredictionOutput predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes, ModelZooPredictionOptions options) throws Exception {
 		String inputName = trainedModel.getSpecification().getInputs().get(0).getName();
 		ImageInput<T> imageInput = new ImageInput<>(inputName, input, axes);
-		return predict(trainedModel, Collections.singletonList(imageInput), options);
+		return predict(trainedModel, imageInput, options);
 	}
 
 	@Override
 	public ModelZooPrediction getPrediction(ModelZooArchive trainedModel, ModelZooPredictionOptions options) {
 		String runner = null;
-		ConfigSpecification config = trainedModel.getSpecification().getConfig();
-		if(config != null) runner = config.getRunner();
+		// it's not yet decided how the runner is listed in the specification
+//		ConfigSpecification config = trainedModel.getSpecification().getConfig();
+//		if(config != null) runner = config.getRunner();
 		ModelZooPrediction prediction = null;
 		if(runner == null) {
 			prediction = new DefaultModelZooPrediction(getContext());
@@ -199,7 +197,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		return mycommand;
 	}
 
-	private <P extends SciJavaPlugin, T extends Class<P>> CommandInfo getCommandInfo(ModelSpecification specification, T predictionClass) throws ModuleException {
+	private <P extends SciJavaPlugin, T extends Class<P>> CommandInfo getCommandInfo(ModelSpecification specification, T predictionClass, boolean showWarningIfNotFound) throws ModuleException {
 		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
 		String archivePrediction = specification.getSource();
 		CommandInfo mycommand = null;
@@ -213,7 +211,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class);
 		}
 		if (mycommand == null) {
-			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
+			if(showWarningIfNotFound) {
+				uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
+			}
 			return null;
 		}
 		context.inject(mycommand);
@@ -242,7 +242,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	}
 
 	private void sanityCheck(ModelZooArchive model, Class commandClass) throws ModuleException {
-		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
+		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class, true);
 		if (predictionCommand == null) return;
 		File value = new File(model.getLocation().getURI());
 		Module module = commandService.moduleService().createModule(predictionCommand);
@@ -255,7 +255,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Override
 	public void sanityCheckInteractive(ModelZooArchive model, RandomAccessibleInterval input, RandomAccessibleInterval groundTruth) throws ModuleException {
-		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class);
+		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class, true);
 		if (predictionCommand == null) return;
 		File value = new File(model.getLocation().getURI());
 		Module module = commandService.moduleService().createModule(predictionCommand);

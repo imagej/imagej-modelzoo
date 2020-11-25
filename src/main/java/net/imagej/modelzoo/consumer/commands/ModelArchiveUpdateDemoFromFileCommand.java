@@ -29,13 +29,13 @@
 package net.imagej.modelzoo.consumer.commands;
 
 import io.scif.services.DatasetIOService;
-import net.imagej.modelzoo.DefaultTensorSample;
+import net.imagej.modelzoo.consumer.model.DefaultTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.TensorSample;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
-import net.imagej.modelzoo.specification.NodeSpecification;
-import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import io.bioimage.specification.NodeSpecification;
+import io.bioimage.specification.OutputNodeSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import org.scijava.command.Command;
 import org.scijava.io.location.FileLocation;

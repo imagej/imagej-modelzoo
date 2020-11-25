@@ -22,30 +22,46 @@ import net.imglib2.view.Views;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO extends NativeType<TO> & RealType<TO>> extends DefaultImageDataReference<TI> {
+class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>> extends DefaultImageDataReference<TI> {
 
-	private ImageDataReference<TO> outputReference;
+	class TiledOutput<TO extends RealType<TO> & NativeType<TO>> {
+		OutputImageNode outputNode;
+		ImageDataReference<TO> outputReference;
+		Cursor<RandomAccessibleInterval<TO>> tiledOutputViewCursor;
+		DiskCachedCellImg<TO, ?> outputData;
+
+		public TiledOutput(OutputImageNode outputImageNode, ImageDataReference<TO> imageDataReference) {
+			outputNode = outputImageNode;
+			outputReference = imageDataReference;
+		}
+
+		public void setOutputReference(ImageDataReference imageDataReference) {
+			outputReference = imageDataReference;
+		}
+	}
+
 	private final InputImageNode inputNode;
-	private final OutputImageNode outputNode;
 	private TiledView<TI> tiledInputView;
 	private Cursor<RandomAccessibleInterval<TI>> tiledInputViewCursor;
-	private Cursor<RandomAccessibleInterval<TO>> tiledOutputViewCursor;
 	private Path cacheDir;
-	private TiledView<TO> tiledOutputView;
-	private DiskCachedCellImg<TO, ?> outputData;
+	private List<TiledOutput<?>> tiledOutputs;
 
-	TiledImageDataReference(InputImageNode inputNode, OutputImageNode outputNode, ImageDataReference<TI> inputReference, ImageDataReference<TO> outputReference, Path cacheDir) {
+	TiledImageDataReference(InputImageNode inputNode, List<OutputImageNode> outputNodes, ImageDataReference<TI> inputReference, List<ImageDataReference<?>> outputReferences, Path cacheDir) {
 		super(inputReference.getData(), inputReference.getDataType());
-		this.outputReference = outputReference;
+		tiledOutputs = new ArrayList<>();
+		for (int i = 0; i < outputNodes.size(); i++) {
+			tiledOutputs.add(new TiledOutput<>(outputNodes.get(i), outputReferences.get(i)));
+		}
 		this.inputNode = inputNode;
-		this.outputNode = outputNode;
 		this.cacheDir = cacheDir;
 	}
 
-	Cursor<RandomAccessibleInterval<TO>> getTiledOutputViewCursor() {
-		return tiledOutputViewCursor;
+	List<TiledOutput<?>> getTiledOutputs() {
+		return tiledOutputs;
 	}
 
 	TiledView<TI> getTiledInputView() {
@@ -65,17 +81,22 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 	}
 
 
-	void resolveCurrentTile(ImageDataReference<?> data) {
-		outputReference = (ImageDataReference<TO>) data;
-		RandomAccessibleInterval<TO> currentTile = tiledOutputViewCursor.next();
+	void resolveCurrentTile(List<ImageDataReference<?>> data) {
+		for (int i = 0; i < tiledOutputs.size(); i++) {
+			tiledOutputs.get(i).setOutputReference(data.get(i));
+		}
 		long[] padding = tiledInputView.getOverlap();
 		for (int i = 0; i < padding.length; i++) {
 			padding[i] = -padding[i];
 		}
-		IntervalView<TO> dataWithoutPadding = Views.expandBorder(outputReference.getData(), padding);
-		LoopBuilder.setImages(dataWithoutPadding, currentTile).multiThreaded().forEachPixel((in, out) -> {
-			out.set(in);
-		});
+		for (int d = 0; d < data.size(); d++) {
+			TiledOutput<?> tiledOutput = tiledOutputs.get(d);
+			RandomAccessibleInterval<? extends RealType<?>> currentTile = tiledOutput.tiledOutputViewCursor.next();
+			IntervalView<? extends RealType<?>> dataWithoutPadding = Views.expandBorder(tiledOutput.outputReference.getData(), padding);
+			LoopBuilder.setImages(dataWithoutPadding, currentTile).multiThreaded().forEachPixel((in, out) -> {
+				out.setReal(in.getRealDouble());
+			});
+		}
 	}
 
 	void createTiledInputView(int batchSize, int defaultHalo, int tilesMin) {
@@ -109,14 +130,21 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 	}
 
 	void createTiledOutputView() {
-		long[] grid = new long[outputNode.numDimensions()];
-		long[] padding = new long[outputNode.numDimensions()];
-		long[] dims = new long[outputNode.numDimensions()];
+		for (int d = 0; d < tiledOutputs.size(); d++) {
+			TiledOutput<?> tiledOutput = tiledOutputs.get(d);
+			createTiledOutputView(tiledOutput, d);
+		}
+	}
+
+	private <T extends RealType<T> & NativeType<T>> void createTiledOutputView(TiledOutput<T> tiledOutput, int d) {
+		long[] grid = new long[tiledOutput.outputNode.numDimensions()];
+		long[] padding = new long[tiledOutput.outputNode.numDimensions()];
+		long[] dims = new long[tiledOutput.outputNode.numDimensions()];
 		AxisType[] inputAxes = inputNode.getDataAxesArray();
 		Arrays.fill(grid, 1);
 
 		for (int i = 0; i < grid.length; i++) {
-			ModelZooAxis outputAxis = outputNode.getDataAxis(i);
+			ModelZooAxis outputAxis = tiledOutput.outputNode.getDataAxis(i);
 			Double scale = outputAxis.getScale();
 			Integer offset = outputAxis.getOffset();
 			if(scale == null) scale = 1.;
@@ -130,11 +158,10 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 			}
 		}
 
-		TO dataType = outputReference.getDataType();
-
 		// is this necessary?
-		if(dataType == null) dataType = (TO) inputNode.getData().getDataType();
-		if(dataType == null) dataType = (TO) tiledInputView.randomAccess().get().randomAccess().get().copy();
+		T dataType = tiledOutput.outputReference.getDataType();
+		if(dataType == null) dataType = (T) inputNode.getData().getDataType();
+		if(dataType == null) dataType = (T) tiledInputView.randomAccess().get().randomAccess().get().copy();
 
 		long[] tileSize = calculateTileSize(dims, grid);
 		int[] intTileSize = new int[tileSize.length];
@@ -145,13 +172,14 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 		System.out.println("Output dimensions: " + Arrays.toString(dims));
 		clearCacheDir();
 //		if(outputData != null) outputData.shutdown();
-		outputData = new DiskCachedCellImgFactory<>(dataType,
+		DiskCachedCellImg<T, ?> cellImg = new DiskCachedCellImgFactory<>(dataType,
 				DiskCachedCellImgOptions.options()
 						.cacheType(DiskCachedCellImgOptions.CacheType.SOFTREF)
 						.cacheDirectory(cacheDir)
 						.deleteCacheDirectoryOnExit(cacheDir == null)).create(dims);
-		tiledOutputView = new TiledView<>(outputData, tileSize, padding);
-		tiledOutputViewCursor = Views.iterable(tiledOutputView).cursor();
+		tiledOutput.outputData = cellImg;
+		TiledView<T> tiledOutputView = new TiledView<>(cellImg, tileSize, padding);
+		tiledOutput.tiledOutputViewCursor = Views.iterable(tiledOutputView).cursor();
 	}
 
 	private void clearCacheDir() {
@@ -303,6 +331,8 @@ class TiledImageDataReference<TI extends RealType<TI> & NativeType<TI>, TO exten
 	}
 
 	public void assignFullOutput() {
-		outputNode.setData(new DefaultImageDataReference(outputData, outputNode.getData().getDataType()));
+		for (TiledOutput<?> tiledOutput : tiledOutputs) {
+			tiledOutput.outputNode.setData(new DefaultImageDataReference(tiledOutput.outputData, tiledOutput.outputNode.getData().getDataType()));
+		}
 	}
 }

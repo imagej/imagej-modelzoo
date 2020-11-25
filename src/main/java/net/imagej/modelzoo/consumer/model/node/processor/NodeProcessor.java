@@ -28,7 +28,7 @@
  */
 package net.imagej.modelzoo.consumer.model.node.processor;
 
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 import org.scijava.plugin.SciJavaPlugin;
 
 public interface NodeProcessor<T extends TransformationSpecification> extends SciJavaPlugin {

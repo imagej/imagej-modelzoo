@@ -30,7 +30,7 @@ package net.imagej.modelzoo.consumer.model.node.processor;
 
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.InputImageNode;
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 
 public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T>, Runnable {
 	void setup(ImageNode imageNode, InputImageNode processorInputReference);

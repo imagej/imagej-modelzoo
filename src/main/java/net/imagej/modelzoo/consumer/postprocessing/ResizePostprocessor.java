@@ -5,7 +5,7 @@ import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;

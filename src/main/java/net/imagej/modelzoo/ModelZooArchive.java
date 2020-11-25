@@ -29,7 +29,8 @@
 package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import io.bioimage.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.scijava.io.location.Location;
 
 import java.io.File;

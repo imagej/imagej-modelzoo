@@ -4,7 +4,7 @@ import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessorException;
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;

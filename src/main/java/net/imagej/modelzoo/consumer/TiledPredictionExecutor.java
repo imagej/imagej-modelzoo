@@ -30,6 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imagej.modelzoo.consumer.tiling.DefaultTiling;
@@ -42,6 +43,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -64,7 +66,8 @@ public class TiledPredictionExecutor implements Cancelable {
 	private boolean tilingEnabled = true;
 
 	private Path cacheDir = null;
-	private OutputImageNode tiledOutput;
+	private ArrayList<OutputImageNode> tilingOutputs;
+	private InputImageNode tilingInput;
 
 	TiledPredictionExecutor(ModelZooModel model, Context context) {
 		this.model = model;
@@ -75,7 +78,7 @@ public class TiledPredictionExecutor implements Cancelable {
 
 		try {
 			assignTilingNodes();
-			if (!tilingEnabled || tiledOutput == null) {
+			if (!tilingEnabled || tilingInput == null) {
 				model.predict();
 			} else {
 				initTiling();
@@ -101,15 +104,26 @@ public class TiledPredictionExecutor implements Cancelable {
 		}
 	}
 
+	/**
+	 * Take the first image output which has a reference to an input image, collect all other output nodes connected to this input
+	 */
 	private void assignTilingNodes() {
+		tilingInput = null;
+		tilingOutputs = new ArrayList<>();
 		for (ModelZooNode<?> outputNode : model.getOutputNodes()) {
 			// check for each output node if there is a reference to the input node
 			// if yes, we assume it might be possible to tile
 			if(OutputImageNode.class.isAssignableFrom(outputNode.getClass())) {
 				OutputImageNode outputImageNode = (OutputImageNode) outputNode;
 				if(outputImageNode.getReference() != null) {
-					this.tiledOutput = outputImageNode;
-					return;
+					if(tilingInput == null) {
+						tilingInput = outputImageNode.getReference();
+						tilingOutputs.add(outputImageNode);
+					} else {
+						if(outputImageNode.getReference().equals(tilingInput)) {
+							tilingOutputs.add(outputImageNode);
+						}
+					}
 				}
 			}
 		}
@@ -166,7 +180,7 @@ public class TiledPredictionExecutor implements Cancelable {
 
 	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void initTiling() {
 		processedTiles = false;
-		tiling = new DefaultTiling(tiledOutput, cacheDir);
+		tiling = new DefaultTiling(tilingInput, tilingOutputs, cacheDir);
 		tiling.setNumberOfTiles(nTiles);
 		tiling.setBatchSize(batchSize);
 		tiling.init();

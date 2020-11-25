@@ -28,11 +28,11 @@
  */
 package net.imagej.modelzoo;
 
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.WeightsSpecification;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imagej.modelzoo.specification.WeightsSpecification;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.apache.commons.compress.utils.FileNameUtils;
-import org.jetbrains.annotations.Nullable;
 import org.scijava.Context;
 import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
@@ -68,6 +68,7 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 	private List<TensorSample> sampleInputs;
 	private List<TensorSample> sampleOutputs;
 
+
 	@Override
 	public Location getLocation() {
 		return source;
@@ -95,14 +96,24 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 		}
 		List<PluginInfo<ModelZooModel>> modelPlugins = pluginService.getPluginsOfType(ModelZooModel.class);
 		ModelZooModel model = null;
+		Location weightsSource = null;
 		for (PluginInfo<ModelZooModel> pluginInfo : modelPlugins) {
-			if(pluginInfo.getAnnotation().name().equals(specification.getFramework())) {
-				model = pluginService.createInstance(pluginInfo);
+			for (WeightsSpecification weight : specification.getWeights()) {
+				if(pluginInfo.get("supports").contains(weight.getId())) {
+					model = pluginService.createInstance(pluginInfo);
+					String source = weight.getSource();
+					if(source == null) {
+						// older specs did not zip the weights
+						weightsSource = this.source;
+					} else {
+						File weightsFile = extract(source);
+						weightsSource = new FileLocation(weightsFile);
+					}
+				}
 			}
 		}
 		if(model != null) {
 			model.loadLibrary();
-			Location weightsSource = getCompatibleWeight(model);
 			model.loadModel(weightsSource, getNameWithTimeStamp(), getSpecification());
 			cleanup(weightsSource);
 		} else {
@@ -119,22 +130,6 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 				((FileLocation) weightsSource).getFile().delete();
 			}
 		}
-	}
-
-	@Nullable
-	private Location getCompatibleWeight(ModelZooModel model) throws IOException {
-		for (WeightsSpecification weight : specification.getWeights()) {
-			if(model.getSupportedWeights().contains(weight.getId())) {
-				String source = weight.getSource();
-				if(source == null) {
-					// older specs did not zip the weights
-					return this.source;
-				}
-				File weightsFile = extract(source);
-				return new FileLocation(weightsFile);
-			}
-		}
-		return null;
 	}
 
 	private String getNameWithTimeStamp() {
@@ -173,13 +168,23 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 
 	@Override
 	public File extract(String path) throws IOException {
-		try (FileSystem fileSystem = FileSystems.newFileSystem(new File(getLocation().getURI()).toPath(), null)) {
+		//FIXME this should be part of the IO plugin.
+		try (FileSystem fileSystem = FileSystems.newFileSystem(((FileLocation)getLocation()).getFile().toPath(), null)) {
 			Path fileToExtract = fileSystem.getPath(path);
 			String base = FileNameUtils.getBaseName(path);
 			String extension = "." + FileNameUtils.getExtension(path);
 			Path res = Files.createTempFile(base, extension);
 			Files.copy(fileToExtract, res, StandardCopyOption.REPLACE_EXISTING);
 			return res.toFile();
+		}
+	}
+
+	public void add(File file, String location) throws IOException {
+		//FIXME this should be part of the IO plugin.
+		try (FileSystem fileSystem = FileSystems.newFileSystem(((FileLocation)getLocation()).getFile().toPath(), null)) {
+			Path fileToAdd = fileSystem.getPath(location);
+			Path source = file.toPath();
+			Files.copy(source, fileToAdd, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 }

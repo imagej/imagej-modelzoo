@@ -29,8 +29,8 @@
 
 package net.imagej.modelzoo.consumer.model;
 
+import io.bioimage.specification.ModelSpecification;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
-import net.imagej.modelzoo.specification.ModelSpecification;
 import org.scijava.io.location.Location;
 
 import java.util.ArrayList;

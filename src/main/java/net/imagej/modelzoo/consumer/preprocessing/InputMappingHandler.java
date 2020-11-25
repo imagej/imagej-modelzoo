@@ -34,6 +34,7 @@ import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
@@ -51,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class InputMappingHandler {
+public class InputMappingHandler implements InputHandler {
 
 	@Parameter
 	private LogService log;
@@ -180,4 +181,8 @@ public class InputMappingHandler {
 		this.mapping.put(name, mapping);
 	}
 
+	@Override
+	public <T extends RealType<T> & NativeType<T>> void handleImageInput(ImageInput<T> input) {
+		addInput(input.getName(), input.getImage(), input.getAxes());
+	}
 }

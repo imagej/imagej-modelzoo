@@ -31,7 +31,6 @@ package net.imagej.modelzoo;
 import net.imagej.ImageJService;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
@@ -39,7 +38,6 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.module.ModuleException;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 
 public interface ModelZooService extends ImageJService {
 
@@ -50,10 +48,6 @@ public interface ModelZooService extends ImageJService {
 
 	ModelZooPredictionOptions createOptions();
 
-	default PredictionOutput predict(ModelZooArchive trainedModel, List<PredictionInput> inputs) throws Exception {
-		return predict(trainedModel, inputs, createOptions());
-	}
-	PredictionOutput predict(ModelZooArchive trainedModel, List<PredictionInput> inputs, ModelZooPredictionOptions options) throws Exception;
 	default <T extends RealType<T> & NativeType<T>> PredictionOutput predict(ModelZooArchive trainedModel, RandomAccessibleInterval<T> input, String axes) throws Exception {
 		return predict(trainedModel, input, axes, createOptions());
 	}

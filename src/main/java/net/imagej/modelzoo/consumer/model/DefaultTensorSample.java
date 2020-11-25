@@ -1,4 +1,4 @@
-package net.imagej.modelzoo;
+package net.imagej.modelzoo.consumer.model;
 
 public class DefaultTensorSample implements TensorSample {
 	private final Object data;

@@ -29,7 +29,7 @@
 package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.io.ModelZooIOPlugin;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import io.bioimage.specification.ModelSpecification;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;

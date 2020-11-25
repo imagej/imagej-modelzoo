@@ -34,7 +34,9 @@ import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.view.Views;
 import org.junit.After;
 import org.junit.Test;
 
@@ -53,24 +55,24 @@ public class E01_Prediction {
 	public void useService() throws Exception {
 
 		ij = new ImageJ();
+		ij.launch();
 
 		// resource paths
-		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+//		String imgPath = getClass().getResource("/blobs.png").getPath();
+		String imgPath = "/home/random/Development/imagej/project/CSBDeep/data/DenoiSeg/data/mouse/Mouse_n10/X_test/img_0.tif";
+//		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath = "/home/random/Documents/2020-11 I2K/denoiseg-2145300043390414539.bioimage.io.zip";
 
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
-
-		// convert to float
-		input = ij.op().convert().float32(input);
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
 
 		ModelZooArchive model = modelZooService.io().open(modelPath);
 
 		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
-		options.numberOfTiles(10);
-		PredictionOutput outputs = modelZooService.predict(model, input, "XY", options);
+		options.numberOfTiles(30);
+		PredictionOutput outputs = modelZooService.predict(model, input, "XYB", options);
 
 		outputs.asMap().forEach((name, output) -> {
 			ij.ui().show(name, output);
@@ -88,7 +90,7 @@ public class E01_Prediction {
 		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
 
 		// load image
-		Img input = (Img) ij.io().open(imgPath);
+		RandomAccessibleInterval input = (Img) ij.io().open(imgPath);
 
 		// create prediction
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());

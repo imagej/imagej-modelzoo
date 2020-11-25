@@ -26,8 +26,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package net.imagej.modelzoo.specification;
+package net.imagej.modelzoo.consumer.command;
 
-public interface TransformationSpecification {
-	String getName();
+import net.imagej.ImageJ;
+import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.consumer.commands.CAREDefaultModelConverterCommand;
+import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import org.junit.Test;
+import org.scijava.command.CommandModule;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.assertNotNull;
+
+public class CAREConverterCommandTest {
+
+	@Test
+	public void testCommand() throws ExecutionException, InterruptedException {
+		ImageJ ij = new ImageJ();
+
+		File oldModel = new File("/home/random/Documents/2020-11 I2K/CARE/old/model-planaria.zip");
+		String name = "CARE Demo planaria";
+		File destinationFolder = new File("/home/random/Documents/2020-11 I2K/CARE/old");
+		String destinationFileName = "care-demo-planaria";
+
+		CommandModule module = ij.command().run(CAREDefaultModelConverterCommand.class,
+				false,
+				"input", oldModel,
+				"name", name,
+				"destinationFolder", destinationFolder,
+				"destinationFileName", destinationFileName).get();
+
+		ModelZooArchive output = (ModelZooArchive) module.getOutput("output");
+		assertNotNull(output);
+	}
 }

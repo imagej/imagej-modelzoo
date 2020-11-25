@@ -31,120 +31,36 @@ package net.imagej.modelzoo.consumer.commands;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
-import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
-import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 import org.scijava.ItemIO;
-import org.scijava.ItemVisibility;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import java.io.File;
-import java.util.concurrent.CancellationException;
-
 @Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo")
-public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>> implements SingleImagePredictionCommand {
-
-	@Parameter(label = "Trained model file (.zip)")
-	private File modelFile;
-
-	@Parameter(persist = false)
-	private RandomAccessibleInterval<T> input;
-
-	@Parameter(label = "Axes of prediction input (subset of XYB, B = batch)", description = "<html>You can predict one dimension independently per position.<br>Use B ( = batch) for this dimension.")
-	private String axes = "XY";
-
-	@Parameter(label = "Batch size", required = false, description = "<html>The batch size will only be used if a batch axis exists.<br>It can improve performance to process multiple batches at once (batch size > 1)")
-	private int batchSize = 10;
-
-	@Parameter(label = "Number of tiles (1 = no tiling)", required = false, description = "<html>Increasing the tiling can help if the memory is insufficient to deal with the whole image at once.<br>Too many tiles decrease performance because an overlap has to be computed.")
-	private int numTiles = 1;
-
-	@Parameter(required = false, visibility = ItemVisibility.INVISIBLE)
-	private boolean showProgressDialog = true;
+public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>> extends AbstractSingleImagePredictionCommand<T, DefaultModelZooPrediction> {
 
 	@Parameter(type = ItemIO.OUTPUT)
 	private Dataset output;
 
 	@Parameter
-	private LogService log;
-
-	@Parameter
-	private ModelZooService modelZooService;
-
-	@Parameter
 	private DatasetService datasetService;
-
-	@Parameter
-	private Context context;
 
 	private ModelZooPrediction<ImageInput<?>, ?> prediction;
 
+
 	@Override
-	public void run() {
-
-		final long startTime = System.currentTimeMillis();
-
-		try {
-			ModelZooPrediction<ImageInput<?>, ?> prediction = getPrediction();
-			prediction.setTrainedModel(modelZooService.io().open(modelFile));
-			prediction.setInput(new ImageInput<>("input", input, axes));
-			prediction.setOptions(ModelZooPredictionOptions.options()
-					.numberOfTiles(numTiles)
-					.batchSize(batchSize));
-			prediction.run();
-			PredictionOutput output = prediction.getOutput();
-			this.output = datasetService.create((RandomAccessibleInterval)output.asMap().values().iterator().next());
-
-		} catch (CancellationException e) {
-			log.warn("ModelZoo prediction canceled.");
-		} catch (OutOfMemoryError | Exception e) {
-			e.printStackTrace();
-		}
-		log.info("ModelZoo prediction exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
-
+	protected void createOutput(DefaultModelZooPrediction prediction) {
+		output = datasetService.create((RandomAccessibleInterval)prediction.getOutput().asMap().values().iterator().next());
 	}
 
-	public ModelZooPrediction<ImageInput<?>, ?> getPrediction() {
-		if(prediction == null) {
-			setPrediction(new DefaultModelZooPrediction(getContext()));
-		}
-		return prediction;
-	}
-
-	protected Context getContext() {
-		return context;
-	}
-
-	public void setPrediction(ModelZooPrediction<ImageInput<?>, ?> prediction) {
-		this.prediction = prediction;
-	}
-
-	protected RandomAccessibleInterval<T> getInput() {
-		return input;
-	}
-
-	protected String getAxes() {
-		return axes;
-	}
-
-	protected File getModelFile() {
-		return modelFile;
-	}
-
-	protected ModelZooService modelZooService() {
-		return modelZooService;
-	}
-
-	protected LogService log() {
-		return log;
+	@Override
+	public DefaultModelZooPrediction createPrediction() {
+		return new DefaultModelZooPrediction(getContext());
 	}
 }

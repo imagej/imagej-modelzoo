@@ -3,7 +3,7 @@ package net.imagej.modelzoo.consumer.model.node.processor;
 import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.InputImageNode;
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -39,5 +39,5 @@ public abstract class DefaultImageNodeProcessor<T extends TransformationSpecific
 		getImageNode().setData(result);
 	}
 
-	protected abstract <I extends RealType<I> & NativeType<I>, O extends RealType<O> & NativeType<O>> ImageDataReference<O> process(RandomAccessibleInterval<I> in, ImageDataReference<O> outType);
+	protected abstract <I extends RealType<I> & NativeType<I>, O extends RealType<O> & NativeType<O>> ImageDataReference<?> process(RandomAccessibleInterval<I> in, ImageDataReference<O> outType);
 }

@@ -35,39 +35,55 @@ import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imglib2.util.Intervals;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class DefaultTiling {
 
 	private final InputImageNode inputNode;
-	private final OutputImageNode outputNode;
+	private final List<OutputImageNode> outputNodes;
 	private final int defaultHalo = 32;
 	private Path cacheDir;
 	private int tilesNum = 1;
 	private int batchSize = 10;
 
 	private final ImageDataReference<?> originalData;
-	private TiledImageDataReference<?, ?> tiledDataReference;
+	private TiledImageDataReference<?> tiledDataReference;
 	private int doneTileCount = 0;
 
-	public DefaultTiling(OutputImageNode outputNode) {
-		this.originalData = outputNode.getReference().getData();
-		this.inputNode = outputNode.getReference();
-		this.outputNode = outputNode;
+	public DefaultTiling(OutputImageNode tilingOutput) {
+		this(tilingOutput.getReference(), Collections.singletonList(tilingOutput));
+	}
+
+	public DefaultTiling(InputImageNode tilingInput, List<OutputImageNode> tilingOutputs) {
+		this.originalData = tilingInput.getData();
+		this.inputNode = tilingInput;
+		this.outputNodes = tilingOutputs;
 		this.cacheDir = null;
 	}
 
-	public DefaultTiling(OutputImageNode outputNode, Path cacheDir) {
-		this(outputNode);
+	public DefaultTiling(InputImageNode tilingInput, List<OutputImageNode> tilingOutputs, Path cacheDir) {
+		this(tilingInput, tilingOutputs);
 		this.cacheDir = cacheDir;
 	}
 
 	public boolean hasTilesLeft() {
 //		return arrayProduct(Intervals.dimensionsAsLongArray(tiledInputView)) > doneTileCount;
-		return tiledDataReference.getTiledOutputViewCursor().hasNext();
+		return tiledDataReference.getTiledOutputs().get(0).tiledOutputViewCursor.hasNext();
 	}
 
 	public void resolveCurrentTile() {
-		tiledDataReference.resolveCurrentTile(outputNode.getData());
+		List<ImageDataReference<?>> newData = getCurrentOutputData();
+		tiledDataReference.resolveCurrentTile(newData);
+	}
+
+	private List<ImageDataReference<?>> getCurrentOutputData() {
+		List<ImageDataReference<?>> newData = new ArrayList<>();
+		for (OutputImageNode outputNode : outputNodes) {
+			newData.add(outputNode.getData());
+		}
+		return newData;
 	}
 
 	public void setNumberOfTiles(int nTiles) {
@@ -82,7 +98,7 @@ public class DefaultTiling {
 		//TODO check if tilesNum / batchSize works?!
 		resetTileCount();
 		inputNode.setData(originalData);
-		tiledDataReference = new TiledImageDataReference<>(inputNode, outputNode, inputNode.getData(), outputNode.getData(), cacheDir);
+		tiledDataReference = new TiledImageDataReference<>(inputNode, outputNodes, inputNode.getData(), getCurrentOutputData(), cacheDir);
 		tiledDataReference.createTiledInputView(batchSize, defaultHalo, tilesNum);
 		long[] tiles = Intervals.dimensionsAsLongArray(tiledDataReference.getTiledInputView());
 		tilesNum = (int) arrayProduct(tiles);
@@ -128,10 +144,6 @@ public class DefaultTiling {
 
 	public long getTilesTotalCount() {
 		return tiledDataReference.getTilesTotalCount();
-	}
-
-	public TiledImageDataReference<?, ?> getTilingData() {
-		return tiledDataReference;
 	}
 
 	public void finish() {

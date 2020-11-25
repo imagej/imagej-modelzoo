@@ -34,6 +34,7 @@ import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
+import net.imglib2.EuclideanSpace;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
@@ -45,11 +46,11 @@ public interface ModelZooPrediction<I extends PredictionInput, O extends Predict
 
 	void setOptions(ModelZooPredictionOptions options);
 
-	default void setInput(I input) {
-		input.addToPrediction(this);
-	}
+	void setInput(I input);
 
 	void run() throws OutOfMemoryError, Exception;
+
+	I getInput();
 
 	O getOutput();
 
@@ -62,8 +63,4 @@ public interface ModelZooPrediction<I extends PredictionInput, O extends Predict
 	default SanityCheck getSanityCheck() {
 		return null;
 	}
-
-	<T extends RealType<T> & NativeType<T>> void addImageInput(ImageInput<T> input);
-
-	void addInputs(List<PredictionInput> inputs);
 }

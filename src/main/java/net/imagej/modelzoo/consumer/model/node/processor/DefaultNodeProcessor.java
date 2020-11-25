@@ -1,6 +1,6 @@
 package net.imagej.modelzoo.consumer.model.node.processor;
 
-import net.imagej.modelzoo.specification.TransformationSpecification;
+import io.bioimage.specification.TransformationSpecification;
 
 public abstract class DefaultNodeProcessor<T extends TransformationSpecification> implements NodeProcessor<T> {
 	private String reference;

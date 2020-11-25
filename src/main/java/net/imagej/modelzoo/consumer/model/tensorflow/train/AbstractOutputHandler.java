@@ -28,9 +28,10 @@
  */
 package net.imagej.modelzoo.consumer.model.tensorflow.train;
 
+import io.bioimage.specification.io.SpecificationWriter;
 import io.scif.img.ImgSaver;
 import net.imagej.modelzoo.ImageTensorSample;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import io.bioimage.specification.ModelSpecification;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
@@ -85,7 +86,8 @@ public abstract class AbstractOutputHandler {
 
 	public File exportLatestTrainedModel() throws IOException {
 		if(noCheckpointSaved) return null;
-		createSpecification("last checkpoint").write(mostRecentModelDir);
+		ModelSpecification last_checkpoint = createSpecification("last checkpoint");
+		SpecificationWriter.write(last_checkpoint, mostRecentModelDir);
 		return saveTrainedModel(mostRecentModelDir, savedModelBundleName);
 	}
 
@@ -106,6 +108,7 @@ public abstract class AbstractOutputHandler {
 		fos.close();
 		return out.toFile();
 	}
+
 	protected String getTimestamp() {
 		TimeZone tz = TimeZone.getTimeZone("UTC");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
@@ -121,7 +124,8 @@ public abstract class AbstractOutputHandler {
 	protected void copyBestModel() {
 		try {
 			FileUtils.copyDirectory(mostRecentModelDir, bestModelDir);
-			createSpecification("lowest loss").write(bestModelDir);
+			ModelSpecification lowest_loss = createSpecification("lowest loss");
+			SpecificationWriter.write(lowest_loss, bestModelDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -206,6 +210,10 @@ public abstract class AbstractOutputHandler {
 
 	public String getSavedModelBundlePackage() {
 		return savedModelBundleName + ".zip";
+	}
+
+	public File getMostRecentModelDir() {
+		return mostRecentModelDir;
 	}
 
 	public void dispose() {

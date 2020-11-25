@@ -1,7 +1,7 @@
 package net.imagej.modelzoo.consumer.model.prediction;
 
-import net.imagej.modelzoo.consumer.ModelZooPrediction;
+import net.imagej.modelzoo.consumer.preprocessing.InputHandler;
 
 public interface PredictionInput {
-	void addToPrediction(ModelZooPrediction<?, ?> prediction);
+	void attachToInputHandler(InputHandler inputHandler);
 }

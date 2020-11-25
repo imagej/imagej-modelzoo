@@ -32,7 +32,6 @@ package net.imagej.modelzoo.consumer;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
-import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
@@ -40,16 +39,17 @@ import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessorException;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+import net.imagej.ops.OpService;
+import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
+import org.scijava.ui.UIService;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> implements ModelZooPrediction<I, O> {
@@ -71,6 +71,7 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	private O output;
 
 	private Map<String, Object> outputs;
+	private I input;
 
 	public AbstractModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
@@ -89,6 +90,7 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	@Override
 	public void run() throws OutOfMemoryError, Exception {
 
+		input.attachToInputHandler(inputHandling);
 		ModelZooModel model = loadModel(modelArchive);
 		if (!validateModel(model)) return;
 		try {
@@ -100,6 +102,16 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 		} finally {
 			model.dispose();
 		}
+	}
+
+	@Override
+	public void setInput(I input) {
+		this.input = input;
+	}
+
+	@Override
+	public I getInput() {
+		return input;
 	}
 
 	@Override
@@ -159,18 +171,6 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	@Override
 	public void setTrainedModel(ModelZooArchive trainedModel) {
 		this.modelArchive = trainedModel;
-	}
-
-	@Override
-	public <T extends RealType<T> & NativeType<T>> void addImageInput(ImageInput<T> input) {
-		inputHandling.addInput(input.getName(), input.getImage(), input.getAxes());
-	}
-
-	@Override
-	public void addInputs(List<PredictionInput> inputs) {
-		for (PredictionInput input : inputs) {
-			input.addToPrediction(this);
-		}
 	}
 
 	public void setTrainedModel(String trainedModel) throws IOException {

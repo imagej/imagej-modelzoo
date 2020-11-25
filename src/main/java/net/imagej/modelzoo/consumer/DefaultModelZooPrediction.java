@@ -4,13 +4,14 @@ import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
 import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
+import net.imagej.modelzoo.consumer.sanitycheck.ImageToImageSanityCheck;
+import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 
-public class DefaultModelZooPrediction extends AbstractModelZooPrediction<ImageInput<?>, DefaultPredictionOutput> {
+public class DefaultModelZooPrediction extends AbstractModelZooPrediction<ImageInput<?>, DefaultPredictionOutput> implements SingleImagePrediction<DefaultPredictionOutput> {
 
 	public DefaultModelZooPrediction() {
 	}
@@ -33,10 +34,15 @@ public class DefaultModelZooPrediction extends AbstractModelZooPrediction<ImageI
 	}
 
 	public <T extends RealType<T> & NativeType<T>> void setInput(RandomAccessibleInterval<T> image, String axes) {
-		addImageInput(new ImageInput<>("input", image, axes));
+		setInput(new ImageInput<>("input", image, axes));
 	}
 
-	public void setInput(String name, Img image, String axes) {
-		addImageInput(new ImageInput<>(name, image, axes));
+	public <T extends RealType<T> & NativeType<T>> void setInput(String name, RandomAccessibleInterval<T> image, String axes) {
+		setInput(new ImageInput<>(name, image, axes));
+	}
+
+	@Override
+	public SanityCheck getSanityCheck() {
+		return new ImageToImageSanityCheck(context());
 	}
 }

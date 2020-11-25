@@ -1,5 +1,6 @@
 package net.imagej.modelzoo;
 
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.RealType;
 

@@ -30,16 +30,17 @@
 package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.weights.TensorFlowSavedModelBundleSpecification;
 import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
-import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
 import net.imagej.modelzoo.consumer.DefaultSpecificationLoader;
-import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
-import net.imagej.modelzoo.specification.ModelSpecification;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
@@ -51,6 +52,7 @@ import org.scijava.command.CommandService;
 import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Attr;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.tensorflow.Tensor;
@@ -60,12 +62,11 @@ import org.tensorflow.framework.SignatureDef;
 import javax.swing.JOptionPane;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-@Plugin(type= ModelZooModel.class, name = "tensorflow")
+@Plugin(type= ModelZooModel.class, attrs = { @Attr(name = "supports",
+		value = TensorFlowSavedModelBundleSpecification.id)})
 public class TensorFlowModel extends DefaultModelZooModel {
 	@Parameter
 	private TensorFlowService tensorFlowService;
@@ -100,17 +101,23 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		context.inject(this);
 	}
 
-	public ModelSpecification guessSpecification(final String source, final String modelName) throws IOException {
+	public ModelSpecification guessSpecification(FileLocation fileLocation, String name, int networkDepth, int kernelSize) throws IOException {
+		loadModelFile(fileLocation, name);
+		loadSignature();
+		TensorFlowModelSpecification specification = TensorFlowUtils.guessSpecification(sig, networkDepth, kernelSize);
+		specification.setName(name);
+		return specification;
+
+	}
+
+	public TensorFlowModelSpecification guessSpecification(final String source, final String modelName) throws IOException {
 		return guessSpecification(new FileLocation(source), modelName);
 	}
 
-	public ModelSpecification guessSpecification(final Location source, final String modelName) throws IOException {
+	public TensorFlowModelSpecification guessSpecification(final Location source, final String modelName) throws IOException {
 		loadModelFile(source, modelName);
-		// Extract names from the model signature.
-		// The strings "input", "probabilities" and "patches" are meant to be
-		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
-		ModelSpecification specification = TensorFlowUtils.guessSpecification(log, sig);
+		TensorFlowModelSpecification specification = TensorFlowUtils.guessSpecification(sig, 0);
 		specification.setName(modelName);
 		return specification;
 	}
@@ -137,9 +144,6 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		if (!tensorFlowLoaded) throw new MissingLibraryException("TensorFlow not loaded");
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
 		loadModelFile(source, modelName);
-		// Extract names from the model signature.
-		// The strings "input", "probabilities" and "patches" are meant to be
-		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
 		inputNodes.clear();
 		if(!verifySpecification(specification)) return;
@@ -168,7 +172,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 					specification.getInputs().size() + " inputs).");
 			return false;
 		}
-		if (sig.getInputsCount() != specification.getOutputs().size()) {
+		if (sig.getOutputsCount() != specification.getOutputs().size()) {
 			log.error("Model signature (" + sig.getOutputsCount() +
 					" outputs) does not match model description signature (" +
 					specification.getOutputs().size() + " outputs).");
@@ -190,11 +194,6 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		setOutputTensors(outputTensors);
 		inputTensors.forEach(Tensor::close);
 		outputTensors.forEach(Tensor::close);
-	}
-
-	@Override
-	public Set<String> getSupportedWeights() {
-		return Collections.singleton(TensorFlowSavedModelBundleSpecification.id());
 	}
 
 	private List<Tensor<?>> getInputTensors() {
@@ -246,5 +245,4 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		sig = null;
 		model = null;
 	}
-
 }
