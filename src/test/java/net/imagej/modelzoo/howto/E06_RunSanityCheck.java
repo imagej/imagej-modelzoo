@@ -31,9 +31,6 @@ package net.imagej.modelzoo.howto;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSanityCheck;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
@@ -53,7 +50,7 @@ public class E06_RunSanityCheck {
 		ij.launch();
 
 		// resource paths
-		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 		String imgPath = getClass().getResource("/blobs.png").getPath();
 
 		// load image
@@ -69,11 +66,9 @@ public class E06_RunSanityCheck {
 
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
-		ModelZooArchive model = modelZooService.open(modelPath);
+		ModelZooArchive model = modelZooService.io().open(modelPath);
 		modelZooService.sanityCheckInteractive(model, noisy, input);
 
-		// run sanity check from static method
-//		DefaultSanityCheck.compare(input, noisy, output, prediction.getTrainedModel().getTestInput(), prediction.getTrainedModel().getTestOutput(), ij.op());
 	}
 
 	public static void main(String... args) throws Exception {

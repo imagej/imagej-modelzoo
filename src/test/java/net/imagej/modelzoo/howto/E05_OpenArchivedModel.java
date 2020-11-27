@@ -49,7 +49,7 @@ public class E05_OpenArchivedModel {
 		ij.launch();
 
 		// resource paths
-		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		Object model = ij.io().open(modelPath);
 		ij.ui().show(model);

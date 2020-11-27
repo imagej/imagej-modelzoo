@@ -28,14 +28,15 @@
  */
 package net.imagej.modelzoo.howto;
 
-import net.imagej.modelzoo.specification.CitationSpecification;
-import net.imagej.modelzoo.specification.DefaultCitationSpecification;
-import net.imagej.modelzoo.specification.DefaultInputNodeSpecification;
-import net.imagej.modelzoo.specification.DefaultModelSpecification;
-import net.imagej.modelzoo.specification.DefaultOutputNodeSpecification;
-import net.imagej.modelzoo.specification.InputNodeSpecification;
-import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imagej.modelzoo.specification.OutputNodeSpecification;
+import io.bioimage.specification.CitationSpecification;
+import io.bioimage.specification.DefaultCitationSpecification;
+import io.bioimage.specification.DefaultInputNodeSpecification;
+import io.bioimage.specification.DefaultModelSpecification;
+import io.bioimage.specification.DefaultOutputNodeSpecification;
+import io.bioimage.specification.InputNodeSpecification;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.OutputNodeSpecification;
+import io.bioimage.specification.io.SpecificationWriter;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,7 +45,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Arrays;
 
 public class E02_WriteSpecification {
@@ -56,7 +56,7 @@ public class E02_WriteSpecification {
 	public void run() throws IOException {
 
 		// create specification
-		ModelSpecification specification = new DefaultModelSpecification();
+		DefaultModelSpecification specification = new DefaultModelSpecification();
 
 		// set specification values
 
@@ -92,13 +92,14 @@ public class E02_WriteSpecification {
 		specification.addOutputNode(output);
 
 		// create temporary directory to save model specification to
+		folder.create();
 		File destination = folder.getRoot();
 
 		// save model specification
-		specification.write(destination);
+		SpecificationWriter.write(specification, destination);
 
 		// print file content to console
-		File modelSpecFile = new File(destination, specification.getModelFileName());
+		File modelSpecFile = new File(destination, SpecificationWriter.getModelFileName());
 		System.out.println(FileUtils.readFileToString(modelSpecFile, StandardCharsets.UTF_8));
 
 	}

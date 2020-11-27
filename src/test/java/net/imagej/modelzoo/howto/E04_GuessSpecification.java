@@ -29,7 +29,7 @@
 package net.imagej.modelzoo.howto;
 
 import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModelSpecification;
 import org.junit.Test;
 import org.scijava.Context;
 
@@ -44,10 +44,10 @@ public class E04_GuessSpecification {
 		Context context = new Context();
 
 		// resource path
-		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// create specification
-		ModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");
+		TensorFlowModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");
 
 		// set the shape step of the input data, in this case, X and Y need to be multiple of 32
 		// since this can't be guessed by the TensorFlow model but is important for models with variable input size, this needs to be set manually
@@ -56,9 +56,6 @@ public class E04_GuessSpecification {
 
 		// access specification
 		System.out.println(specification);
-
-		// save archive with specification
-//		context.service(ModelZooService.class).save(archivePath, specification, "/home/random/tmp/test.bioimage.io.zip");
 
 		// dispose context
 		context.dispose();

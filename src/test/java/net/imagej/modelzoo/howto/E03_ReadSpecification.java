@@ -28,8 +28,10 @@
  */
 package net.imagej.modelzoo.howto;
 
-import net.imagej.modelzoo.specification.DefaultModelSpecification;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import io.bioimage.specification.DefaultModelSpecification;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.io.SpecificationReader;
+import io.bioimage.specification.io.SpecificationWriter;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -46,10 +48,10 @@ public class E03_ReadSpecification {
 		DefaultModelSpecification specification = new DefaultModelSpecification();
 
 		// read specification
-		specification.read(specificationPath);
+		SpecificationReader.read(specificationPath, specification);
 
 		// access specification
-		System.out.println(specification.toMap());
+		System.out.println(SpecificationWriter.write(specification));
 
 	}
 

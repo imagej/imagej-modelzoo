@@ -30,9 +30,11 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import org.junit.Test;
@@ -43,7 +45,9 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class DefaultModelZooPredictionTest {
 
@@ -54,33 +58,44 @@ public class DefaultModelZooPredictionTest {
 		Path img = Paths.get(getClass().getResource("denoise2D/input.tif").toURI());
 
 		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
-		Img inputFloat = ij.op().convert().float32(input);
 
-		File archiveFile = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
+		File archive1 = new File(getClass().getResource("denoise2D/dummy-0.2.0-csbdeep.bioimage.io.zip").toURI());
+		File archive2 = new File(getClass().getResource("denoise2D/dummy-0.3.0.model.bioimage.io.zip").toURI());
 
+		testPredictionForArchive(ij, input, archive1);
+		testPredictionForArchive(ij, input, archive2);
+
+		ij.dispose();
+	}
+
+	private void testPredictionForArchive(ImageJ ij, Img input, File archiveFile) throws Exception {
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
-		prediction.setInput("input", inputFloat, "XY");
+		prediction.setInput("input", input, "XY");
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, RandomAccessibleInterval<?>> res = prediction.getOutputs();
-		RandomAccessibleInterval output = res.values().iterator().next();
+		DefaultPredictionOutput res = prediction.getOutput();
+		Object output = res.values().iterator().next();
 		assertNotNull(output);
 	}
 
 	@Test
 	public void testNoTiling() throws Exception {
 		ImageJ ij = new ImageJ();
-		File archiveFile = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
-		Img inputFloat = new ArrayImgFactory<>(new FloatType()).create(7, 7);
+		File archiveFile = new File(getClass().getResource("denoise2D/dummy.model.bioimage.io.zip").toURI());
+		Img input = new ArrayImgFactory<>(new ByteType()).create(7, 7);
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
-		prediction.setInput("input", inputFloat, "XY");
+		prediction.setInput("input", input, "XY");
+		prediction.setOptions(ModelZooPredictionOptions.options().convertIntoInputFormat(true));
 		Object archive = ij.io().open(archiveFile.getAbsolutePath());
 		prediction.setTrainedModel((ModelZooArchive) archive);
 		prediction.run();
-		Map<String, RandomAccessibleInterval<?>> res = prediction.getOutputs();
-		RandomAccessibleInterval output = res.values().iterator().next();
+		Map<String, Object> res = prediction.getOutput();
+		Object output = res.values().iterator().next();
 		assertNotNull(output);
-		assertArrayEquals(Intervals.dimensionsAsLongArray(inputFloat), Intervals.dimensionsAsLongArray(output));
+		assertTrue(RandomAccessibleInterval.class.isAssignableFrom(output.getClass()));
+		Class<?> outClass = ((RandomAccessibleInterval) output).getAt(0, 0).getClass();
+		assertEquals(ByteType.class, outClass);
+		assertArrayEquals(Intervals.dimensionsAsLongArray(input), Intervals.dimensionsAsLongArray((RandomAccessibleInterval)output));
 	}
 }

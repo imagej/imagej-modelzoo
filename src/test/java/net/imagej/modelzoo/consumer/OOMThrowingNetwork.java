@@ -28,25 +28,24 @@
  */
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.consumer.tiling.Tiling;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.tiling.TilingAction;
+import io.bioimage.specification.ModelSpecification;
 import org.scijava.ItemIO;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class OOMThrowingNetwork implements ModelZooModel
 {
 
 	@Parameter
-	Tiling.TilingAction[] actions;
+	TilingAction[] actions;
 
 	@Parameter(type = ItemIO.OUTPUT)
 	List nTilesHistory = new ArrayList();
@@ -55,16 +54,16 @@ public class OOMThrowingNetwork implements ModelZooModel
 	List batchSizeHistory = new ArrayList();
 
 	@Override
-	public void loadModel(Location location, String modelName) {
+	public void loadModel(Location location, String modelName, ModelSpecification specification) {
 	}
 
 	@Override
-	public List<InputImageNode<?>> getInputNodes() {
+	public List<ModelZooNode<?>> getInputNodes() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public List<OutputImageNode<?, ?>> getOutputNodes() {
+	public List<ModelZooNode<?>> getOutputNodes() {
 		return Collections.emptyList();
 	}
 

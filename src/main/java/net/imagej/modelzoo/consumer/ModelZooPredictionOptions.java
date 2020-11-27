@@ -41,6 +41,8 @@ public class ModelZooPredictionOptions extends AbstractOptions<ModelZooPredictio
 	private static final String numberOfTilesKey = "numberOfTiles";
 	private static final String tilingEnabledKey = "tilingEnabled";
 	private static final String cacheDirectoryKey = "cacheDirectory";
+	private static final String showProgressDialogKey = "showProgressDialog";
+	private static final String convertIntoInputFormatKey = "convertIntoInputFormat";
 
 	/**
 	 * @return Default {@link ModelZooPredictionOptions} instance
@@ -69,6 +71,20 @@ public class ModelZooPredictionOptions extends AbstractOptions<ModelZooPredictio
 	 */
 	public ModelZooPredictionOptions tilingEnabled(boolean enabled) {
 		return setValue(tilingEnabledKey, enabled);
+	}
+
+	/**
+	 * @param showProgressDialog Whether to show a progress dialog during prediction
+	 */
+	public ModelZooPredictionOptions showProgressDialog(boolean showProgressDialog) {
+		return setValue(showProgressDialogKey, showProgressDialog);
+	}
+
+	/**
+	 * @param convertIntoInputFormat Whether to show a progress dialog during prediction
+	 */
+	public ModelZooPredictionOptions convertIntoInputFormat(boolean convertIntoInputFormat) {
+		return setValue(convertIntoInputFormatKey, convertIntoInputFormat);
 	}
 
 	/**
@@ -109,6 +125,17 @@ public class ModelZooPredictionOptions extends AbstractOptions<ModelZooPredictio
 		 */
 		public Path cacheDirectory() {
 			return getValueOrDefault(cacheDirectoryKey, null);
+		}
+		/**
+		 * @return see {@link DiskCachedCellImgOptions.Values#cacheDirectory()}
+		 */
+		public boolean showProgressDialog() {
+			return getValueOrDefault(showProgressDialogKey, true);
+		}		/**
+		 * @return see {@link DiskCachedCellImgOptions.Values#cacheDirectory()}
+		 */
+		public boolean convertIntoInputFormat() {
+			return getValueOrDefault(convertIntoInputFormatKey, false);
 		}
 	}
 }

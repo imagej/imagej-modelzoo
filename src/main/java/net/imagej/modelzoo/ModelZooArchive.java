@@ -29,16 +29,16 @@
 package net.imagej.modelzoo;
 
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+import io.bioimage.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.scijava.io.location.Location;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
-public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO>> {
+public interface ModelZooArchive {
 	/**
 	 * @return the source of the archive
 	 */
@@ -50,14 +50,14 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	ModelSpecification getSpecification();
 
 	/**
-	 * @return an exemplary input image
+	 * @return sample inputs
 	 */
-	RandomAccessibleInterval<TI> getTestInput();
+	List<TensorSample> getSampleInputs();
 
 	/**
-	 * @return an image matching the prediction of {@link #getTestInput()}
+	 * @return the outputs matching the prediction of {@link #getSampleInputs()}
 	 */
-	RandomAccessibleInterval<TO> getTestOutput();
+	List<TensorSample> getSampleOutputs();
 
 	/**
 	 * @return an instance of the model specified by {@link #getSpecification()} and loaded from {@link #getLocation()}
@@ -65,9 +65,9 @@ public interface ModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO
 	 */
 	ModelZooModel createModelInstance() throws Exception;
 
-	void setTestInput(RandomAccessibleInterval<TI> testInput);
+	void setSampleInputs(List<TensorSample> sampleInputs);
 
-	void setTestOutput(RandomAccessibleInterval<TO> testOutput);
+	void setSampleOutputs(List<TensorSample> sampleOutputs);
 
 	/**
 	 * @param path the relative path to the file in the archive

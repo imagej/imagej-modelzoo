@@ -30,34 +30,43 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.ModelZooArchive;
-import net.imglib2.RandomAccessibleInterval;
+import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imagej.modelzoo.consumer.sanitycheck.SanityCheck;
+import net.imglib2.EuclideanSpace;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.plugin.SciJavaPlugin;
 
-import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
-public interface ModelZooPrediction extends SciJavaPlugin {
+public interface ModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> extends SciJavaPlugin {
 
-	<T extends RealType<T>> void setInput(String name, RandomAccessibleInterval<T> value, String axes);
+	void setOptions(ModelZooPredictionOptions options);
+
+	void setInput(I input);
 
 	void run() throws OutOfMemoryError, Exception;
 
-	Map<String, RandomAccessibleInterval<?>> getOutputs();
+	I getInput();
 
-	void setTilingEnabled(boolean enabled);
+	O getOutput();
 
-	void setNumberOfTiles(int nTiles);
-
-	void setBatchSize(int batchSize);
+	Map<String, Object> getOutputs();
 
 	ModelZooArchive getTrainedModel();
 
 	void setTrainedModel(ModelZooArchive trainedModel);
 
-	void setCacheDir(Path cacheDir);
-
 	default SanityCheck getSanityCheck() {
 		return null;
 	}
+
+	void cancel();
+
+	boolean canRunSanityCheck(ModelZooArchive trainedModel);
+
+	void addCallbackOnCompleted(PredictionCompletedCallback callback);
 }

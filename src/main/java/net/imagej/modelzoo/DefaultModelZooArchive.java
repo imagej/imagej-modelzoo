@@ -28,12 +28,13 @@
  */
 package net.imagej.modelzoo;
 
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.WeightsSpecification;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.specification.ModelSpecification;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
+import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.scijava.Context;
+import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -51,7 +52,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
-public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType<TO>> implements ModelZooArchive<TI, TO> {
+public class DefaultModelZooArchive implements ModelZooArchive {
 
 	@Parameter
 	private PluginService pluginService;
@@ -64,9 +65,9 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 
 	private Location source;
 	private ModelSpecification specification;
-	private RandomAccessibleInterval<TI> testInput;
+	private List<TensorSample> sampleInputs;
+	private List<TensorSample> sampleOutputs;
 
-	private RandomAccessibleInterval<TO> testOutput;
 
 	@Override
 	public Location getLocation() {
@@ -79,13 +80,13 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	}
 
 	@Override
-	public RandomAccessibleInterval<TI> getTestInput() {
-		return testInput;
+	public List<TensorSample> getSampleInputs() {
+		return sampleInputs;
 	}
 
 	@Override
-	public RandomAccessibleInterval<TO> getTestOutput() {
-		return testOutput;
+	public List<TensorSample> getSampleOutputs() {
+		return sampleOutputs;
 	}
 
 	@Override
@@ -95,18 +96,40 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 		}
 		List<PluginInfo<ModelZooModel>> modelPlugins = pluginService.getPluginsOfType(ModelZooModel.class);
 		ModelZooModel model = null;
+		Location weightsSource = null;
 		for (PluginInfo<ModelZooModel> pluginInfo : modelPlugins) {
-			if(pluginInfo.getAnnotation().name().equals(specification.getFramework())) {
-				model = pluginService.createInstance(pluginInfo);
+			for (WeightsSpecification weight : specification.getWeights()) {
+				if(pluginInfo.get("supports").contains(weight.getId())) {
+					model = pluginService.createInstance(pluginInfo);
+					String source = weight.getSource();
+					if(source == null) {
+						// older specs did not zip the weights
+						weightsSource = this.source;
+					} else {
+						File weightsFile = extract(source);
+						weightsSource = new FileLocation(weightsFile);
+					}
+				}
 			}
 		}
 		if(model != null) {
 			model.loadLibrary();
-			model.loadModel(source, getNameWithTimeStamp());
+			model.loadModel(weightsSource, getNameWithTimeStamp(), getSpecification());
+			cleanup(weightsSource);
 		} else {
 			logService.error("Could not find a plugin matching the model framework " + specification.getFramework());
 		}
 		return model;
+	}
+
+	private void cleanup(Location weightsSource) {
+		// in case the weights where extracted from the model,
+		//  the temporary weights file can be deleted after loading the model
+		if(!weightsSource.equals(source)) {
+			if(weightsSource instanceof FileLocation) {
+				((FileLocation) weightsSource).getFile().delete();
+			}
+		}
 	}
 
 	private String getNameWithTimeStamp() {
@@ -134,24 +157,34 @@ public class DefaultModelZooArchive<TI extends RealType<TI>, TO extends RealType
 	}
 
 	@Override
-	public void setTestInput(RandomAccessibleInterval<TI> testInput) {
-		this.testInput = testInput;
+	public void setSampleInputs(List<TensorSample> sampleInputs) {
+		this.sampleInputs = sampleInputs;
 	}
 
 	@Override
-	public void setTestOutput(RandomAccessibleInterval<TO> testOutput) {
-		this.testOutput = testOutput;
+	public void setSampleOutputs(List<TensorSample> sampleOutputs) {
+		this.sampleOutputs = sampleOutputs;
 	}
 
 	@Override
 	public File extract(String path) throws IOException {
-		try (FileSystem fileSystem = FileSystems.newFileSystem(new File(getLocation().getURI()).toPath(), null)) {
+		//FIXME this should be part of the IO plugin.
+		try (FileSystem fileSystem = FileSystems.newFileSystem(((FileLocation)getLocation()).getFile().toPath(), null)) {
 			Path fileToExtract = fileSystem.getPath(path);
 			String base = FileNameUtils.getBaseName(path);
 			String extension = "." + FileNameUtils.getExtension(path);
 			Path res = Files.createTempFile(base, extension);
 			Files.copy(fileToExtract, res, StandardCopyOption.REPLACE_EXISTING);
 			return res.toFile();
+		}
+	}
+
+	public void add(File file, String location) throws IOException {
+		//FIXME this should be part of the IO plugin.
+		try (FileSystem fileSystem = FileSystems.newFileSystem(((FileLocation)getLocation()).getFile().toPath(), null)) {
+			Path fileToAdd = fileSystem.getPath(location);
+			Path source = file.toPath();
+			Files.copy(source, fileToAdd, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 }

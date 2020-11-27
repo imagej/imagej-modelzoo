@@ -93,6 +93,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>io.bioimage</groupId>
+			<artifactId>java-bioimage-io</artifactId>
+			<version>0.3.1</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
@@ -124,6 +129,10 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-tensorflow</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

@@ -29,6 +29,8 @@
 
 package net.imagej.modelzoo.consumer.model;
 
+import io.bioimage.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import org.scijava.io.location.Location;
 
 import java.util.ArrayList;
@@ -36,22 +38,22 @@ import java.util.List;
 
 public abstract class DefaultModelZooModel implements ModelZooModel {
 
-	protected final List<InputImageNode<?>> inputNodes = new ArrayList<>();
-	protected final List<OutputImageNode<?, ?>> outputNodes = new ArrayList<>();
+	protected final List<ModelZooNode<?>> inputNodes = new ArrayList<>();
+	protected final List<ModelZooNode<?>> outputNodes = new ArrayList<>();
 
 	protected DefaultModelZooModel() {
 	}
 
 	@Override
-	public abstract void loadModel(Location source, String modelName) throws Exception;
+	public abstract void loadModel(Location source, String modelName, ModelSpecification specification) throws Exception;
 
 	@Override
-	public List<InputImageNode<?>> getInputNodes() {
+	public List<ModelZooNode<?>> getInputNodes() {
 		return inputNodes;
 	}
 
 	@Override
-	public List<OutputImageNode<?, ?>> getOutputNodes() {
+	public List<ModelZooNode<?>> getOutputNodes() {
 		return outputNodes;
 	}
 

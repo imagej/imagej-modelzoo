@@ -30,14 +30,19 @@
 package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.bioimage.specification.InputNodeSpecification;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.OutputNodeSpecification;
+import io.bioimage.specification.weights.TensorFlowSavedModelBundleSpecification;
 import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
+import net.imagej.modelzoo.consumer.DefaultSpecificationLoader;
 import net.imagej.modelzoo.consumer.model.DefaultModelZooModel;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.OutputImageNode;
-import net.imagej.modelzoo.specification.DefaultModelSpecification;
-import net.imagej.modelzoo.specification.ModelSpecification;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
 import net.imagej.tensorflow.CachedModelBundle;
 import net.imagej.tensorflow.TensorFlowService;
 import net.imagej.tensorflow.ui.TensorFlowLibraryManagementCommand;
@@ -49,21 +54,23 @@ import org.scijava.command.CommandService;
 import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Attr;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.tensorflow.Tensor;
-import org.tensorflow.TensorFlowException;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 
 import javax.swing.JOptionPane;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-@Plugin(type= ModelZooModel.class, name = "tensorflow")
+@Plugin(type= ModelZooModel.class, attrs = { @Attr(name = "supports",
+		value = TensorFlowSavedModelBundleSpecification.id)})
 public class TensorFlowModel extends DefaultModelZooModel {
 	@Parameter
 	private TensorFlowService tensorFlowService;
@@ -77,6 +84,9 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	@Parameter
 	private LogService log;
 
+	@Parameter
+	private Context context;
+
 	private CachedModelBundle model;
 	private SignatureDef sig;
 	private boolean tensorFlowLoaded = false;
@@ -88,6 +98,9 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY =
 			"serving_default";
 
+	private Map<String, String> tensorInRenamings = new HashMap<>();
+	private Map<String, String> tensorOutRenamings = new HashMap<>();
+
 	public TensorFlowModel() {
 	}
 
@@ -95,17 +108,23 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		context.inject(this);
 	}
 
-	public ModelSpecification guessSpecification(final String source, final String modelName) throws IOException {
+	public ModelSpecification guessSpecification(FileLocation fileLocation, String name, int networkDepth, int kernelSize) throws IOException {
+		loadModelFile(fileLocation, name);
+		loadSignature();
+		TensorFlowModelSpecification specification = TensorFlowUtils.guessSpecification(sig, networkDepth, kernelSize);
+		specification.setName(name);
+		return specification;
+
+	}
+
+	public TensorFlowModelSpecification guessSpecification(final String source, final String modelName) throws IOException {
 		return guessSpecification(new FileLocation(source), modelName);
 	}
 
-	public ModelSpecification guessSpecification(final Location source, final String modelName) throws IOException {
+	public TensorFlowModelSpecification guessSpecification(final Location source, final String modelName) throws IOException {
 		loadModelFile(source, modelName);
-		// Extract names from the model signature.
-		// The strings "input", "probabilities" and "patches" are meant to be
-		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
-		ModelSpecification specification = SpecificationLoader.guessSpecification(log, sig);
+		TensorFlowModelSpecification specification = TensorFlowUtils.guessSpecification(sig, 0);
 		specification.setName(modelName);
 		return specification;
 	}
@@ -128,24 +147,15 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	@Override
-	public void loadModel(final Location source, final String modelName) throws IOException, MissingLibraryException {
+	public void loadModel(final Location source, final String modelName, ModelSpecification specification) throws IOException, MissingLibraryException {
 		if (!tensorFlowLoaded) throw new MissingLibraryException("TensorFlow not loaded");
 		log.info("Loading TensorFlow model " + modelName + " from source file " + source.getURI());
 		loadModelFile(source, modelName);
-		// Extract names from the model signature.
-		// The strings "input", "probabilities" and "patches" are meant to be
-		// in sync with the model exporter (export_saved_model()) in Python.
 		loadSignature();
-		loadModelSettings(source, modelName);
-	}
-
-	private boolean loadModelSettings(Location source, String modelName) {
-		try {
-			return loadModelSettingsFromYaml(tensorFlowService.loadFile(source, modelName, "model.yaml"));
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
+		inputNodes.clear();
+		if(!verifyOrFixSpecification(specification)) return;
+		DefaultSpecificationLoader loader = new DefaultSpecificationLoader(context, specification, this);
+		loader.process();
 	}
 
 	private void loadSignature() throws InvalidProtocolBufferException {
@@ -160,32 +170,35 @@ public class TensorFlowModel extends DefaultModelZooModel {
 			model.close();
 		}
 		model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
-//			model.model().graph().operations().forEachRemaining(op -> {
-//				for (int i = 0; i < op.numOutputs(); i++) {
-//					Output<Object> opOutput = op.output(i);
-//					String name = opOutput.op().name();
-//					System.out.println(name);
-//				}
-//			});
 	}
 
-	private boolean loadModelSettingsFromYaml(File yamlFile) throws IOException {
-		log.info("load settings from yaml file " + yamlFile);
-		if (!yamlFile.exists()) {
-			log.warn("Could not load settings from YAML " + yamlFile + ": file does not exist.");
+	private boolean verifyOrFixSpecification(ModelSpecification specification) {
+		if (sig.getInputsCount() != specification.getInputs().size()) {
+			log.error("Model signature (" + sig.getInputsCount() +
+					" inputs) does not match model description signature (" +
+					specification.getInputs().size() + " inputs).");
 			return false;
 		}
-		ModelSpecification specification = new DefaultModelSpecification();
-		if (!specification.read(yamlFile)) {
-			log.error("Model seems to be incompatible.");
+		if (sig.getOutputsCount() != specification.getOutputs().size()) {
+			log.error("Model signature (" + sig.getOutputsCount() +
+					" outputs) does not match model description signature (" +
+					specification.getOutputs().size() + " outputs).");
 			return false;
 		}
-		inputNodes.clear();
-		SpecificationLoader loader = new SpecificationLoader(log, sig, specification);
-		inputNodes.addAll(loader.processInputs());
-		outputNodes.clear();
-		outputNodes.addAll(loader.processOutputs(inputNodes));
-		loader.processPrediction();
+		if(sig.getInputsCount() == 1 && sig.getOutputsCount() == 1) {
+			sig.getInputsMap().forEach((name, tensorInfo) -> {
+				InputNodeSpecification inSpec = specification.getInputs().get(0);
+				if(!inSpec.getName().equals(name)) {
+					tensorInRenamings.put(inSpec.getName(), tensorInfo.getName());
+				}
+			});
+			sig.getOutputsMap().forEach((name, tensorInfo) -> {
+				OutputNodeSpecification outputSpec = specification.getOutputs().get(0);
+				if(!outputSpec.getName().equals(name)) {
+					tensorOutRenamings.put(outputSpec.getName(), tensorInfo.getName());
+				}
+			});
+		}
 		return true;
 	}
 
@@ -206,8 +219,10 @@ public class TensorFlowModel extends DefaultModelZooModel {
 
 	private List<Tensor<?>> getInputTensors() {
 		List<Tensor<?>> res = new ArrayList<>();
-		for (InputImageNode node : getInputNodes()) {
-			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData(), node.getMappingIndices());
+		for (ModelZooNode<?> _node : getInputNodes()) {
+			//TODO currently, we assume all inputs are images
+			InputImageNode node = (InputImageNode) _node;
+			final Tensor<?> tensor = TensorFlowConverter.imageToTensor(node.getData().getData(), node.getMappingIndices());
 			if (tensor == null) {
 				log.error("Cannot convert to tensor: " + node.getData());
 			}
@@ -217,20 +232,30 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	private List<String> getInputNames() {
-		return getInputNodes().stream().map(InputImageNode::getName).collect(Collectors.toList());
+		List<String> names = new ArrayList<>();
+		for (ModelZooNode<?> node : getInputNodes()) {
+			String name = node.getName();
+			names.add(tensorInRenamings.getOrDefault(name, name));
+		}
+		return names;
 	}
 
 	private List<String> getOutputNames() {
-		return getOutputNodes().stream().map(OutputImageNode::getName).collect(Collectors.toList());
+		List<String> names = new ArrayList<>();
+		for (ModelZooNode<?> node : getOutputNodes()) {
+			String name = node.getName();
+			names.add(tensorOutRenamings.getOrDefault(name, name));
+		}
+		return names;
 	}
 
 	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {
 		for (int i = 0; i < tensors.size(); i++) {
 			Tensor tensor = tensors.get(i);
-			OutputImageNode<TO, TI> node = (OutputImageNode<TO, TI>) getOutputNodes().get(i);
+			OutputImageNode node = (OutputImageNode) getOutputNodes().get(i);
 //			System.out.println(Arrays.toString(node.getMappingIndices()));
 			RandomAccessibleInterval<TO> output = TensorFlowConverter.tensorToImage(tensor, node.getMappingIndices());
-			node.setData(output);
+			node.setData(new DefaultImageDataReference(output, node.getData().getDataType()));
 		}
 	}
 
@@ -251,5 +276,4 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		sig = null;
 		model = null;
 	}
-
 }

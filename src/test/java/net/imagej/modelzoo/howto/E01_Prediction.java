@@ -31,11 +31,16 @@ package net.imagej.modelzoo.howto;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.DefaultSingleImagePrediction;
+import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.view.Views;
 import org.junit.After;
 import org.junit.Test;
+
+import java.util.Map;
 
 public class E01_Prediction {
 
@@ -50,24 +55,30 @@ public class E01_Prediction {
 	public void useService() throws Exception {
 
 		ij = new ImageJ();
+		ij.launch();
 
 		// resource paths
 		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
 
-		// convert to float
-		input = ij.op().convert().float32(input);
+		ij.ui().show(input);
 
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
 
-		ModelZooArchive model = modelZooService.open(modelPath);
+		ModelZooArchive model = modelZooService.io().open(modelPath);
+		modelZooService.predictInteractive(model);
 
-		RandomAccessibleInterval output = modelZooService.predict(model, input, "XY");
-
-		ij.ui().show(output);
+//		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
+//		options.numberOfTiles(1);
+//		PredictionOutput outputs = modelZooService.predict(model, input, "XY", options);
+//
+//		if(outputs == null) return; // in case it got canceled
+//		outputs.asMap().forEach((name, output) -> {
+//			ij.ui().show(name, output);
+//		});
 
 	}
 
@@ -78,25 +89,23 @@ public class E01_Prediction {
 
 		// resource paths
 		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
-		Img input = (Img) ij.io().open(imgPath);
-
-		// convert to float
-		input = ij.op().convert().float32(input);
+		RandomAccessibleInterval input = (Img) ij.io().open(imgPath);
 
 		// create prediction
-		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
+		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 
 		// setup prediction
 		prediction.setInput("input", input, "XY");
 		prediction.setTrainedModel(modelPath);
-		prediction.setNumberOfTiles(8);
+		prediction.setOptions(ModelZooPredictionOptions.options().numberOfTiles(8));
 		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
+		Map<String, Object> outputs = prediction.getOutputs();
 
-		ij.ui().show(output);
+		if(outputs == null) return; // in case it got canceled
+		outputs.forEach((name, output) -> ij.ui().show(name, output));
 
 	}
 

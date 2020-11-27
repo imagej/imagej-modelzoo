@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -57,16 +58,16 @@ public class DefaultSingleInputPredictionTest {
 		Img imgFloat = ij.op().convert().float32(input);
 
 		// load pretrained model
-		File model = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
-		ModelZooArchive modelArchive = ij.get(ModelZooService.class).open(model);
+		File model = new File(getClass().getResource("denoise2D/dummy.model.bioimage.io.zip").toURI());
+		ModelZooArchive modelArchive = ij.get(ModelZooService.class).io().open(model);
 
 		// run prediction
-		DefaultSingleImagePrediction prediction = new DefaultSingleImagePrediction(ij.context());
+		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
 		prediction.setTrainedModel(modelArchive);
 		prediction.setInput(imgFloat, "XY");
 		prediction.run();
-		RandomAccessibleInterval output = prediction.getOutput();
-		assertNotNull(output);
+		Map<String, Object> outputs = prediction.getOutput();
+		assertNotNull(outputs);
 
 		ij.context().dispose();
 	}

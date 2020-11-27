@@ -30,8 +30,9 @@ package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.model.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.plugin.Parameter;
@@ -62,12 +63,13 @@ class InputMappingCommand extends DynamicCommand {
 	@Override
 	public void run() {
 		if (model != null) {
-			for (InputImageNode inputNode : model.getInputNodes()) {
+			for (ModelZooNode inputNode : model.getInputNodes()) {
 				Object val = getInput(inputNode.getName());
 				if (val == null) continue;
 				System.out.println(inputNode.getName() + " mapping: " + val);
 				List<AxisType> axisTypes = parseMappingStr((String) val);
-				inputNode.setDataMapping(axisTypes);
+				ImageNode imageNode = (ImageNode) inputNode;
+				imageNode.setDataMapping(axisTypes);
 			}
 		}
 	}

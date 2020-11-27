@@ -29,7 +29,9 @@
 
 package net.imagej.modelzoo.consumer.model;
 
+import io.bioimage.specification.ModelSpecification;
 import io.scif.MissingLibraryException;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import org.scijava.Disposable;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.SciJavaPlugin;
@@ -38,11 +40,11 @@ import java.util.List;
 
 public interface ModelZooModel extends Disposable, SciJavaPlugin {
 
-	void loadModel(Location location, String modelName) throws Exception;
+	void loadModel(Location location, String modelName, ModelSpecification specification) throws Exception;
 
-	List<InputImageNode<?>> getInputNodes();
+	List<ModelZooNode<?>> getInputNodes();
 
-	List<OutputImageNode<?, ?>> getOutputNodes();
+	List<ModelZooNode<?>> getOutputNodes();
 
 	boolean isInitialized();
 
