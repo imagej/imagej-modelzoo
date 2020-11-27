@@ -34,14 +34,15 @@ import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
-import net.imagej.modelzoo.consumer.commands.DefaultModelZooBatchPredictionCommand;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
-import net.imagej.modelzoo.consumer.commands.SingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultModelZooBatchPredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.SingleImagePredictionCommand;
 import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromFileCommand;
 import net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityCheckFromImageCommand;
+import net.imagej.modelzoo.io.ModelZooIOService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
@@ -57,7 +58,6 @@ import org.scijava.plugin.PluginService;
 import org.scijava.plugin.SciJavaPlugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
-import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
 
 import java.io.File;
@@ -84,7 +84,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 	@Parameter
 	private ModelZooIOService io;
 
-	private final static String modelFileParameter = "modelFile";
+	public final static String modelFileParameter = "modelFile";
 
 	private final static String predictionCommandParameter = "prediction";
 	private final static String inputParameter = "input";
@@ -116,7 +116,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 			return false;
 		}
 		ModelZooPrediction prediction = getPrediction(trainedModel);
-		return predictionCommand != null && prediction.getSanityCheck() != null;
+		return predictionCommand != null && prediction.canRunSanityCheck(trainedModel);
 	}
 
 	@Override
@@ -129,6 +129,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		if (prediction == null) return null;
 		prediction.setTrainedModel(trainedModel);
 		prediction.setInput(input);
+		if(options.values.showProgressDialog()) {
+			uiService.show(prediction);
+		}
 		prediction.run();
 		return prediction.getOutput();
 	}
@@ -186,12 +189,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 					mycommand = commandInfo.createModule();
 				}
 			}
-		} else {
-			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class).createModule();
 		}
 		if (mycommand == null) {
-			uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
-			return null;
+			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class).createModule();
 		}
 		context.inject(mycommand);
 		return mycommand;
@@ -207,14 +207,9 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 					mycommand = commandService.getCommand(command.getClassName());
 				}
 			}
-		} else {
-			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class);
 		}
 		if (mycommand == null) {
-			if(showWarningIfNotFound) {
-				uiService.showDialog("Could not find suitable prediction handler for source " + archivePrediction + ".", DialogPrompt.MessageType.ERROR_MESSAGE);
-			}
-			return null;
+			mycommand = commandService.getCommand(DefaultSingleImagePredictionCommand.class);
 		}
 		context.inject(mycommand);
 		return mycommand;
@@ -258,13 +253,13 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 		CommandInfo predictionCommand = getCommandInfo(model.getSpecification(), SingleImagePredictionCommand.class, true);
 		if (predictionCommand == null) return;
 		File value = new File(model.getLocation().getURI());
+		if(!(input instanceof Dataset)) {
+			input = datasetService.create(input);
+		}
 		Module module = commandService.moduleService().createModule(predictionCommand);
 		module.setInput(modelFileParameter, value);
 		module.resolveInput(modelFileParameter);
 		module.resolveOutput(outputParameter);
-		if(!(input instanceof Dataset)) {
-			input = datasetService.create(input);
-		}
 		commandService.run(DefaultModelZooSanityCheckFromImageCommand.class, true,
 				modelFileParameter, value,
 				inputParameter, input,

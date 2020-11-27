@@ -29,7 +29,6 @@
 package net.imagej.modelzoo.consumer.command;
 
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import org.junit.Test;
@@ -53,7 +52,7 @@ public class DefaultModelZooPredictionCommandTest {
 
 		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
 
-		Path model = Paths.get(getClass().getResource("../denoise2D/model.bioimage.io.zip").toURI());
+		Path model = Paths.get(getClass().getResource("../denoise2D/dummy.model.bioimage.io.zip").toURI());
 
 		CommandModule module = ij.command().run(DefaultSingleImagePredictionCommand.class,
 				false,

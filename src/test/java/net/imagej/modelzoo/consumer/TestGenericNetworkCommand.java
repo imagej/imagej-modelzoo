@@ -30,7 +30,7 @@ package net.imagej.modelzoo.consumer;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultSingleImagePredictionCommand;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.module.Module;

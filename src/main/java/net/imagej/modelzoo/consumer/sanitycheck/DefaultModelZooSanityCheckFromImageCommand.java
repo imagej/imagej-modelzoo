@@ -108,10 +108,12 @@ public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 		log("ModelZoo sanity check start");
 
 		try {
-			prediction.setInput("input", input);
-			prediction.resolveInput("input");
+			String inputName = "input";
+			String outputName = prediction.getInfo().outputs().iterator().next().getName();
+			prediction.setInput(inputName, input);
+			prediction.resolveInput(inputName);
 			context().service(ModuleService.class).run(prediction, true).get();
-			output = (Dataset) prediction.getOutput("output");
+			output = (Dataset) prediction.getOutput(outputName);
 
 			difference = datasetService.create(getDifference((RandomAccessibleInterval)input, (RandomAccessibleInterval)output, new FloatType()));
 			ModelZooArchive model = modelZooService.io().open(modelFile);

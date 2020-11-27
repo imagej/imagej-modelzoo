@@ -58,25 +58,27 @@ public class E01_Prediction {
 		ij.launch();
 
 		// resource paths
-//		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String imgPath = "/home/random/Development/imagej/project/CSBDeep/data/DenoiSeg/data/mouse/Mouse_n10/X_test/img_0.tif";
-//		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
-		String modelPath = "/home/random/Documents/2020-11 I2K/denoiseg-2145300043390414539.bioimage.io.zip";
+		String imgPath = getClass().getResource("/blobs.png").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
 		Img input = (Img) ij.io().open(imgPath);
 
+		ij.ui().show(input);
+
 		ModelZooService modelZooService = ij.get(ModelZooService.class);
 
 		ModelZooArchive model = modelZooService.io().open(modelPath);
+		modelZooService.predictInteractive(model);
 
-		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
-		options.numberOfTiles(30);
-		PredictionOutput outputs = modelZooService.predict(model, input, "XYB", options);
-
-		outputs.asMap().forEach((name, output) -> {
-			ij.ui().show(name, output);
-		});
+//		ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
+//		options.numberOfTiles(1);
+//		PredictionOutput outputs = modelZooService.predict(model, input, "XY", options);
+//
+//		if(outputs == null) return; // in case it got canceled
+//		outputs.asMap().forEach((name, output) -> {
+//			ij.ui().show(name, output);
+//		});
 
 	}
 
@@ -87,7 +89,7 @@ public class E01_Prediction {
 
 		// resource paths
 		String imgPath = getClass().getResource("/blobs.png").getPath();
-		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
 		RandomAccessibleInterval input = (Img) ij.io().open(imgPath);
@@ -102,6 +104,7 @@ public class E01_Prediction {
 		prediction.run();
 		Map<String, Object> outputs = prediction.getOutputs();
 
+		if(outputs == null) return; // in case it got canceled
 		outputs.forEach((name, output) -> ij.ui().show(name, output));
 
 	}

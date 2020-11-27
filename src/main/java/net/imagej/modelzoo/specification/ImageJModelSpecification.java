@@ -19,11 +19,20 @@ public class ImageJModelSpecification extends DefaultModelSpecification {
 		return readConfig(getConfig());
 	}
 
+	protected void setTrainingStats(String trainingSource, Map<String, Object> trainingKwargs) {
+		ImageJConfigSpecification imageJConfig = getImageJConfig();
+		if(imageJConfig == null) imageJConfig = new ImageJConfigSpecification();
+		imageJConfig.setTrainingSource(trainingSource);
+		imageJConfig.setTrainingKwargs(trainingKwargs);
+		setConfig(imageJConfig);
+	}
+
 	public void setConfig(ImageJConfigSpecification config) {
 		writeConfig(config);
 	}
 
 	private ImageJConfigSpecification readConfig(Map<String, Object> config) {
+		if(config == null) config = new HashMap<>();
 		ImageJConfigSpecification imageJConfig = new ImageJConfigSpecification();
 		Map<String, Object> fijiConfig = asMap(config.get(idConfigFiji));
 		if(fijiConfig == null) return null;

@@ -157,12 +157,12 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 	}
 
 	@Override
-	public void setSampleInputs(List sampleInputs) {
+	public void setSampleInputs(List<TensorSample> sampleInputs) {
 		this.sampleInputs = sampleInputs;
 	}
 
 	@Override
-	public void setSampleOutputs(List sampleOutputs) {
+	public void setSampleOutputs(List<TensorSample> sampleOutputs) {
 		this.sampleOutputs = sampleOutputs;
 	}
 

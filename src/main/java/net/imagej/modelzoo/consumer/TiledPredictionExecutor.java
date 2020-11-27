@@ -86,7 +86,7 @@ public class TiledPredictionExecutor implements Cancelable {
 					model.predict();
 					tiling.resolveCurrentTile();
 				}
-				tiling.finish();
+				if(!isCanceled()) tiling.finish();
 			}
 		} catch (final CancellationException | RejectedExecutionException e) {
 			//canceled
@@ -168,12 +168,13 @@ public class TiledPredictionExecutor implements Cancelable {
 
 	private boolean processNextTile() {
 		// go to next tile
+		if(isCanceled()) return false;
 		if (processedTiles || !tiling.hasTilesLeft()) {
 			processedTiles = true;
 			return false;
 		}
 		tiling.assignNextTile();
-		statusService.showStatus(tiling.getDoneTileCount(), (int) tiling.getTilesTotalCount(), "Predicting tile " + (tiling.getDoneTileCount()) + " of " + tiling.getTilesTotalCount() + "..");
+		statusService.showStatus(tiling.getDoneTileCount()-1, (int) tiling.getTilesTotalCount(), "Predicting tile " + (tiling.getDoneTileCount()) + " of " + tiling.getTilesTotalCount() + "..");
 		log.info("Processing tile " + (tiling.getDoneTileCount()) + "..");
 		return true;
 	}
@@ -194,6 +195,9 @@ public class TiledPredictionExecutor implements Cancelable {
 	@Override
 	public void cancel(final String reason) {
 		canceled = true;
+		statusService.showProgress(0, 0);
+		statusService.clearStatus();
+		statusService.showStatus("Prediction canceled.");
 	}
 
 	@Override

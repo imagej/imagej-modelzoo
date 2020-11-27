@@ -85,17 +85,23 @@ public abstract class AbstractOutputHandler {
 	protected abstract ModelSpecification createSpecification(String name);
 
 	public File exportLatestTrainedModel() throws IOException {
-		if(noCheckpointSaved) return null;
+		if(noCheckpointSaved()) return null;
 		ModelSpecification last_checkpoint = createSpecification("last checkpoint");
-		SpecificationWriter.write(last_checkpoint, mostRecentModelDir);
-		return saveTrainedModel(mostRecentModelDir, savedModelBundleName);
+		SpecificationWriter.write(last_checkpoint, getMostRecentModelDir());
+		return saveTrainedModel(getMostRecentModelDir(), getSavedModelBundleName());
 	}
 
-	private File saveTrainedModel(File checkpointDir, String weightsLocation) throws IOException {
-		File weights = new File(checkpointDir, "tf_saved_model_bundle.zip");
+	protected String getSavedModelBundleName() {
+		return savedModelBundleName;
+	}
+
+	protected File saveTrainedModel(File checkpointDir, String weightsLocation) throws IOException {
+		Path tmp = Files.createTempDirectory("export");
+		FileUtils.copyDirectory(checkpointDir, tmp.toFile());
+		File weights = new File(tmp.toFile(), "tf_saved_model_bundle.zip");
 		FileOutputStream fosWeights = new FileOutputStream(weights);
 		ZipOutputStream zipOutWeights = new ZipOutputStream(fosWeights);
-		File weightsUnpacked = new File(checkpointDir, weightsLocation);
+		File weightsUnpacked = new File(tmp.toFile(), weightsLocation);
 		zipFile(weightsUnpacked, null, zipOutWeights);
 		zipOutWeights.close();
 		fosWeights.close();
@@ -103,9 +109,10 @@ public abstract class AbstractOutputHandler {
 		Path out = Files.createTempFile(getShortName() + "-", ".bioimage.io.zip");
 		FileOutputStream fos = new FileOutputStream(out.toFile());
 		ZipOutputStream zipOut = new ZipOutputStream(fos);
-		zipFile(checkpointDir, null, zipOut);
+		zipFile(tmp.toFile(), null, zipOut);
 		zipOut.close();
 		fos.close();
+		FileUtils.deleteDirectory(tmp.toFile());
 		return out.toFile();
 	}
 
@@ -117,8 +124,12 @@ public abstract class AbstractOutputHandler {
 	}
 
 	public File exportBestTrainedModel() throws IOException {
-		if(noCheckpointSaved) return null;
-		return saveTrainedModel(bestModelDir, savedModelBundleName);
+		if(noCheckpointSaved()) return null;
+		return saveTrainedModel(getBestModelDir(), getSavedModelBundleName());
+	}
+
+	protected File getBestModelDir() {
+		return bestModelDir;
 	}
 
 	protected void copyBestModel() {
@@ -214,6 +225,10 @@ public abstract class AbstractOutputHandler {
 
 	public File getMostRecentModelDir() {
 		return mostRecentModelDir;
+	}
+
+	protected boolean noCheckpointSaved() {
+		return noCheckpointSaved;
 	}
 
 	public void dispose() {

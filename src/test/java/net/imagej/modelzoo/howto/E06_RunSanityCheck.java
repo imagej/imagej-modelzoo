@@ -50,7 +50,7 @@ public class E06_RunSanityCheck {
 		ij.launch();
 
 		// resource paths
-		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 		String imgPath = getClass().getResource("/blobs.png").getPath();
 
 		// load image

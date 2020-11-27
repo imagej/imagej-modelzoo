@@ -58,7 +58,7 @@ public class DefaultSingleInputPredictionTest {
 		Img imgFloat = ij.op().convert().float32(input);
 
 		// load pretrained model
-		File model = new File(getClass().getResource("denoise2D/model.bioimage.io.zip").toURI());
+		File model = new File(getClass().getResource("denoise2D/dummy.model.bioimage.io.zip").toURI());
 		ModelZooArchive modelArchive = ij.get(ModelZooService.class).io().open(model);
 
 		// run prediction

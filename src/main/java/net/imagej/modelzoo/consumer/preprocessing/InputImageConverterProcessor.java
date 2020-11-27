@@ -1,5 +1,6 @@
 package net.imagej.modelzoo.consumer.preprocessing;
 
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
@@ -25,7 +26,7 @@ public class InputImageConverterProcessor<TO extends RealType<TO> & NativeType<T
 	}
 
 	@Override
-	public void run() throws NodeProcessorException {
+	public void run(ModelZooPredictionOptions.Values options) throws NodeProcessorException {
 		RandomAccessibleInterval<?> data = node.getData().getData();
 		if(data == null) return;
 		if(!dataType.getClass().isAssignableFrom(data.randomAccess().get().getClass())) {

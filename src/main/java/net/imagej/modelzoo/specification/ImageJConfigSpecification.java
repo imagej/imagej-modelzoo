@@ -11,7 +11,7 @@ public class ImageJConfigSpecification {
 		return trainingSource;
 	}
 
-	public void setTrainingSource(String trainingSource) {
+	void setTrainingSource(String trainingSource) {
 		this.trainingSource = trainingSource;
 	}
 

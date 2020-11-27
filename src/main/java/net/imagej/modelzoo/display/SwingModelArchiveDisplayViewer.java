@@ -28,16 +28,18 @@
  */
 package net.imagej.modelzoo.display;
 
+import io.bioimage.specification.CitationSpecification;
+import io.bioimage.specification.InputNodeSpecification;
+import io.bioimage.specification.OutputNodeSpecification;
+import io.bioimage.specification.TransformationSpecification;
 import net.imagej.display.ColorTables;
 import net.imagej.display.SourceOptimizedCompositeXYProjector;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.command.ModelArchiveUpdateDemoFromFileCommand;
+import net.imagej.modelzoo.consumer.command.ModelArchiveUpdateDemoFromImageCommand;
 import net.imagej.modelzoo.consumer.model.TensorSample;
-import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromFileCommand;
-import net.imagej.modelzoo.consumer.commands.ModelArchiveUpdateDemoFromImageCommand;
-import io.bioimage.specification.CitationSpecification;
-import io.bioimage.specification.InputNodeSpecification;
-import io.bioimage.specification.OutputNodeSpecification;
+import net.imagej.modelzoo.specification.ImageJModelSpecification;
 import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.stats.ComputeMinMax;
@@ -163,14 +165,17 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private static Component createTrainingPanel(ModelZooArchive model) {
-		if(model.getSpecification().getTrainingKwargs() == null) {
-			return null;
+		if(!ImageJModelSpecification.class.isAssignableFrom(model.getSpecification().getClass())) return null;
+		ImageJModelSpecification specification = (ImageJModelSpecification) model.getSpecification();
+		if(specification.getImageJConfig() != null && specification.getImageJConfig().getTrainingKwargs() != null) {
+			JPanel panel = new JPanel(new MigLayout("", "[][push]", ""));
+			addToPanel(panel, "source", specification.getImageJConfig().getTrainingSource());
+			specification.getImageJConfig().getTrainingKwargs().forEach((s, o) -> {
+				addToPanel(panel, s, o == null ? "null" : o.toString());
+			});
+			return scroll(panel);
 		}
-		JPanel panel = new JPanel(new MigLayout("", "[][push]", ""));
-		model.getSpecification().getTrainingKwargs().forEach((s, o) -> {
-			addToPanel(panel, s, o == null ? "null" : o.toString());
-		});
-		return scroll(panel);
+		return null;
 	}
 
 	private Component createOverviewPanel(ModelZooArchive model, Component previewPanel) {
@@ -273,9 +278,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private Component createActionsBar(ModelZooArchive model) {
 		JPanel panel = new JPanel(new MigLayout("ins 0, fillx", "[]push[][]", "align bottom"));
 		//TODO enable once the features are all ready
-		String text = "<html><span style='font-weight: normal;'>Source:</span> "
-				+ getSource(model)
-				+ " | <span style='font-weight: normal;'>Format:</span> "
+		String text = "<html>Format:</span> "
 				+ model.getSpecification().getFormatVersion()
 				+ " | <span style='font-weight: normal;'>Input axes:</span> "
 				+ getInputAxes(model);
@@ -287,7 +290,6 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private static String getSource(ModelZooArchive model) {
-		if(model.getSpecification().getSource() == null) return "default";
 		return model.getSpecification().getSource();
 	}
 
@@ -456,25 +458,25 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private void reloadTestImages(ModelZooArchive model, ImageIcon testInputIcon, ImageIcon testOutputIcon) {
-		// TODO this is not great. ideally, we could display multiple input and output tensor samples,
-		//  (e.g. by having arrow buttons to go through multiple outputs)
-		//  and we could also use the UIService / DisplayService to display the data and not do this type check
 		display(model, testInputIcon, model.getSampleInputs());
 		display(model, testOutputIcon, model.getSampleOutputs());
 	}
 
-	private void display(ModelZooArchive model, ImageIcon testInputIcon, List<TensorSample> sampleInputs) {
-		if(sampleInputs == null) return;
-		if (sampleInputs.size() > 0) {
-			TensorSample sample = model.getSampleInputs().get(0);
+	private void display(ModelZooArchive model, ImageIcon icon, List<TensorSample> samples) {
+		if(samples == null) return;
+		if (samples.size() > 0) {
+			// TODO this is not great. ideally, we could display multiple input and output tensor samples,
+			//  (e.g. by having arrow buttons to go through multiple outputs)
+			//  and we could also use the UIService / DisplayService to display the data and not do this type check
+			TensorSample sample = samples.get(0);
 			if (RandomAccessibleInterval.class.isAssignableFrom(sample.getData().getClass())) {
-				testInputIcon.setImage(toBufferedImage((RandomAccessibleInterval) sample.getData()));
+				icon.setImage(toBufferedImage((RandomAccessibleInterval) sample.getData()));
 			}
 		}
 	}
 
 	private <T extends RealType<T>> BufferedImage toBufferedImage(RandomAccessibleInterval<T> img) {
-		for (int i = 2; i < img.numDimensions(); i++) {
+		for (int i = 2; i < img.numDimensions(); ) {
 			img = Views.hyperSlice(img, i, 0);
 		}
 		img = opService.transform().scaleView(img, new double[]{(double)previewDim/(double)img.dimension(0), (double)previewDim/(double)img.dimension(1)}, new NLinearInterpolatorFactory<>());
@@ -605,25 +607,36 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 
 	private static String outputToString(OutputNodeSpecification output) {
 		StringBuilder str = new StringBuilder();
-		str.append("name       : ").append(output.getName()).append("\n");
-		str.append("axes       : ").append(output.getAxes()).append("\n");
-		str.append("data type  : ").append(output.getDataType()).append("\n");
-		str.append("data range : ").append(output.getDataRange()).append("\n");
-		str.append("reference  : ").append(output.getReferenceInputName()).append("\n");
-		str.append("scale      : ").append(output.getShapeScale()).append("\n");
-		str.append("offset     : ").append(output.getShapeOffset()).append("\n");
+		str.append("name           : ").append(output.getName()).append("\n");
+		str.append("axes           : ").append(output.getAxes()).append("\n");
+		str.append("data type      : ").append(output.getDataType()).append("\n");
+		str.append("data range     : ").append(output.getDataRange()).append("\n");
+		str.append("reference      : ").append(output.getReferenceInputName()).append("\n");
+		str.append("scale          : ").append(output.getShapeScale()).append("\n");
+		str.append("offset         : ").append(output.getShapeOffset()).append("\n");
+		str.append("halo           : ").append(output.getHalo()).append("\n");
+		str.append("postprocessing : ").append(transformationsToString(output.getPostprocessing())).append("\n");
 		return str.toString();
 	}
 
 	private static String inputToString(InputNodeSpecification input) {
 		StringBuilder str = new StringBuilder();
-		str.append("name       : ").append(input.getName()).append("\n");
-		str.append("axes       : ").append(input.getAxes()).append("\n");
-		str.append("data type  : ").append(input.getDataType()).append("\n");
-		str.append("data range : ").append(input.getDataRange()).append("\n");
-		str.append("halo       : ").append(input.getHalo()).append("\n");
-		str.append("min        : ").append(input.getShapeMin()).append("\n");
-		str.append("step       : ").append(input.getShapeStep()).append("\n");
+		str.append("name         : ").append(input.getName()).append("\n");
+		str.append("axes         : ").append(input.getAxes()).append("\n");
+		str.append("data type    : ").append(input.getDataType()).append("\n");
+		str.append("data range   : ").append(input.getDataRange()).append("\n");
+		str.append("halo         : ").append(input.getHalo()).append("\n");
+		str.append("min          : ").append(input.getShapeMin()).append("\n");
+		str.append("step         : ").append(input.getShapeStep()).append("\n");
+		str.append("preprocesing : ").append(transformationsToString(input.getPreprocessing())).append("\n");
+		return str.toString();
+	}
+
+	private static String transformationsToString(List<TransformationSpecification> transformations) {
+		StringBuilder str = new StringBuilder();
+		for (TransformationSpecification transformation : transformations) {
+			str.append(transformation.getName()).append(" ");
+		}
 		return str.toString();
 	}
 

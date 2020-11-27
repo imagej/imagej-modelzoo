@@ -29,27 +29,25 @@
 
 package net.imagej.modelzoo.consumer;
 
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
-import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
-import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
 import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessorException;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionInput;
+import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
 import net.imagej.modelzoo.consumer.preprocessing.InputMappingHandler;
-import net.imagej.ops.OpService;
-import net.imglib2.IterableInterval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
-import org.scijava.ui.UIService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractModelZooPrediction<I extends PredictionInput, O extends PredictionOutput> implements ModelZooPrediction<I, O> {
@@ -63,6 +61,9 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	@Parameter
 	private ModelZooService modelZooService;
 
+	@Parameter
+	private DatasetService datasetService;
+
 	private ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
 	private final InputMappingHandler inputHandling;
 	private ModelZooArchive modelArchive;
@@ -72,9 +73,13 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 
 	private Map<String, Object> outputs;
 	private I input;
+	protected boolean canceled;
+	private TiledPredictionExecutor executor;
+	private List<PredictionCompletedCallback> onCompletedCallbacks;
 
 	public AbstractModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
+		onCompletedCallbacks = new ArrayList<>();
 	}
 
 	public AbstractModelZooPrediction(Context context) {
@@ -92,14 +97,21 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 
 		input.attachToInputHandler(inputHandling);
 		ModelZooModel model = loadModel(modelArchive);
-		if (!validateModel(model)) return;
+		if (model == null || !validateModel(model)) return;
 		try {
+			if(canceled) return;
 			preprocessing(model);
+			if(canceled) return;
 			executePrediction(model);
+			if(canceled) return;
 			postprocessing(model);
+			if(canceled) return;
 			this.output = createOutput(model);
 			log.info("Prediction done.");
 		} finally {
+			for (PredictionCompletedCallback onCompletedCallback : onCompletedCallbacks) {
+				onCompletedCallback.run();
+			}
 			model.dispose();
 		}
 	}
@@ -142,7 +154,8 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	protected void preprocessing(ModelZooModel model) throws NodeProcessorException {
 		for (ModelZooNode<?> inputNode : model.getInputNodes()) {
 			for (NodeProcessor processor : inputNode.getProcessors()) {
-				processor.run();
+				if(canceled) return;
+				processor.run(options.values);
 			}
 		}
 	}
@@ -150,7 +163,8 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	protected void postprocessing(ModelZooModel model) throws NodeProcessorException {
 		for (ModelZooNode<?> outputNode : model.getOutputNodes()) {
 			for (NodeProcessor processor : outputNode.getProcessors()) {
-				processor.run();
+				if(canceled) return;
+				processor.run(options.values);
 			}
 		}
 		outputs = new HashMap<>();
@@ -178,7 +192,7 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	}
 
 	protected void executePrediction(ModelZooModel model) throws OutOfMemoryError {
-		TiledPredictionExecutor executor = new TiledPredictionExecutor(model, context);
+		executor = new TiledPredictionExecutor(model, context);
 		executor.setTilingEnabled(options.values.tilingEnabled());
 		executor.setNumberOfTiles(options.values.numberOfTiles());
 		executor.setBatchSize(options.values.batchSize());
@@ -186,7 +200,7 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 		boolean isOutOfMemory = true;
 		boolean canHandleOutOfMemory = true;
 
-		while (isOutOfMemory) {
+		while (isOutOfMemory && !canceled) {
 			try {
 				executor.run();
 				isOutOfMemory = false;
@@ -214,6 +228,30 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	@Override
 	public Map<String, Object> getOutputs() {
 		return outputs;
+	}
+
+	public LogService log() {
+		return log;
+	}
+
+	public ModelZooService modelZooService() {
+		return modelZooService;
+	}
+
+	public DatasetService datasetService() {
+		return datasetService;
+	}
+
+	@Override
+	public void cancel() {
+		this.canceled = true;
+		executor.cancel("");
+		log().info("Prediction canceled.");
+	}
+
+	@Override
+	public void addCallbackOnCompleted(PredictionCompletedCallback callback) {
+		onCompletedCallbacks.add(callback);
 	}
 
 	Context context() {

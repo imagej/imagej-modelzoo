@@ -1,25 +1,27 @@
 package net.imagej.modelzoo.consumer;
 
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
-import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
-import net.imagej.modelzoo.consumer.model.node.ImageNode;
-import net.imagej.modelzoo.consumer.model.node.processor.ImageNodeProcessor;
-import net.imagej.modelzoo.consumer.model.node.InputImageNode;
-import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
-import net.imagej.modelzoo.consumer.model.ModelZooModel;
-import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
-import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
-import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
-import net.imagej.modelzoo.consumer.postprocessing.ResizePostprocessor;
-import net.imagej.modelzoo.consumer.preprocessing.InputImageConverterProcessor;
-import net.imagej.modelzoo.consumer.preprocessing.ResizePreprocessor;
-import net.imagej.modelzoo.consumer.tiling.TilingAction;
 import io.bioimage.specification.InputNodeSpecification;
 import io.bioimage.specification.ModelSpecification;
 import io.bioimage.specification.NodeSpecification;
 import io.bioimage.specification.OutputNodeSpecification;
 import io.bioimage.specification.TransformationSpecification;
+import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
+import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
+import net.imagej.modelzoo.consumer.model.node.ImageNode;
+import net.imagej.modelzoo.consumer.model.node.InputImageNode;
+import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
+import net.imagej.modelzoo.consumer.model.node.ModelZooNode;
+import net.imagej.modelzoo.consumer.model.node.OutputImageNode;
+import net.imagej.modelzoo.consumer.model.node.processor.ImageNodeProcessor;
+import net.imagej.modelzoo.consumer.model.node.processor.NodePostprocessor;
+import net.imagej.modelzoo.consumer.model.node.processor.NodePreprocessor;
+import net.imagej.modelzoo.consumer.model.node.processor.NodeProcessor;
+import net.imagej.modelzoo.consumer.postprocessing.ResizePostprocessor;
+import net.imagej.modelzoo.consumer.preprocessing.InputImageConverterProcessor;
+import net.imagej.modelzoo.consumer.preprocessing.ResizePreprocessor;
+import net.imagej.modelzoo.consumer.tiling.TilingAction;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.Context;
@@ -40,12 +42,14 @@ public class DefaultSpecificationLoader {
 	private PluginService pluginService;
 
 	private final ModelSpecification spec;
-	private final List<PluginInfo<NodeProcessor>> processors;
+	private final List<PluginInfo<NodePreprocessor>> preprocessors;
+	private final List<PluginInfo<NodePostprocessor>> postprocessors;
 	private final ModelZooModel model;
 
 	public DefaultSpecificationLoader(Context context, ModelSpecification spec, ModelZooModel model) {
 		context.inject(this);
-		processors = pluginService.getPluginsOfType(NodeProcessor.class);
+		preprocessors = pluginService.getPluginsOfType(NodePreprocessor.class);
+		postprocessors = pluginService.getPluginsOfType(NodePostprocessor.class);
 		this.spec = spec;
 		this.model = model;
 	}
@@ -67,7 +71,7 @@ public class DefaultSpecificationLoader {
 		InputImageNode node = new InputImageNode();
 		node.setName(data.getName());
 		setInputNodeShape(data, node);
-		assignProcessors(node, data.getPreprocessing(), this.processors);
+		assignProcessors(node, data.getPreprocessing(), this.preprocessors);
 		node.getProcessors().add(new ResizePreprocessor(node, log));
 		node.getProcessors().add(new InputImageConverterProcessor(node, getNodeDataType(data)));
 		return node;
@@ -79,7 +83,7 @@ public class DefaultSpecificationLoader {
 		setOutputNodeShape(data, node);
 		node.setData(new DefaultImageDataReference(null, getNodeDataType(data)));
 		assignDefaultImagePostprocessors(node);
-		assignProcessors(node, data.getPostprocessing(), this.processors);
+		assignProcessors(node, data.getPostprocessing(), this.postprocessors);
 		return node;
 	}
 
@@ -95,30 +99,22 @@ public class DefaultSpecificationLoader {
 		return null;
 	}
 
-	private void assignProcessors(ImageNode node, List<TransformationSpecification> transformations, List<PluginInfo<NodeProcessor>> availableProcessors) {
+	private <T extends NodeProcessor> void assignProcessors(ImageNode node, List<TransformationSpecification> transformations, List<PluginInfo<T>> availableProcessors) {
 		if(transformations == null) return;
 		for (TransformationSpecification transformation : transformations) {
 			String name = transformation.getName();
-			for (PluginInfo<NodeProcessor> info : availableProcessors) {
+			for (PluginInfo<T> info : availableProcessors) {
 				if(info.getName().equals(name)) {
 					NodeProcessor processor = pluginService.createInstance(info);
 					if(ImageNodeProcessor.class.isAssignableFrom(processor.getClass())) {
-						((ImageNodeProcessor)processor).setup(node, getImageReference(processor));
+						((ImageNodeProcessor)processor).setup(node, model);
 					}
 					processor.readSpecification(transformation);
 					node.getProcessors().add(processor);
+					break;
 				}
 			}
 		}
-	}
-
-	private InputImageNode getImageReference(NodeProcessor node) {
-		for (ModelZooNode<?> inputNode : model.getInputNodes()) {
-			if(inputNode.getName().equals(node.getReference()) && ImageNode.class.isAssignableFrom(inputNode.getClass())) {
-				return (InputImageNode) inputNode;
-			}
-		}
-		return null;
 	}
 
 	private void setInputNodeShape(InputNodeSpecification data, InputImageNode node) {
@@ -144,7 +140,7 @@ public class DefaultSpecificationLoader {
 			axis.setMin(minVal);
 			axis.setStep(stepVal);
 			axis.setTiling(tilingAction);
-			axis.setHalo(halo.get(i));
+			if(halo != null) axis.setHalo(halo.get(i));
 			node.addAxis(axis);
 		}
 	}
@@ -153,14 +149,24 @@ public class DefaultSpecificationLoader {
 		String axes = data.getAxes();
 		List<? extends Number> scale = data.getShapeScale();
 		List<Integer> offset = data.getShapeOffset();
+		List<Integer> halo = data.getHalo();
 		String reference = data.getReferenceInputName();
-		node.setReference(getInput(reference));
+		ModelZooNode input = getInput(reference);
+		node.setReference(input);
 		node.clearAxes();
 		for (int i = 0; i < axes.length(); i++) {
 			AxisType axisType = getAxisType(axes.substring(i, i + 1));
 			ModelZooAxis axis = new ModelZooAxis(axisType);
 			axis.setScale(scale.get(i).doubleValue());
 			axis.setOffset(offset.get(i));
+			if(halo != null && input != null) {
+				// this is here in case the halo is not defined in the input, but in the output node
+				InputImageNode inputImageNode = (InputImageNode) input;
+				ModelZooAxis inputAxis = inputImageNode.getAxes().get(i);
+				if(inputAxis != null && inputAxis.getHalo() == null) {
+					inputAxis.setHalo((int) (data.getHalo().get(i) / axis.getScale()));
+				}
+			}
 			node.addAxis(axis);
 		}
 	}

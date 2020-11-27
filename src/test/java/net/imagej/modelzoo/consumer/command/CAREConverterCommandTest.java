@@ -30,25 +30,16 @@ package net.imagej.modelzoo.consumer.command;
 
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
-import net.imagej.modelzoo.consumer.commands.CAREDefaultModelConverterCommand;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import org.junit.Test;
 import org.scijava.command.CommandModule;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertNotNull;
 
 public class CAREConverterCommandTest {
 
-	@Test
+//	@Test
 	public void testCommand() throws ExecutionException, InterruptedException {
 		ImageJ ij = new ImageJ();
 

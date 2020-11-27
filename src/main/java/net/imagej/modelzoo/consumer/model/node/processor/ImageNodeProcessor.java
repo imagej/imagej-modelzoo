@@ -28,13 +28,12 @@
  */
 package net.imagej.modelzoo.consumer.model.node.processor;
 
+import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
 import net.imagej.modelzoo.consumer.model.node.InputImageNode;
 import io.bioimage.specification.TransformationSpecification;
 
-public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T>, Runnable {
-	void setup(ImageNode imageNode, InputImageNode processorInputReference);
-
-	InputImageNode getProcessorInputReference();
+public interface ImageNodeProcessor<T extends TransformationSpecification> extends NodeProcessor<T> {
+	void setup(ImageNode imageNode, ModelZooModel model);
 	ImageNode getImageNode();
 }

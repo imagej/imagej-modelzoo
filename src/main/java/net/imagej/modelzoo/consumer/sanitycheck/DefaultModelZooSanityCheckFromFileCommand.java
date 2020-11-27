@@ -31,10 +31,18 @@ package net.imagej.modelzoo.consumer.sanitycheck;
 
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
 import net.imagej.modelzoo.display.InfoWidget;
 import net.imagej.ops.OpService;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.loops.LoopBuilder;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
+import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
@@ -78,6 +86,9 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 	@Parameter(label = "Expected result image")
 	private File inputGroundTruthFile;
 
+	@Parameter(label = "Difference input - prediction", type = ItemIO.OUTPUT)
+	private Dataset difference;
+
 	@Parameter
 	private LogService log;
 
@@ -94,6 +105,9 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 	private OpService opService;
 
 	@Parameter
+	private DatasetService datasetService;
+
+	@Parameter
 	private ModelZooService modelZooService;
 
 	private static final int numBins = 20;
@@ -106,12 +120,15 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 		try {
 			Dataset input = datasetIOService.open(inputFile.getAbsolutePath());
 			Dataset gt = datasetIOService.open(inputGroundTruthFile.getAbsolutePath());
-			prediction.setInput("input", input);
-			prediction.resolveInput("input");
+			String inputName = "input";
+			String outputName = prediction.getInfo().outputs().iterator().next().getName();
+			prediction.setInput(inputName, input);
+			prediction.resolveInput(inputName);
 			context().service(ModuleService.class).run(prediction, true).get();
-			Dataset output = (Dataset) prediction.getOutput("output");
+			Dataset output = (Dataset) prediction.getOutput(outputName);
 			uiService.show("expected", gt);
 			uiService.show("result after prediction", output);
+			difference = datasetService.create(getDifference((RandomAccessibleInterval)input, (RandomAccessibleInterval)output, new FloatType()));
 			ModelZooArchive model = modelZooService.io().open(modelFile);
 			SanityCheck sanityCheck = modelZooService.getPrediction(model).getSanityCheck();
 			sanityCheck.checkInteractive(Collections.singletonList(input), Collections.singletonList(output), Collections.singletonList(gt), model);
@@ -121,6 +138,14 @@ public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 
 		log("ModelZoo sanity check exit (took " + (System.currentTimeMillis() - startTime) + " milliseconds)");
 
+	}
+
+	<TI extends RealType<TI>, TO extends RealType<TO>, TR extends RealType<TR> & NativeType<TR>> RandomAccessibleInterval<TR> getDifference(RandomAccessibleInterval<TI> input, RandomAccessibleInterval<TO> output, TR resultType) {
+		Img<TR> res = opService.create().img(input, resultType);
+		LoopBuilder.setImages(input, output, res).multiThreaded().forEachPixel((ti, to, tr) -> {
+			tr.setReal(ti.getRealDouble()-to.getRealDouble());
+		});
+		return res;
 	}
 
 	private void log(String msg) {

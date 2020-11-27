@@ -1,5 +1,6 @@
 package net.imagej.modelzoo.consumer.postprocessing;
 
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
@@ -20,7 +21,7 @@ public class ResizePostprocessor implements NodeProcessor<TransformationSpecific
 	}
 
 	@Override
-	public void run() {
+	public void run(ModelZooPredictionOptions.Values options) {
 		resize(node.getData());
 	}
 

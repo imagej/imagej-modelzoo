@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -51,7 +51,7 @@ public class GenericNetworksMultipleCallsTest extends AbstractModelZooTest {
 
 		createImageJ();
 
-		String[] networks = {"denoise2D/model.bioimage.io.zip"};
+		String[] networks = {"denoise2D/dummy.model.bioimage.io.zip"};
 
 		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(4, 5, 6);
 

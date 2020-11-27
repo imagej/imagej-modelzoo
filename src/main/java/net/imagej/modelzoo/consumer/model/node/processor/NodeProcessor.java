@@ -29,11 +29,10 @@
 package net.imagej.modelzoo.consumer.model.node.processor;
 
 import io.bioimage.specification.TransformationSpecification;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import org.scijava.plugin.SciJavaPlugin;
 
 public interface NodeProcessor<T extends TransformationSpecification> extends SciJavaPlugin {
-	default void setReference(String reference){}
-	default String getReference() { return null; }
 	default void readSpecification(T specification){}
-	void run() throws NodeProcessorException;
+	void run(ModelZooPredictionOptions.Values options) throws NodeProcessorException;
 }

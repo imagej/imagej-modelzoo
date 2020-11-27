@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.numeric.real.FloatType;
@@ -61,8 +61,8 @@ public class GenericNetworksMismatchTest extends AbstractModelZooTest {
 	@Test
 	public void test2DNetworkWith2DInputImage() throws ExecutionException, InterruptedException {
 		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(5, 10, 20);
-		test("denoise2D/model.bioimage.io.zip", input, "XYZ");
-		test("denoise2D/model.bioimage.io.zip", input, "XYZ");
+		test("denoise2D/dummy.model.bioimage.io.zip", input, "XYZ");
+		test("denoise2D/dummy.model.bioimage.io.zip", input, "XYZ");
 
 	}
 
@@ -75,7 +75,7 @@ public class GenericNetworksMismatchTest extends AbstractModelZooTest {
 	@Test
 	public void test2DNetworkWith3DInputImage() throws ExecutionException, InterruptedException {
 		RandomAccessibleInterval input = new ArrayImgFactory<>(new FloatType()).create(10, 20, 30);
-		test("denoise2D/model.bioimage.io.zip", input, "XYZ");
+		test("denoise2D/dummy.model.bioimage.io.zip", input, "XYZ");
 
 	}
 

@@ -32,6 +32,7 @@ import net.imagej.ImageJService;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.prediction.PredictionOutput;
+import net.imagej.modelzoo.io.ModelZooIOService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

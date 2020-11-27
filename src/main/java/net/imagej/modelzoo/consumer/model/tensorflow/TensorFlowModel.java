@@ -30,7 +30,9 @@
 package net.imagej.modelzoo.consumer.model.tensorflow;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.bioimage.specification.InputNodeSpecification;
 import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.OutputNodeSpecification;
 import io.bioimage.specification.weights.TensorFlowSavedModelBundleSpecification;
 import io.scif.MissingLibraryException;
 import net.imagej.DatasetService;
@@ -62,7 +64,9 @@ import org.tensorflow.framework.SignatureDef;
 import javax.swing.JOptionPane;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Plugin(type= ModelZooModel.class, attrs = { @Attr(name = "supports",
@@ -93,6 +97,9 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	private static final String MODEL_TAG = "serve";
 	private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY =
 			"serving_default";
+
+	private Map<String, String> tensorInRenamings = new HashMap<>();
+	private Map<String, String> tensorOutRenamings = new HashMap<>();
 
 	public TensorFlowModel() {
 	}
@@ -146,7 +153,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		loadModelFile(source, modelName);
 		loadSignature();
 		inputNodes.clear();
-		if(!verifySpecification(specification)) return;
+		if(!verifyOrFixSpecification(specification)) return;
 		DefaultSpecificationLoader loader = new DefaultSpecificationLoader(context, specification, this);
 		loader.process();
 	}
@@ -165,7 +172,7 @@ public class TensorFlowModel extends DefaultModelZooModel {
 		model = tensorFlowService.loadCachedModel(source, modelName, MODEL_TAG);
 	}
 
-	private boolean verifySpecification(ModelSpecification specification) {
+	private boolean verifyOrFixSpecification(ModelSpecification specification) {
 		if (sig.getInputsCount() != specification.getInputs().size()) {
 			log.error("Model signature (" + sig.getInputsCount() +
 					" inputs) does not match model description signature (" +
@@ -177,6 +184,20 @@ public class TensorFlowModel extends DefaultModelZooModel {
 					" outputs) does not match model description signature (" +
 					specification.getOutputs().size() + " outputs).");
 			return false;
+		}
+		if(sig.getInputsCount() == 1 && sig.getOutputsCount() == 1) {
+			sig.getInputsMap().forEach((name, tensorInfo) -> {
+				InputNodeSpecification inSpec = specification.getInputs().get(0);
+				if(!inSpec.getName().equals(name)) {
+					tensorInRenamings.put(inSpec.getName(), tensorInfo.getName());
+				}
+			});
+			sig.getOutputsMap().forEach((name, tensorInfo) -> {
+				OutputNodeSpecification outputSpec = specification.getOutputs().get(0);
+				if(!outputSpec.getName().equals(name)) {
+					tensorOutRenamings.put(outputSpec.getName(), tensorInfo.getName());
+				}
+			});
 		}
 		return true;
 	}
@@ -211,11 +232,21 @@ public class TensorFlowModel extends DefaultModelZooModel {
 	}
 
 	private List<String> getInputNames() {
-		return getInputNodes().stream().map(ModelZooNode::getName).collect(Collectors.toList());
+		List<String> names = new ArrayList<>();
+		for (ModelZooNode<?> node : getInputNodes()) {
+			String name = node.getName();
+			names.add(tensorInRenamings.getOrDefault(name, name));
+		}
+		return names;
 	}
 
 	private List<String> getOutputNames() {
-		return getOutputNodes().stream().map(ModelZooNode::getName).collect(Collectors.toList());
+		List<String> names = new ArrayList<>();
+		for (ModelZooNode<?> node : getOutputNodes()) {
+			String name = node.getName();
+			names.add(tensorOutRenamings.getOrDefault(name, name));
+		}
+		return names;
 	}
 
 	private <TO extends RealType<TO> & NativeType<TO>, TI extends RealType<TI> & NativeType<TI>> void setOutputTensors(List<Tensor<?>> tensors) {

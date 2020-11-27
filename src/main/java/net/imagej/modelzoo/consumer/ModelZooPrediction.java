@@ -63,4 +63,10 @@ public interface ModelZooPrediction<I extends PredictionInput, O extends Predict
 	default SanityCheck getSanityCheck() {
 		return null;
 	}
+
+	void cancel();
+
+	boolean canRunSanityCheck(ModelZooArchive trainedModel);
+
+	void addCallbackOnCompleted(PredictionCompletedCallback callback);
 }

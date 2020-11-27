@@ -33,9 +33,14 @@ import io.bioimage.specification.DefaultModelSpecification;
 import io.bioimage.specification.ModelSpecification;
 import io.bioimage.specification.io.SpecificationReader;
 import io.bioimage.specification.io.SpecificationWriter;
+import net.imagej.DatasetService;
 import net.imagej.modelzoo.DefaultModelZooArchive;
+import net.imagej.modelzoo.ImageTensorSample;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.consumer.model.TensorSample;
+import net.imagej.modelzoo.specification.ImageJModelSpecification;
+import net.imglib2.RandomAccessibleInterval;
+import org.jetbrains.annotations.NotNull;
 import org.scijava.app.StatusService;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
@@ -47,7 +52,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +67,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -81,6 +84,9 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 	@Parameter
 	private IOService ioService;
 
+	@Parameter
+	private DatasetService datasetService;
+
 	@Override
 	public ModelZooArchive open(String source) throws IOException {
 		statusService.showStatus("Opening " + source + "..");
@@ -94,7 +100,6 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		DefaultModelZooArchive archive = new DefaultModelZooArchive();
 		getContext().inject(archive);
 		archive.setLocation(location);
-		DefaultModelSpecification specification = new DefaultModelSpecification();
 		try (ZipFile zf = new ZipFile(source)) {
 			ZipEntry modelFile = zf.getEntry(SpecificationWriter.getModelFileName());
 			if(modelFile == null) {
@@ -104,13 +109,14 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 				while ( entries.hasMoreElements() ) {
 					final ZipEntry entry = entries.nextElement();
 					if(entry.getName().endsWith(".model.yaml")) {
-					modelFile = entry;
+						modelFile = entry;
 						break;
 					}
 				}
 				if(modelFile == null) throw new IOException("Can't open " + source + " as bioimage.io model archive: No model.yaml or *.model.yaml file found.");
 			}
 			InputStream inSpec = zf.getInputStream(modelFile);
+			ImageJModelSpecification specification = new ImageJModelSpecification();
 			boolean success = SpecificationReader.read(inSpec, specification);
 			if(!success) {
 				throw new IOException("Could not read model.yaml specification from source " + source);
@@ -125,19 +131,24 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 
 	private void setSampleImages(DefaultModelZooArchive archive, DefaultModelSpecification specification, ZipFile zf) throws IOException {
 		if(specification.getSampleInputs() != null) {
-			List<Object> sampleInputs = new ArrayList<>();
+			List<TensorSample> sampleInputs = new ArrayList<>();
 			for (String sampleInput : specification.getSampleInputs()) {
-				sampleInputs.add(extract(zf,sampleInput));
+				sampleInputs.add(extractImageSample(zf, sampleInput));
 			}
 			archive.setSampleInputs(sampleInputs);
 		}
 		if(specification.getSampleOutputs() != null) {
-			List<Object> sampleOutputs = new ArrayList<>();
+			List<TensorSample> sampleOutputs = new ArrayList<>();
 			for (String sampleOutput : specification.getSampleOutputs()) {
-				sampleOutputs.add(extract(zf,sampleOutput));
+				sampleOutputs.add(extractImageSample(zf,sampleOutput));
 			}
 			archive.setSampleOutputs(sampleOutputs);
 		}
+	}
+
+	@NotNull
+	private ImageTensorSample extractImageSample(ZipFile zf, String sampleInput) throws IOException {
+		return new ImageTensorSample<>((RandomAccessibleInterval)extract(zf,sampleInput), sampleInput);
 	}
 
 	@Override
@@ -147,32 +158,46 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		Path destinationPath = Paths.get(destination);
 		if(!destinationPath.toFile().exists()) {
 			Files.createFile(destinationPath);
-		} else {
-			FileLocation sourceFile = (FileLocation) archive.getLocation();
-			if(sourceFile != null && sourceFile.getFile().exists()) {
-				Files.copy(sourceFile.getFile().toPath(), destinationPath, REPLACE_EXISTING);
-			}
 		}
-		FileOutputStream fos = new FileOutputStream(destinationPath.toFile());
-		ZipOutputStream zipOut = new ZipOutputStream(fos);
-		SpecificationWriter.write(archive.getSpecification(), zipOut);
-		fos.close();
-		zipOut.close();
+		FileLocation sourceFile = (FileLocation) archive.getLocation();
+		if(sourceFile != null && sourceFile.getFile().exists() && !sourceFile.getFile().toPath().equals(destinationPath)) {
+			Files.copy(sourceFile.getFile().toPath(), destinationPath, REPLACE_EXISTING);
+		}
+		Path tmpSpec = writeSpecification(archive);
 		List<Path> tmpTestInputs = saveSampleTensors(archive.getSampleInputs());
 		List<Path> tmpTestOutputs = saveSampleTensors(archive.getSampleOutputs());
 		try (FileSystem fileSystem = FileSystems.newFileSystem(destinationPath, null)) {
-			copySampleTensors(tmpTestInputs, fileSystem, archive.getSpecification().getTestInputs());
-			copySampleTensors(tmpTestOutputs, fileSystem, archive.getSpecification().getTestOutputs());
+			Files.copy(tmpSpec, fileSystem.getPath(SpecificationWriter.getModelFileName()), REPLACE_EXISTING);
+			copySampleTensors(tmpTestInputs, archive.getSampleInputs(), fileSystem, archive.getSpecification().getSampleInputs());
+			copySampleTensors(tmpTestOutputs, archive.getSampleOutputs(), fileSystem, archive.getSpecification().getSampleOutputs());
 		}
+		Files.delete(tmpSpec);
+		cleanup(tmpTestInputs);
+		cleanup(tmpTestOutputs);
 		archive.setLocation(new FileLocation(destination));
 		statusService.showStatus("Done saving " + destination + ".");
 	}
 
-	private void copySampleTensors(List<Path> sampleTensorFiles, FileSystem fileSystem, List<String> newFileNames) throws IOException {
+	private Path writeSpecification(ModelZooArchive archive) throws IOException {
+		Path tmpSpec = Files.createTempFile("spec", ".yaml");
+		SpecificationWriter.write(archive.getSpecification(), tmpSpec);
+		return tmpSpec;
+	}
+
+	private void cleanup(List<Path> tmpData) throws IOException {
+		for (Path tmpTestInput : tmpData) {
+			Files.delete(tmpTestInput);
+		}
+	}
+
+	private void copySampleTensors(List<Path> sampleTensorFiles, List<TensorSample> samples, FileSystem fileSystem, List<String> newFileNames) throws IOException {
 		for (int i = 0; i < sampleTensorFiles.size(); i++) {
 			Path tmpTestInput = sampleTensorFiles.get(i);
-			Path path = fileSystem.getPath(newFileNames.get(i));
-			Files.copy(tmpTestInput, path, REPLACE_EXISTING);
+			String newPath = samples.get(i).getFileName();
+			if(newFileNames != null && newFileNames.size() > i) {
+				newPath = newFileNames.get(i);
+			}
+			Files.copy(tmpTestInput, fileSystem.getPath(newPath), REPLACE_EXISTING);
 		}
 	}
 
@@ -182,7 +207,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 			for (int i = 0; i < tensorSamples.size(); i++) {
 				TensorSample sampleInput = tensorSamples.get(i);
 				Path tmpTestInput = Files.createTempFile("file", sampleInput.getFileName());
-				ioService.save(sampleInput, tmpTestInput.toFile().getAbsolutePath());
+				ioService.save(sampleInput.getData(), tmpTestInput.toFile().getAbsolutePath());
 				resultPaths.add(tmpTestInput);
 			}
 		}
@@ -205,8 +230,13 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 	}
 
 	private Object extract(ZipFile zf, String testInputLocation) throws IOException {
-		ZipEntry entry = zf.getEntry(testInputLocation);
-		if(entry == null) return null;
+		ZipEntry entry;
+		try {
+			entry = zf.getEntry(testInputLocation);
+		} catch (NullPointerException e) {
+			entry = null;
+		}
+		if (entry == null) return null;
 		InputStream inputStream = zf.getInputStream(entry);
 		File tmpTestInput = Files.createTempFile("", entry.getName()).toFile();
 		byte[] buffer = new byte[8 * 1024];
@@ -217,7 +247,7 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		}
 		outStream.close();
 		inputStream.close();
-		Object result =  ioService.open(tmpTestInput.getAbsolutePath());
+		Object result = ioService.open(tmpTestInput.getAbsolutePath());
 		tmpTestInput.delete();
 		return result;
 	}

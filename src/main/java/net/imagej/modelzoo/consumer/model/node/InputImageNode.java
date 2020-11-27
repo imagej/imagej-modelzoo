@@ -29,7 +29,28 @@
 
 package net.imagej.modelzoo.consumer.model.node;
 
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+
 public class InputImageNode extends ImageNode {
 
+	private ImageDataReference<?> originalDataType;
 
+	public void setOriginalData(ImageDataReference<?> data) {
+		originalDataType = getEmptyReference(data);
+	}
+
+	private <T extends RealType<T> & NativeType<T>> DefaultImageDataReference<T> getEmptyReference(ImageDataReference<T> data) {
+		return new DefaultImageDataReference<>(null, data.getDataType());
+	}
+
+	@Override
+	public void initializeWithData(ImageDataReference<?> data) {
+		setOriginalData(data);
+		super.initializeWithData(data);
+	}
+
+	public <O extends RealType<O> & NativeType<O>> O getOriginalDataType() {
+		return (O) originalDataType.getDataType();
+	}
 }

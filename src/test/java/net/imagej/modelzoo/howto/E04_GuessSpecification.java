@@ -44,7 +44,7 @@ public class E04_GuessSpecification {
 		Context context = new Context();
 
 		// resource path
-		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/model.bioimage.io.zip").getPath();
+		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// create specification
 		TensorFlowModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");

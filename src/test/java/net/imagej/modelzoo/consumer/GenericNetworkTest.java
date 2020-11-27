@@ -30,7 +30,7 @@
 package net.imagej.modelzoo.consumer;
 
 import net.imagej.modelzoo.AbstractModelZooTest;
-import net.imagej.modelzoo.consumer.commands.DefaultSingleImagePredictionCommand;
+import net.imagej.modelzoo.consumer.command.DefaultSingleImagePredictionCommand;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.NativeType;
@@ -75,7 +75,7 @@ public class GenericNetworkTest extends AbstractModelZooTest {
 	private <T extends RealType<T> & NativeType<T>> void testDataset(final T type,
 	                                                                 final long[] dims, String axes) throws ExecutionException, InterruptedException {
 
-		URL networkUrl = this.getClass().getResource("denoise2D/model.bioimage.io.zip");
+		URL networkUrl = this.getClass().getResource("denoise2D/dummy.model.bioimage.io.zip");
 
 		final RandomAccessibleInterval input = new ArrayImgFactory<>(type).create(dims);
 		final Module module = ij.command().run(DefaultSingleImagePredictionCommand.class, false,

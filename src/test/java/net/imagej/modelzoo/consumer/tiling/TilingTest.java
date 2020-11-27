@@ -33,6 +33,7 @@ import net.imagej.Dataset;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.modelzoo.AbstractModelZooTest;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.InputImageNode;
 import net.imagej.modelzoo.consumer.model.node.ModelZooAxis;
@@ -79,7 +80,7 @@ public class TilingTest extends AbstractModelZooTest {
 		nodeOut.getAxes().addAll(axes);
 		nodeOut.setData(new DefaultImageDataReference<>(input, new FloatType()));
 
-		new ResizePreprocessor(nodeIn, ij.log()).run();
+		new ResizePreprocessor(nodeIn, ij.log()).run(ModelZooPredictionOptions.options().values);
 
 		final DefaultTiling tiling = new DefaultTiling(nodeOut);
 		tiling.setNumberOfTiles(8);
@@ -90,7 +91,7 @@ public class TilingTest extends AbstractModelZooTest {
 		}
 		tiling.finish();
 
-		new ResizePostprocessor(nodeOut).run();
+		new ResizePostprocessor(nodeOut).run(ModelZooPredictionOptions.options().values);
 
 		RandomAccessibleInterval output = nodeOut.getData().getData();
 		assertNotNull(output);

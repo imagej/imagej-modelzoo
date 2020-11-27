@@ -1,6 +1,7 @@
 package net.imagej.modelzoo.consumer.preprocessing;
 
 import net.imagej.axis.AxisType;
+import net.imagej.modelzoo.consumer.ModelZooPredictionOptions;
 import net.imagej.modelzoo.consumer.model.node.DefaultImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageDataReference;
 import net.imagej.modelzoo.consumer.model.node.ImageNode;
@@ -25,7 +26,7 @@ public class ResizePreprocessor implements NodeProcessor<TransformationSpecifica
 	}
 
 	@Override
-	public void run() throws NodeProcessorException {
+	public void run(ModelZooPredictionOptions.Values options) throws NodeProcessorException {
 		resize(node.getData());
 	}
 

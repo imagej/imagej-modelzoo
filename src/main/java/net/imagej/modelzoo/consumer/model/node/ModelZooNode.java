@@ -37,6 +37,10 @@ public interface ModelZooNode<T> {
 	String getName();
 	List<NodeProcessor> getProcessors();
 	T getData();
+	default void initializeWithData(T data) {
+		setData(data);
+	}
 	void setData(T data);
+
 	boolean accepts(Object data);
 }

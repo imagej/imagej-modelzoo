@@ -108,7 +108,7 @@ public class InputMappingHandler implements InputHandler {
 	}
 
 	private <T> void setData(ModelZooNode<T> inputNode, T data) {
-		inputNode.setData(data);
+		inputNode.initializeWithData(data);
 	}
 
 	private void runInputMapping() throws InterruptedException, ExecutionException {
@@ -178,7 +178,7 @@ public class InputMappingHandler implements InputHandler {
 
 	public void addInput(String name, Object value, String mapping) {
 		inputs.put(name, value);
-		this.mapping.put(name, mapping);
+		this.mapping.put(name, mapping.toUpperCase());
 	}
 
 	@Override
