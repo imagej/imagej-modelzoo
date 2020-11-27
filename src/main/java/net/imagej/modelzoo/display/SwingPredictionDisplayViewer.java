@@ -1,8 +1,8 @@
 /*-
  * #%L
- * CSBDeep: CNNs for image restoration of fluorescence microscopy.
+ * This is the bioimage.io modelzoo library for ImageJ.
  * %%
- * Copyright (C) 2017 - 2020 Deborah Schmidt, Florian Jug, Benjamin Wilhelm
+ * Copyright (C) 2019 - 2020 Center for Systems Biology Dresden
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

@@ -1,6 +1,6 @@
 /*-
  * #%L
- * N2V plugin
+ * This is the bioimage.io modelzoo library for ImageJ.
  * %%
  * Copyright (C) 2019 - 2020 Center for Systems Biology Dresden
  * %%
