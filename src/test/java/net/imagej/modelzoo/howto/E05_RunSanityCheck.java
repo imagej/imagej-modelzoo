@@ -29,12 +29,13 @@
 package net.imagej.modelzoo.howto;
 
 import net.imagej.ImageJ;
+import net.imagej.modelzoo.ModelZooArchive;
+import net.imagej.modelzoo.ModelZooService;
+import net.imglib2.img.Img;
 import org.junit.After;
 import org.junit.Test;
 
-import java.io.IOException;
-
-public class E05_OpenArchivedModel {
+public class E05_RunSanityCheck {
 	private ImageJ ij;
 
 	@After
@@ -43,20 +44,34 @@ public class E05_OpenArchivedModel {
 	}
 
 	@Test
-	public void run() throws IOException {
+	public void run() throws Exception {
 
 		ij = new ImageJ();
 		ij.launch();
 
 		// resource paths
 		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
+		String imgPath = getClass().getResource("/blobs.png").getPath();
 
-		Object model = ij.io().open(modelPath);
-		ij.ui().show(model);
+		// load image
+		Img input = (Img) ij.io().open(imgPath);
+
+		// create noisy image from input image
+		Img noisy = ij.op().create().img(input);
+		ij.op().filter().gauss(noisy, input, 5);
+
+		// display results
+		ij.ui().show("Expected (GT)", input);
+		ij.ui().show("Sanity Check input", noisy);
+
+
+		ModelZooService modelZooService = ij.get(ModelZooService.class);
+		ModelZooArchive model = modelZooService.io().open(modelPath);
+		modelZooService.sanityCheckInteractive(model, noisy, input);
 
 	}
 
-	public static void main(String... args) throws IOException {
-		new E05_OpenArchivedModel().run();
+	public static void main(String... args) throws Exception {
+		new E05_RunSanityCheck().run();
 	}
 }

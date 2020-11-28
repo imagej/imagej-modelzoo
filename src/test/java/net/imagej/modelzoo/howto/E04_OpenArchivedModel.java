@@ -28,34 +28,35 @@
  */
 package net.imagej.modelzoo.howto;
 
-import io.bioimage.specification.DefaultModelSpecification;
-import io.bioimage.specification.ModelSpecification;
-import io.bioimage.specification.io.SpecificationReader;
-import io.bioimage.specification.io.SpecificationWriter;
+import net.imagej.ImageJ;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class E03_ReadSpecification {
+public class E04_OpenArchivedModel {
+	private ImageJ ij;
+
+	@After
+	public void tearDown() {
+		ij.context().dispose();
+	}
 
 	@Test
 	public void run() throws IOException {
 
-		// resource path
-		String specificationPath = ModelSpecification.class.getResource("/example.model.yaml").getPath();
+		ij = new ImageJ();
+		ij.launch();
 
-		// create specification
-		DefaultModelSpecification specification = new DefaultModelSpecification();
+		// resource paths
+		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
-		// read specification
-		SpecificationReader.read(specificationPath, specification);
-
-		// access specification
-		System.out.println(SpecificationWriter.write(specification));
+		Object model = ij.io().open(modelPath);
+		ij.ui().show(model);
 
 	}
 
 	public static void main(String... args) throws IOException {
-		new E03_ReadSpecification().run();
+		new E04_OpenArchivedModel().run();
 	}
 }

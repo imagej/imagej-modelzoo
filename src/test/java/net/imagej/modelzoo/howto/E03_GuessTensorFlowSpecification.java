@@ -28,50 +28,41 @@
  */
 package net.imagej.modelzoo.howto;
 
-import net.imagej.ImageJ;
-import net.imagej.modelzoo.ModelZooArchive;
-import net.imagej.modelzoo.ModelZooService;
-import net.imglib2.img.Img;
-import org.junit.After;
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
+import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModelSpecification;
 import org.junit.Test;
+import org.scijava.Context;
 
-public class E06_RunSanityCheck {
-	private ImageJ ij;
+import java.io.IOException;
 
-	@After
-	public void tearDown() {
-		ij.context().dispose();
-	}
+public class E03_GuessTensorFlowSpecification {
 
 	@Test
-	public void run() throws Exception {
+	public void run() throws IOException {
 
-		ij = new ImageJ();
-		ij.launch();
+		// create context
+		Context context = new Context();
 
-		// resource paths
-		String modelPath =  getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
-		String imgPath = getClass().getResource("/blobs.png").getPath();
+		// resource path
+		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
-		// load image
-		Img input = (Img) ij.io().open(imgPath);
+		// create specification
+		TensorFlowModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");
 
-		// create noisy image from input image
-		Img noisy = ij.op().create().img(input);
-		ij.op().filter().gauss(noisy, input, 5);
+		// set the shape step of the input data, in this case, X and Y need to be multiple of 32
+		// since this can't be guessed by the TensorFlow model but is important for models with variable input size, this needs to be set manually
+		specification.getInputs().get(0).getShapeStep().set(1, 32);
+		specification.getInputs().get(0).getShapeStep().set(2, 32);
 
-		// display results
-		ij.ui().show("Expected (GT)", input);
-		ij.ui().show("Sanity Check input", noisy);
+		// access specification
+		System.out.println(specification);
 
-
-		ModelZooService modelZooService = ij.get(ModelZooService.class);
-		ModelZooArchive model = modelZooService.io().open(modelPath);
-		modelZooService.sanityCheckInteractive(model, noisy, input);
+		// dispose context
+		context.dispose();
 
 	}
 
-	public static void main(String... args) throws Exception {
-		new E06_RunSanityCheck().run();
+	public static void main(String... args) throws IOException {
+		new E03_GuessTensorFlowSpecification().run();
 	}
 }

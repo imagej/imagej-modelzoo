@@ -28,41 +28,34 @@
  */
 package net.imagej.modelzoo.howto;
 
-import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModel;
-import net.imagej.modelzoo.consumer.model.tensorflow.TensorFlowModelSpecification;
+import io.bioimage.specification.ModelSpecification;
+import io.bioimage.specification.io.SpecificationReader;
+import io.bioimage.specification.io.SpecificationWriter;
+import net.imagej.modelzoo.specification.ImageJModelSpecification;
 import org.junit.Test;
-import org.scijava.Context;
 
 import java.io.IOException;
 
-public class E04_GuessSpecification {
+public class E02_ReadSpecification {
 
 	@Test
 	public void run() throws IOException {
 
-		// create context
-		Context context = new Context();
-
 		// resource path
-		String archivePath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
+		String specificationPath = ModelSpecification.class.getResource("/example.model.yaml").getPath();
 
 		// create specification
-		TensorFlowModelSpecification specification = new TensorFlowModel(context).guessSpecification(archivePath, "example model");
+		ImageJModelSpecification specification = new ImageJModelSpecification();
 
-		// set the shape step of the input data, in this case, X and Y need to be multiple of 32
-		// since this can't be guessed by the TensorFlow model but is important for models with variable input size, this needs to be set manually
-		specification.getInputs().get(0).getShapeStep().set(1, 32);
-		specification.getInputs().get(0).getShapeStep().set(2, 32);
+		// read specification
+		SpecificationReader.read(specificationPath, specification);
 
 		// access specification
-		System.out.println(specification);
-
-		// dispose context
-		context.dispose();
+		System.out.println(SpecificationWriter.write(specification));
 
 	}
 
 	public static void main(String... args) throws IOException {
-		new E04_GuessSpecification().run();
+		new E02_ReadSpecification().run();
 	}
 }
