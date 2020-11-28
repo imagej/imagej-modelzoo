@@ -86,6 +86,7 @@ public class TiledPredictionExecutor implements Cancelable {
 					model.predict();
 					tiling.resolveCurrentTile();
 				}
+				statusService.showProgress(1, 1);
 				if(!isCanceled()) tiling.finish();
 			}
 		} catch (final CancellationException | RejectedExecutionException e) {
