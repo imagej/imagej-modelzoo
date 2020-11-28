@@ -43,7 +43,7 @@ import org.scijava.plugin.Plugin;
 
 import java.util.Map;
 
-@Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo", menuPath = "Plugins>CSBDeep>DenoiSeg>DenoiSeg predict")
+@Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo", menuPath = "Plugins>bioimage.io>bioimage.io model prediction")
 public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>> extends AbstractSingleImagePredictionCommand<T, DefaultModelZooPrediction> {
 
 	@Parameter(type = ItemIO.OUTPUT)
