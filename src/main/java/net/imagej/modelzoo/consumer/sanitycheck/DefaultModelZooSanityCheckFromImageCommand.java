@@ -63,10 +63,10 @@ import static net.imagej.modelzoo.consumer.sanitycheck.DefaultModelZooSanityChec
 @Plugin(type = Command.class)
 public class DefaultModelZooSanityCheckFromImageCommand extends DynamicCommand {
 
-	@Parameter(label = "Import model (.zip) from file")
+	@Parameter(label = "Import model (.zip) from file", persist = false)
 	private File modelFile;
 
-	@Parameter
+	@Parameter(persist = false)
 	private Module prediction;
 
 	@Parameter(label="<html><h1>Sanity check</h1>", description = descriptionText, required = false, style = InfoWidget.STYLE)

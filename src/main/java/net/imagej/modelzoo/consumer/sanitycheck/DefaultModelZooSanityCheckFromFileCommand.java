@@ -61,10 +61,10 @@ import java.util.concurrent.ExecutionException;
 @Plugin(type = Command.class)
 public class DefaultModelZooSanityCheckFromFileCommand extends DynamicCommand {
 
-	@Parameter(label = "Import model (.zip) from file")
+	@Parameter(label = "Import model (.zip) from file", persist = false)
 	private File modelFile;
 
-	@Parameter
+	@Parameter(persist = false)
 	private Module prediction;
 
 	final static String descriptionText =
