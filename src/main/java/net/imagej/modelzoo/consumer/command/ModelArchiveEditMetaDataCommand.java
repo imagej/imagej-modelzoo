@@ -40,19 +40,19 @@ import org.scijava.widget.TextWidget;
 import java.util.Arrays;
 import java.util.List;
 
-@Plugin(type = Command.class, name = "Update modelzoo archive demo image", initializer = "initParameters")
+@Plugin(type = Command.class, name = "Edit bioimage.io model metadata", initializer = "initParameters")
 public class ModelArchiveEditMetaDataCommand implements Command {
 
-	@Parameter(label = "Name of trained model", persist = false, description = "Please only use letters, numbers, _, - or spaces, maximal 36 characters")
+	@Parameter(label = "Trained model name", persist = false, required = false, description = "Please only use letters, numbers, _, - or spaces, maximal 36 characters")
 	String name;
 
-	@Parameter(label = "Description of trained model", persist = false, style = TextWidget.AREA_STYLE)
+	@Parameter(label = "Description", persist = false, required = false, style = TextWidget.AREA_STYLE)
 	String description;
 
-	@Parameter(label = "Authors (comma separated)", persist = false, description = "Please list the creators of the model archive", style = TextWidget.AREA_STYLE)
+	@Parameter(label = "Authors", persist = false, required = false, description = "Please list the creators of the model archive (comma separated)", style = TextWidget.AREA_STYLE)
 	String authors;
 
-	@Parameter(label = "Tags (comma separated)", persist = false, style = TextWidget.AREA_STYLE)
+	@Parameter(label = "Tags (comma separated)", persist = false, required = false, style = TextWidget.AREA_STYLE)
 	String tags;
 
 	@Parameter
