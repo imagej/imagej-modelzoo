@@ -151,14 +151,15 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		ButtonGroup group = new ButtonGroup();
 		ImageIcon inputIcon = new ImageIcon();
 		ImageIcon outputIcon = new ImageIcon();
-		Component overviewPanel = createOverviewPanel(model, createPreviewPanel(model, inputIcon, outputIcon));
+		JPanel previewPanel = createPreviewPanel(model, inputIcon, outputIcon);
+		Component overviewPanel = createOverviewPanel(model, previewPanel);
 		addCard(leftPanel, rightPanel, group, overviewPanel, "Overview");
 		addCard(leftPanel, rightPanel, group, createMetaPanel(model), "Metadata");
 		addCard(leftPanel, rightPanel, group, createInputsOutputsPanel(model), "Inputs & Outputs");
 		addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
 		JButton saveChangesBtn = createSaveChangesBtn(model);
 		leftPanel.add(saveChangesBtn, "gap 6px 11px 6px 0px, growx");
-		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, createPreviewPanel(model, inputIcon, outputIcon)), "gap 6px 11px 0px 6px, growx");
+		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, previewPanel), "gap 6px 11px 0px 6px, growx");
 		cardLayout.first(rightPanel);
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
 		panel.add(rightPanel, "width 500:500:null, height 100%");
