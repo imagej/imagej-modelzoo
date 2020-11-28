@@ -84,7 +84,7 @@ public abstract class AbstractOutputHandler {
 
 	protected abstract ModelSpecification createSpecification(String name);
 
-	public File exportLatestTrainedModel() throws IOException {
+	public synchronized File exportLatestTrainedModel() throws IOException {
 		if(noCheckpointSaved()) return null;
 		ModelSpecification last_checkpoint = createSpecification("last checkpoint");
 		SpecificationWriter.write(last_checkpoint, getMostRecentModelDir());
@@ -95,7 +95,7 @@ public abstract class AbstractOutputHandler {
 		return savedModelBundleName;
 	}
 
-	protected File saveTrainedModel(File checkpointDir, String weightsLocation) throws IOException {
+	protected synchronized File saveTrainedModel(File checkpointDir, String weightsLocation) throws IOException {
 		Path tmp = Files.createTempDirectory("export");
 		FileUtils.copyDirectory(checkpointDir, tmp.toFile());
 		File weights = new File(tmp.toFile(), "tf_saved_model_bundle.zip");
@@ -195,7 +195,7 @@ public abstract class AbstractOutputHandler {
 		}
 	}
 
-	protected void saveCheckpoint(Session sess,
+	protected synchronized void saveCheckpoint(Session sess,
 	                              List<ImageTensorSample<?>> inputs,
 	                              List<ImageTensorSample<?>> outputs) {
 		sess.runner().feed("save/Const", checkpointPrefix).addTarget("save/control_dependency").run();
