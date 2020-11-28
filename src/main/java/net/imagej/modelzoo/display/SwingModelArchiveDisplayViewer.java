@@ -36,6 +36,7 @@ import net.imagej.display.ColorTables;
 import net.imagej.display.SourceOptimizedCompositeXYProjector;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
+import net.imagej.modelzoo.consumer.command.ModelArchiveEditMetaDataCommand;
 import net.imagej.modelzoo.consumer.command.ModelArchiveUpdateDemoFromFileCommand;
 import net.imagej.modelzoo.consumer.command.ModelArchiveUpdateDemoFromImageCommand;
 import net.imagej.modelzoo.consumer.model.TensorSample;
@@ -52,6 +53,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
+import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.module.ModuleException;
@@ -121,6 +123,12 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	private static final Font plainFont = font.deriveFont(Font.PLAIN);
 	private static final Font headerFont = font.deriveFont(Font.BOLD);
 	private int previewDim = 240;
+	private JTextArea modelNameInOverview;
+	private JTextArea modelDescriptionInOverview;
+	private JTextArea modelName;
+	private JTextArea modelDescription;
+	private JTextArea modelTags;
+	private JTextArea modelAuthors;
 
 	public SwingModelArchiveDisplayViewer() {
 		super(ModelZooArchive.class);
@@ -143,14 +151,14 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		ButtonGroup group = new ButtonGroup();
 		ImageIcon inputIcon = new ImageIcon();
 		ImageIcon outputIcon = new ImageIcon();
-		JPanel previewPanel = createPreviewPanel(model, inputIcon, outputIcon);
-		addCard(leftPanel, rightPanel, group, createOverviewPanel(model, previewPanel), "Overview");
+		Component overviewPanel = createOverviewPanel(model, createPreviewPanel(model, inputIcon, outputIcon));
+		addCard(leftPanel, rightPanel, group, overviewPanel, "Overview");
 		addCard(leftPanel, rightPanel, group, createMetaPanel(model), "Metadata");
 		addCard(leftPanel, rightPanel, group, createInputsOutputsPanel(model), "Inputs & Outputs");
 		addCard(leftPanel, rightPanel, group, createTrainingPanel(model), "Training");
 		JButton saveChangesBtn = createSaveChangesBtn(model);
 		leftPanel.add(saveChangesBtn, "gap 6px 11px 6px 0px, growx");
-		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, previewPanel), "gap 6px 11px 0px 6px, growx");
+		leftPanel.add(createFileActionsBtn(model, inputIcon, outputIcon, saveChangesBtn, createPreviewPanel(model, inputIcon, outputIcon)), "gap 6px 11px 0px 6px, growx");
 		cardLayout.first(rightPanel);
 		panel.add(leftPanel, "newline, width 150:150:150, height 100%");
 		panel.add(rightPanel, "width 500:500:null, height 100%");
@@ -180,11 +188,11 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 
 	private Component createOverviewPanel(ModelZooArchive model, Component previewPanel) {
 		JPanel panel = new JPanel(new MigLayout("fill"));
-		JTextArea title = createReadTextArea(model.getSpecification().getName());
-		title.setFont(headerFont);
-		panel.add(title, "width 20:350:null, span");
-		JTextArea descriptionText = createReadTextArea(model.getSpecification().getDescription());
-		panel.add(descriptionText, "newline, span,growx,wmin 20");
+		modelNameInOverview = createReadTextArea(model.getSpecification().getName());
+		modelNameInOverview.setFont(headerFont);
+		panel.add(modelNameInOverview, "width 20:350:null, span");
+		modelDescriptionInOverview = createReadTextArea(model.getSpecification().getDescription());
+		panel.add(modelDescriptionInOverview, "newline, span,growx,wmin 20");
 		panel.add(previewPanel, "newline, push, grow, span");
 		panel.add(createActionsBar(model), "newline, span, pushx, growx");
 		return panel;
@@ -208,6 +216,23 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 					StringSelection stringSelection = new StringSelection(model.getLocation().getURI().getPath());
 					Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
 					clpbrd.setContents(stringSelection, null);
+				}).start();
+			}
+		});
+		menu.add(new AbstractAction("Edit metadata") {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				new Thread(() -> {
+					boolean changesMade = editMetaData(model);
+					if(changesMade) {
+						if(modelDescription != null) modelDescription.setText(model.getSpecification().getDescription());
+						if(modelDescriptionInOverview != null) modelDescriptionInOverview.setText(model.getSpecification().getDescription());
+						if(modelName != null) modelName.setText(model.getSpecification().getName());
+						if(modelNameInOverview!= null) modelNameInOverview.setText(model.getSpecification().getName());
+						if(modelTags != null) modelTags.setText(listToString(model.getSpecification().getTags()));
+						if(modelAuthors != null) modelAuthors.setText(listToString(model.getSpecification().getAuthors()));
+						saveChangesBtn.setVisible(true);
+					}
 				}).start();
 			}
 		});
@@ -427,6 +452,16 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		}
 	}
 
+	private boolean editMetaData(ModelZooArchive model) {
+		try {
+			CommandModule module = commandService.run(ModelArchiveEditMetaDataCommand.class, true, "archive", model).get();
+			return !module.isCanceled();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	private void updateTestImageFromFile(
 			ModelZooArchive model, ImageIcon inputIcon, ImageIcon outputIcon) {
 		try {
@@ -568,15 +603,15 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return scroll(panel);
 	}
 
-	private static Component createMetaPanel(ModelZooArchive model) {
+	private Component createMetaPanel(ModelZooArchive model) {
 		JPanel panel = new JPanel(new MigLayout("fill"));
-		addToPanel(panel, "Name", model.getSpecification().getName());
-		addToPanel(panel, "Description", model.getSpecification().getDescription());
-		addToPanel(panel, "Authors", listToString(model.getSpecification().getAuthors()));
+		modelName = addToPanel(panel, "Name", model.getSpecification().getName());
+		modelDescription = addToPanel(panel, "Description", model.getSpecification().getDescription());
+		modelAuthors = addToPanel(panel, "Authors", listToString(model.getSpecification().getAuthors()));
 		addToPanel(panel, "References", asString(model.getSpecification().getCitations(), SwingModelArchiveDisplayViewer::citationToString));
 		addToPanel(panel, "License", model.getSpecification().getLicense());
 		addToPanel(panel, "Documentation", model.getSpecification().getDocumentation());
-		addToPanel(panel, "Tags", listToString(model.getSpecification().getTags()));
+		modelTags = addToPanel(panel, "Tags", listToString(model.getSpecification().getTags()));
 		return scroll(panel);
 	}
 
@@ -586,7 +621,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		return jScrollPane;
 	}
 
-	private static void addToPanel(JPanel panel, String title, String value) {
+	private static JTextArea addToPanel(JPanel panel, String title, String value) {
 		JLabel titleLabel = new JLabel(title);
 		JTextArea valueLabel = createReadTextArea(value);
 		valueLabel.setFont(plainMonospaceFont);
@@ -595,6 +630,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		JSeparator component = new JSeparator();
 		component.setForeground(Color.white);
 		panel.add(component, "newline, growx, span");
+		return valueLabel;
 	}
 
 	private static String listToString(List<String> list) {
