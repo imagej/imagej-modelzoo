@@ -44,9 +44,9 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import org.apache.commons.lang3.NotImplementedException;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Plugin(type = NodePostprocessor.class, name = ScaleMinMaxTransformation.name)
 public class ScaleMinMaxPostprocessing
