@@ -91,10 +91,11 @@ public abstract class AbstractSingleImagePredictionCommand<T extends RealType<T>
 
 		try {
 			P prediction = createPrediction();
+			if(prediction == null) return;
 			prediction.setTrainedModel(getArchive());
 			setInput(prediction);
 			prediction.setOptions(createOptions());
-			if(showProgressDialog) {
+			if(showProgressDialog && !uiService.isHeadless()) {
 				uiService.show(prediction);
 			}
 			prediction.run();

@@ -670,6 +670,7 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 	}
 
 	private static String transformationsToString(List<TransformationSpecification> transformations) {
+		if(transformations == null) return null;
 		StringBuilder str = new StringBuilder();
 		for (TransformationSpecification transformation : transformations) {
 			str.append(transformation.getName()).append(" ");

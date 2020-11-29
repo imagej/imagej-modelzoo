@@ -33,6 +33,7 @@ import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.consumer.DefaultModelZooPrediction;
 import net.imagej.modelzoo.consumer.ModelZooPrediction;
+import net.imagej.modelzoo.consumer.SingleImagePrediction;
 import net.imagej.modelzoo.consumer.model.prediction.ImageInput;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
@@ -41,10 +42,11 @@ import org.scijava.ItemIO;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Plugin(type = SingleImagePredictionCommand.class, name = "imagej-modelzoo", menuPath = "Plugins>bioimage.io>bioimage.io prediction")
-public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>> extends AbstractSingleImagePredictionCommand<T, DefaultModelZooPrediction> {
+public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeType<T>, S extends SingleImagePrediction<?>> extends AbstractSingleImagePredictionCommand<T, S> {
 
 	@Parameter(type = ItemIO.OUTPUT)
 	private Dataset output;
@@ -60,7 +62,7 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeT
 	Map<String, Object> outputs;
 
 	@Override
-	protected void createOutput(DefaultModelZooPrediction prediction) {
+	protected void createOutput(SingleImagePrediction prediction) {
 		int i = 0;
 		for (Map.Entry<String, Object> entry : prediction.getOutput().asMap().entrySet()) {
 			String name = entry.getKey();
@@ -78,8 +80,13 @@ public class DefaultSingleImagePredictionCommand<T extends RealType<T> & NativeT
 	}
 
 	@Override
-	public DefaultModelZooPrediction createPrediction() {
-		return new DefaultModelZooPrediction(getContext());
+	public S createPrediction() {
+		try {
+			return (S) modelZooService().getPrediction(getArchive());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

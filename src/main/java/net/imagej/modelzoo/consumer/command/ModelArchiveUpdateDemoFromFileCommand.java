@@ -96,7 +96,6 @@ public class ModelArchiveUpdateDemoFromFileCommand implements Command {
 		List<String> outNames = namesAsList(outputSamples);
 		archive.getSpecification().setSampleInputs(inNames);
 		archive.getSpecification().setSampleOutputs(outNames);
-		archive.getSpecification().updateToNewestVersion();
 	}
 
 	private static List<String> namesAsList(List<TensorSample> samples) {

@@ -59,4 +59,12 @@ public class ZeroMeanUnitVariancePreprocessing extends DefaultImageNodePreproces
 		mean = specification.getMean();
 		std = specification.getStd();
 	}
+
+	public Number getStdDev() {
+		return std;
+	}
+
+	public Number getMean() {
+		return mean;
+	}
 }
