@@ -145,22 +145,20 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	@Override
 	public ModelZooPrediction getPrediction(ModelZooArchive trainedModel, ModelZooPredictionOptions options) {
-		String runner = null;
 		// it's not yet decided how the runner is listed in the specification
-//		ConfigSpecification config = trainedModel.getSpecification().getConfig();
-//		if(config != null) runner = config.getRunner();
+		String executionModel = trainedModel.getSpecification().getExecutionModel();
 		ModelZooPrediction prediction = null;
-		if(runner == null) {
+		if(executionModel == null) {
 			prediction = new DefaultModelZooPrediction(getContext());
 		} else {
 			List<PluginInfo<ModelZooPrediction>> predictionCommands = pluginService.getPluginsOfType(ModelZooPrediction.class);
 			for (PluginInfo<ModelZooPrediction> command : predictionCommands) {
-				if(command.getAnnotation().name().equals(runner)) {
+				if(command.getAnnotation().name().equals(executionModel)) {
 					prediction = pluginService.createInstance(command);
 				}
 			}
 			if(prediction == null) {
-				log().error("Could not find prediction plugin for model runner " + runner + ".");
+				log().error("Could not find prediction plugin for execution model " + executionModel + ".");
 				return null;
 			}
 		}
@@ -180,7 +178,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	private <P extends SciJavaPlugin, T extends Class<P>> Module getModule(ModelSpecification specification, T predictionClass) throws ModuleException {
 		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
-		String archivePrediction = specification.getSource();
+		String archivePrediction = specification.getExecutionModel();
 		Module mycommand = null;
 		if(archivePrediction != null) {
 			for (PluginInfo<P> command : predictionCommands) {
@@ -199,7 +197,7 @@ public class DefaultModelZooService extends AbstractService implements ModelZooS
 
 	private <P extends SciJavaPlugin, T extends Class<P>> CommandInfo getCommandInfo(ModelSpecification specification, T predictionClass, boolean showWarningIfNotFound) throws ModuleException {
 		List<PluginInfo<P>> predictionCommands = pluginService.getPluginsOfType(predictionClass);
-		String archivePrediction = specification.getSource();
+		String archivePrediction = specification.getExecutionModel();
 		CommandInfo mycommand = null;
 		if(archivePrediction != null) {
 			for (PluginInfo<P> command : predictionCommands) {
