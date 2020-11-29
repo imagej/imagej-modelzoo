@@ -56,6 +56,8 @@ public interface ModelZooPrediction<I extends PredictionInput, O extends Predict
 
 	Map<String, Object> getOutputs();
 
+	ModelZooPredictionOptions getOptions();
+
 	ModelZooArchive getTrainedModel();
 
 	void setTrainedModel(ModelZooArchive trainedModel);

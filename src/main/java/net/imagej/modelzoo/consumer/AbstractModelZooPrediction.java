@@ -65,18 +65,18 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	private DatasetService datasetService;
 
 	private ModelZooPredictionOptions options = ModelZooPredictionOptions.options();
+
 	private final InputMappingHandler inputHandling;
 	private ModelZooArchive modelArchive;
-
 	private boolean contextInjected = false;
-	private O output;
 
+	private O output;
 	private Map<String, Object> outputs;
+
 	private I input;
 	protected boolean canceled;
 	private TiledPredictionExecutor executor;
 	private List<PredictionCompletedCallback> onCompletedCallbacks;
-
 	public AbstractModelZooPrediction() {
 		inputHandling = new InputMappingHandler();
 		onCompletedCallbacks = new ArrayList<>();
@@ -129,6 +129,11 @@ public abstract class AbstractModelZooPrediction<I extends PredictionInput, O ex
 	@Override
 	public O getOutput() {
 		return output;
+	}
+
+	@Override
+	public ModelZooPredictionOptions getOptions() {
+		return options;
 	}
 
 	protected abstract O createOutput(ModelZooModel model);
