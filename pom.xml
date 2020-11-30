@@ -11,7 +11,7 @@
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-modelzoo</artifactId>
-	<version>0.9.8-SNAPSHOT</version>
+	<version>0.9.9-SNAPSHOT</version>
 
 	<name>ImageJ bioimage.io modelzoo library</name>
 	<description>This is the bioimage.io modelzoo library for ImageJ.</description>
