@@ -54,7 +54,7 @@ public abstract class AbstractSingleImagePredictionCommand<T extends RealType<T>
 	@Parameter(persist = false)
 	private RandomAccessibleInterval<T> input;
 
-	@Parameter(label = "Axes of prediction input (subset of XYB, B = batch)", description = "<html>You can predict one dimension independently per position.<br>Use B ( = batch) for this dimension.")
+	@Parameter(label = "Axes of prediction input (subset of XYZCB, B = batch)", description = "<html>You can predict one dimension independently per position.<br>Use B ( = batch) for this dimension.")
 	private String axes = "XY";
 
 	@Parameter(label = "Batch size", required = false, description = "<html>The batch size will only be used if a batch axis exists.<br>It can improve performance to process multiple batches at once (batch size > 1)")
