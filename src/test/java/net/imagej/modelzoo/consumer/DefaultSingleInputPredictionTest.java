@@ -54,7 +54,10 @@ public class DefaultSingleInputPredictionTest {
 
 		// load input image
 		Path img = Paths.get(getClass().getResource("denoise2D/input.tif").toURI());
-		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
+
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		// Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
+		Img input = (Img) ij.scifio().datasetIO().open(img.toAbsolutePath().toString());
 		Img imgFloat = ij.op().convert().float32(input);
 
 		// load pretrained model

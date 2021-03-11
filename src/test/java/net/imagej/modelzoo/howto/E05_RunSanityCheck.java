@@ -54,7 +54,9 @@ public class E05_RunSanityCheck {
 		String imgPath = getClass().getResource("/blobs.png").getPath();
 
 		// load image
-		Img input = (Img) ij.io().open(imgPath);
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		// Img input = (Img) ij.io().open(imgPath);
+		Img input = (Img) ij.scifio().datasetIO().open(imgPath);
 
 		// create noisy image from input image
 		Img noisy = ij.op().create().img(input);

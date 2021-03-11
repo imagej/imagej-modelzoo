@@ -28,6 +28,7 @@
  */
 package net.imagej.modelzoo.consumer;
 
+import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.consumer.model.prediction.DefaultPredictionOutput;
@@ -57,7 +58,9 @@ public class DefaultModelZooPredictionTest {
 
 		Path img = Paths.get(getClass().getResource("denoise2D/input.tif").toURI());
 
-		Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		// Img input = (Img) ij.io().open(img.toAbsolutePath().toString());
+		Img input = (Img) ij.scifio().datasetIO().open(img.toAbsolutePath().toString());
 
 		File archive1 = new File(getClass().getResource("denoise2D/dummy-0.2.0-csbdeep.bioimage.io.zip").toURI());
 		File archive2 = new File(getClass().getResource("denoise2D/dummy-0.3.0.model.bioimage.io.zip").toURI());

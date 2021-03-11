@@ -62,7 +62,9 @@ public class E01_Prediction {
 		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
-		Img input = (Img) ij.io().open(imgPath);
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		// Img input = ((Img) ij.io().open(imgPath);
+		Img input = (Img) ij.scifio().datasetIO().open(imgPath);
 
 		ij.ui().show(input);
 
@@ -92,7 +94,9 @@ public class E01_Prediction {
 		String modelPath = getClass().getResource("/net/imagej/modelzoo/consumer/denoise2D/dummy.model.bioimage.io.zip").getPath();
 
 		// load image
-		RandomAccessibleInterval input = (Img) ij.io().open(imgPath);
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		// RandomAccessibleInterval input = ((Img) ij.io().open(imgPath);
+		RandomAccessibleInterval input = (Img) ij.scifio().datasetIO().open(imgPath);
 
 		// create prediction
 		DefaultModelZooPrediction prediction = new DefaultModelZooPrediction(ij.context());
