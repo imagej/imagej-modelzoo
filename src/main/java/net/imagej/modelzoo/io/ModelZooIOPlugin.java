@@ -33,6 +33,7 @@ import io.bioimage.specification.DefaultModelSpecification;
 import io.bioimage.specification.ModelSpecification;
 import io.bioimage.specification.io.SpecificationReader;
 import io.bioimage.specification.io.SpecificationWriter;
+import io.scif.services.DatasetIOService;
 import net.imagej.DatasetService;
 import net.imagej.modelzoo.DefaultModelZooArchive;
 import net.imagej.modelzoo.ImageTensorSample;
@@ -87,20 +88,18 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 	@Parameter
 	private DatasetService datasetService;
 
+	// TODO remove when compatible with scifio 0.41.2
+	@Parameter
+	private DatasetIOService datasetIOService;
+
 	@Override
-	public ModelZooArchive open(String source) throws IOException {
+	public ModelZooArchive open(Location source) throws IOException {
 		statusService.showStatus("Opening " + source + "..");
-		Location location = null;
-		try {
-			LocationService locationService = getContext().service(LocationService.class);
-			location = locationService.resolve(source);
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+
 		DefaultModelZooArchive archive = new DefaultModelZooArchive();
 		getContext().inject(archive);
-		archive.setLocation(location);
-		try (ZipFile zf = new ZipFile(source)) {
+		archive.setLocation(source);
+		try (ZipFile zf = new ZipFile(source.getURI().getPath())) {
 			ZipEntry modelFile = zf.getEntry(SpecificationWriter.getModelFileName());
 			if(modelFile == null) {
 				// older models had a name.model.yaml file, look for that
@@ -129,6 +128,19 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		return archive;
 	}
 
+	@Override
+	public ModelZooArchive open(String source) throws IOException {
+		statusService.showStatus("Opening " + source + "..");
+		Location location = null;
+		try {
+			LocationService locationService = getContext().service(LocationService.class);
+			location = locationService.resolve(source);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return open(location);
+	}
+
 	private void setSampleImages(DefaultModelZooArchive archive, DefaultModelSpecification specification, ZipFile zf) throws IOException {
 		if(specification.getSampleInputs() != null) {
 			List<TensorSample> sampleInputs = new ArrayList<>();
@@ -149,6 +161,12 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 	@NotNull
 	private ImageTensorSample extractImageSample(ZipFile zf, String sampleInput) throws IOException {
 		return new ImageTensorSample<>((RandomAccessibleInterval)extract(zf,sampleInput), sampleInput);
+	}
+
+
+	@Override
+	public void save(ModelZooArchive archive, Location destination) throws IOException {
+		save(archive, destination.getURI().getPath());
 	}
 
 	@Override
@@ -229,6 +247,16 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		return destination.endsWith("bioimage.io.zip");
 	}
 
+	@Override
+	public boolean supportsOpen(Location source) {
+		return source.getURI().getPath().endsWith("bioimage.io.zip");
+	}
+
+	@Override
+	public boolean supportsSave(Location destination) {
+		return destination.getURI().getPath().endsWith("bioimage.io.zip");
+	}
+
 	private Object extract(ZipFile zf, String testInputLocation) throws IOException {
 		ZipEntry entry;
 		try {
@@ -247,7 +275,11 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 		}
 		outStream.close();
 		inputStream.close();
-		Object result = ioService.open(tmpTestInput.getAbsolutePath());
+
+		// TODO scifio DatasetIOPlugin fixed in future versions (fixed in 0.41.2)
+		//Object result = ioService.open(tmpTestInput.getAbsolutePath());
+		Object result = datasetIOService.open(tmpTestInput.getAbsolutePath());
+
 		tmpTestInput.delete();
 		return result;
 	}
