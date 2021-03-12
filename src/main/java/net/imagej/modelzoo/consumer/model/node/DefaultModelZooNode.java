@@ -2,7 +2,7 @@
  * #%L
  * This is the bioimage.io modelzoo library for ImageJ.
  * %%
- * Copyright (C) 2019 - 2020 Center for Systems Biology Dresden
+ * Copyright (C) 2019 - 2021 Center for Systems Biology Dresden
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
