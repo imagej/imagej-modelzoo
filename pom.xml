@@ -69,8 +69,8 @@
 		<url>https://github.com/imagej/imagej/imagej-modelzoo/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.com/imagej/imagej-modelzoo</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/imagej/imagej-modelzoo/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -79,7 +79,7 @@
 		<!-- LICENSE -->
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>Center for Systems Biology Dresden</license.copyrightOwners>
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 		<tensorflow.version>1.13.1</tensorflow.version>
 		<imagej-tensorflow.version>1.1.4</imagej-tensorflow.version>
 		<java-bioimage-io.version>0.3.5</java-bioimage-io.version>

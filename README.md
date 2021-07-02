@@ -1,4 +1,4 @@
-[![](https://travis-ci.com/imagej/imagej-modelzoo.svg?branch=master)](https://travis-ci.com/imagej/imagej-modelzoo)
+[![](https://github.com/imagej/imagej-modelzoo/actions/workflows/build-main.yml/badge.svg)](https://github.com/imagej/imagej-modelzoo/actions/workflows/build-main.yml)
 
 # imagej-modelzoo
 
