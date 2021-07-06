@@ -1,0 +1,5 @@
+// Preprocessing macro
+print("Preprocessing");
+run("32-bit");
+run("Divide...", "value=255");
+

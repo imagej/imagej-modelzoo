@@ -1,0 +1,49 @@
+name: Superres
+description: Superresolution model
+date: Mon Apr 20 12:16:07 CEST 2020
+authors: Carlos
+cite:
+  text: ['Ignacio Arganda-Carreras, Machine Learning for BioImage Analysis, NEUBIAS Bioimage Analyst School 2020']
+  doi: ['https://github.com/miura/NEUBIAS_AnalystSchool2020/tree/master/Ignacio']
+documentation: n/a
+cover: ['']
+test_input: [.\exampleImage.tiff]
+test_output: [.\resultImage.tiff]
+tags:
+- [deepImageJ]
+license: n/a
+format_version: '1.0'
+language: Java
+framework: Tensorflow
+source: n/a
+tensorflow_metadata:
+  tensorflow_model_tag: [tf.saved_model.tag_constants.SERVING]
+  tensorflow_siganture_def: [tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+test_metadata:
+  input_size: [1024x1024x1]
+  pixel_size: [6.00E+00nmx6.00E+00nmx1.00E+00nm]
+  output_size: [2048x2048x1]
+  memory_peak: 384.0 Mb
+  runtime: ' 21.2 s'
+inputs:
+- name: input
+  axes: NHWC
+  dimensions: [-1, 128, 128, 1]
+  data_type: float32
+  data_range: [-.inf, .inf]
+  shape:
+    patch_size: [1, 128, 128, 1]
+    min: [1, 128, 128, 1]
+    step: [0, 0, 0, 0]
+outputs:
+- name: output
+  axes: NHWC
+  dimensions: [-1, 256, 256, 1]
+  data_type: float32
+  data_range: [-.inf, .inf]
+  halo: [0, 60, 60, 0]
+  shape:
+    reference_input: input
+    scale: [1.0, 2.0, 2.0, 1.0]
+    offset: [0, 0, 0, 0]
+prediction: {preprocess: preprocessing.txt, postprocess: postprocessing.txt}
