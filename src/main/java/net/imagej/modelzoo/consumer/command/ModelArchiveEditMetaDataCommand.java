@@ -28,6 +28,8 @@
  */
 package net.imagej.modelzoo.consumer.command;
 
+import io.bioimage.specification.AuthorSpecification;
+import io.bioimage.specification.DefaultAuthorSpecification;
 import io.bioimage.specification.ModelSpecification;
 import net.imagej.modelzoo.ModelZooArchive;
 import net.imagej.modelzoo.ModelZooService;
@@ -39,6 +41,7 @@ import org.scijava.widget.TextWidget;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Plugin(type = Command.class, name = "Edit bioimage.io model metadata", initializer = "initParameters")
 public class ModelArchiveEditMetaDataCommand implements Command {
@@ -67,7 +70,11 @@ public class ModelArchiveEditMetaDataCommand implements Command {
 	public void run() {
 		ModelSpecification specification = archive.getSpecification();
 		specification.setName(conform(name));
-		specification.setAuthors(stringToList(authors, false));
+		specification.setAuthors(Arrays.stream(authors.split("\n")).map(author -> {
+			AuthorSpecification authorSpec = new DefaultAuthorSpecification();
+			authorSpec.setName(author);
+			return authorSpec;
+		}).collect(Collectors.toList()));
 		specification.setTags(stringToList(tags, true));
 		specification.setDescription(description);
 	}
@@ -82,7 +89,10 @@ public class ModelArchiveEditMetaDataCommand implements Command {
 			ModelSpecification specification = archive.getSpecification();
 			List<String> tags = specification.getTags();
 			this.tags = listToString(tags);
-			this.authors = listToString(specification.getAuthors());
+			this.authors = specification.getAuthors().stream()
+					.map(author -> author.getName()).reduce("", (a,b)->{
+						return a+"\n"+b;
+					});
 			this.description = specification.getDescription();
 			this.name = specification.getName();
 		}

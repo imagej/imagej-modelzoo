@@ -30,6 +30,7 @@ package net.imagej.modelzoo;
 
 import io.bioimage.specification.ModelSpecification;
 import io.bioimage.specification.WeightsSpecification;
+import io.bioimage.specification.weights.TensorFlowSavedModelBundleSpecification;
 import net.imagej.modelzoo.consumer.model.ModelZooModel;
 import net.imagej.modelzoo.consumer.model.TensorSample;
 import org.apache.commons.compress.utils.FileNameUtils;
@@ -51,6 +52,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public class DefaultModelZooArchive implements ModelZooArchive {
 
@@ -98,10 +100,10 @@ public class DefaultModelZooArchive implements ModelZooArchive {
 		ModelZooModel model = null;
 		Location weightsSource = null;
 		for (PluginInfo<ModelZooModel> pluginInfo : modelPlugins) {
-			for (WeightsSpecification weight : specification.getWeights()) {
-				if(pluginInfo.get("supports").contains(weight.getId())) {
+			for (Map.Entry<String, WeightsSpecification> weightEntries : specification.getWeights().entrySet()) {
+				if(TensorFlowSavedModelBundleSpecification.id.contains(weightEntries.getKey())) {
 					model = pluginService.createInstance(pluginInfo);
-					String source = weight.getSource();
+					String source = weightEntries.getValue().getSource();
 					if(source == null) {
 						// older specs did not zip the weights
 						weightsSource = this.source;

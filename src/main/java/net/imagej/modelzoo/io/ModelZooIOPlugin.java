@@ -107,18 +107,18 @@ public class ModelZooIOPlugin extends AbstractIOPlugin<ModelZooArchive> {
 				modelFile = null;
 				while ( entries.hasMoreElements() ) {
 					final ZipEntry entry = entries.nextElement();
-					if(entry.getName().endsWith(".model.yaml")) {
+					if(entry.getName().endsWith("model.yaml") || entry.getName().endsWith("rdf.yaml")) {
 						modelFile = entry;
 						break;
 					}
 				}
-				if(modelFile == null) throw new IOException("Can't open " + source + " as bioimage.io model archive: No model.yaml or *.model.yaml file found.");
+				if(modelFile == null) throw new IOException("Can't open " + source + " as bioimage.io model archive: No *model.yaml or *rdf.yaml file found.");
 			}
 			InputStream inSpec = zf.getInputStream(modelFile);
 			ImageJModelSpecification specification = new ImageJModelSpecification();
 			boolean success = SpecificationReader.read(inSpec, specification);
 			if(!success) {
-				throw new IOException("Could not read model.yaml specification from source " + source);
+				throw new IOException("Could not read rdf.yaml specification from source " + source);
 			}
 			inSpec.close();
 			archive.setSpecification(specification);
