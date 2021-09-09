@@ -231,7 +231,10 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 						if(modelName != null) modelName.setText(model.getSpecification().getName());
 						if(modelNameInOverview!= null) modelNameInOverview.setText(model.getSpecification().getName());
 						if(modelTags != null) modelTags.setText(listToString(model.getSpecification().getTags()));
-						if(modelAuthors != null) modelAuthors.setText(listToString(model.getSpecification().getAuthors()));
+						if(modelAuthors != null) modelAuthors.setText(model.getSpecification().getAuthors().stream()
+								.map(author -> author.getName()).reduce("", (a,b)->{
+									return a+"\n"+b;
+								}));
 						saveChangesBtn.setVisible(true);
 					}
 				}).start();
@@ -608,7 +611,10 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		JPanel panel = new JPanel(new MigLayout("fill"));
 		modelName = addToPanel(panel, "Name", model.getSpecification().getName());
 		modelDescription = addToPanel(panel, "Description", model.getSpecification().getDescription());
-		modelAuthors = addToPanel(panel, "Authors", listToString(model.getSpecification().getAuthors()));
+		modelAuthors = addToPanel(panel, "Authors", model.getSpecification().getAuthors().stream()
+				.map(author -> author.getName()).reduce("", (a,b)->{
+			return a+"\n"+b;
+		}));
 		addToPanel(panel, "References", asString(model.getSpecification().getCitations(), SwingModelArchiveDisplayViewer::citationToString));
 		addToPanel(panel, "License", model.getSpecification().getLicense());
 		addToPanel(panel, "Documentation", model.getSpecification().getDocumentation());
@@ -662,10 +668,9 @@ public class SwingModelArchiveDisplayViewer extends EasySwingDisplayViewer<Model
 		str.append("axes         : ").append(input.getAxes()).append("\n");
 		str.append("data type    : ").append(input.getDataType()).append("\n");
 		str.append("data range   : ").append(input.getDataRange()).append("\n");
-		str.append("halo         : ").append(input.getHalo()).append("\n");
 		str.append("min          : ").append(input.getShapeMin()).append("\n");
 		str.append("step         : ").append(input.getShapeStep()).append("\n");
-		str.append("preprocesing : ").append(transformationsToString(input.getPreprocessing())).append("\n");
+		str.append("preprocessing : ").append(transformationsToString(input.getPreprocessing())).append("\n");
 		return str.toString();
 	}
 
